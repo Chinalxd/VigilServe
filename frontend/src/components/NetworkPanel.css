@@ -1,0 +1,285 @@
+/* 网络设备页签 —— 极简平面直角风格，与主机信息页签同一套语言 */
+
+.network-panel {
+  padding: 4px 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.np-loading,
+.np-error {
+  padding: 16px;
+  font-size: 13px;
+  color: #6c757d;
+}
+
+.np-error { color: #a94442; }
+
+.np-panel {
+  background: #fff;
+  border: 1px solid #e5e8eb;
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+}
+
+/* 面板头（设备系统信息 + 搜索 + 刷新）—— 2026-09-21 按要求把底色从 #f4f6f8 改成白色，
+   和卡片本体同色，只留一条下边框把工具栏和内容分开（原来那块灰底看着像另一个盒子）。
+   ⚠ 下面分组标题行 `.np-row-head`（资产信息 / 系统信息（SNMP）/ 端口列表）仍是浅灰，
+     两处不一致是有意的：分组标题靠灰底区分层次，工具栏靠留白。 */
+.np-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #fff;
+  border-bottom: 1px solid #e5e8eb;
+}
+
+.np-panel-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.np-spacer { flex: 1 1 auto; }
+
+.np-search {
+  width: 200px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid #d5dae0;
+  border-radius: 0;
+  font-size: 13px;
+  outline: none;
+}
+
+.np-search:focus { border-color: #0275d8; }
+
+.np-btn {
+  height: 28px;
+  padding: 0 14px;
+  border: 1px solid #d5dae0;
+  background: #fff;
+  color: #333;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 0;
+}
+
+.np-btn:hover:not(:disabled) { background: #f4f6f8; }
+.np-btn:disabled { opacity: .55; cursor: default; }
+
+.np-btn-primary {
+  border-color: #0275d8;
+  background: #0275d8;
+  color: #fff;
+}
+
+.np-btn-primary:hover:not(:disabled) { background: #0269c2; }
+
+.np-btn-danger {
+  border-color: #d9534f;
+  background: #d9534f;
+  color: #fff;
+}
+
+.np-btn-danger:hover:not(:disabled) { background: #c9302c; }
+
+.np-panel-body { padding: 0; }
+
+.np-empty-box {
+  margin: 10px 12px;
+  padding: 14px;
+  font-size: 13px;
+  color: #6c757d;
+  background: #f8f9fa;
+  border: 1px solid #e5e8eb;
+}
+
+.np-row { display: block; }
+
+.np-row-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 12px;
+  background: #f4f6f8;
+  border-top: 1px solid #e5e8eb;
+  border-bottom: 1px solid #e5e8eb;
+}
+
+.np-row:first-child .np-row-head { border-top: none; }
+
+.np-row-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.np-row-sub { font-size: 12px; color: #6c757d; }
+
+/* 端口表右上角的「显示全部端口」开关：默认只显示物理口，虚拟口要手动放开 */
+.np-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #495057;
+  cursor: pointer;
+  user-select: none;
+}
+
+.np-toggle input { margin: 0; cursor: pointer; }
+
+.np-row-body { padding: 8px 12px; }
+.np-row-body-flush { padding: 0; }
+
+.np-kv {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.np-kv th {
+  width: 150px;
+  text-align: left;
+  font-weight: 400;
+  color: #6c757d;
+  padding: 5px 12px 5px 0;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.np-kv td {
+  padding: 5px 0;
+  color: #2c3e50;
+  word-break: break-all;
+}
+
+.np-table-wrap { overflow-x: auto; }
+
+.np-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.np-table th {
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  background: #f8f9fa;
+  padding: 6px 8px;
+  border-bottom: 1px solid #e5e8eb;
+  white-space: nowrap;
+}
+
+.np-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid #f0f2f4;
+  color: #2c3e50;
+  vertical-align: middle;
+}
+
+.np-table tbody tr:hover { background: #f8f9fa; }
+
+.np-table td.np-num { text-align: right; font-variant-numeric: tabular-nums; }
+.np-table td.np-num-warn { color: #c9302c; font-weight: 600; }
+
+.np-mono {
+  font-family: Consolas, 'SFMono-Regular', Menlo, monospace;
+  font-size: 12.5px;
+}
+
+.np-pill {
+  display: inline-block;
+  padding: 1px 7px;
+  font-size: 12px;
+  color: #fff;
+  background: #777;
+  line-height: 18px;
+}
+
+.np-pill-up { background: #5cb85c; }
+.np-pill-down { background: #d9534f; }
+.np-pill-test { background: #f0ad4e; }
+.np-pill-unknown { background: #9aa0a6; }
+
+.np-inline-sub { margin-left: 10px; font-size: 12px; color: #6c757d; }
+
+.np-inline-err {
+  margin-left: 8px;
+  font-size: 12px;
+  color: #a94442;
+}
+
+.np-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  gap: 8px 20px;
+  padding: 12px;
+}
+
+.np-field { display: flex; flex-direction: column; gap: 4px; }
+.np-field-wide { grid-column: 1 / -1; }
+
+.np-label {
+  font-size: 12px;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.np-hint { color: #0275d8; font-size: 11.5px; }
+
+.np-input {
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid #d5dae0;
+  border-radius: 0;
+  font-size: 13px;
+  outline: none;
+  background: #fff;
+  color: #2c3e50;
+}
+
+.np-input:focus { border-color: #0275d8; }
+.np-input:disabled { background: #f4f6f8; color: #6c757d; }
+
+.np-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #2c3e50;
+  height: 28px;
+}
+
+.np-switch-text { color: #6c757d; font-size: 12.5px; }
+
+.np-tip {
+  margin: 0 12px 12px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #856404;
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+}
+
+.np-alert {
+  margin: 10px 12px;
+  padding: 8px 10px;
+  font-size: 12.5px;
+  color: #a94442;
+  background: #fcf2f2;
+  border: 1px solid #f0c9c9;
+}
+
+.np-fp { font-size: 12px; word-break: break-all; }
+.np-fp-new { color: #a94442; }

@@ -1,0 +1,408 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 全站 SVG 图标的统一出口在 components/AppIcon.jsx（原来各处散着 emoji / 符号）。
+   SVG 默认按文字基线对齐，放进按钮、表头、卡片里会偏低几个像素，这里统一微调；
+   flex:none 是防它在 flex 容器里被压扁。
+   侧边栏里由 Sidebar.css 的 `.nav-icon svg.device-icon` 覆盖（那里要 16px 居中）。 */
+svg.device-icon {
+  display: inline-block;
+  vertical-align: -0.125em;
+  flex: none;
+}
+
+:root {
+  --sidebar-width: 220px;
+  --header-height: 0px;
+
+  --color-bg: #f0f3f5;
+  --color-sidebar: #3a506b;
+  --color-sidebar-hover: #2f455c;
+  --color-sidebar-active: #4e6a8a;
+  --color-primary: #0275d8;
+  --color-success: #5cb85c;
+  --color-warning: #f0ad4e;
+  --color-danger: #d9534f;
+  --color-offline: #777777;
+
+  --color-text: #333333;
+  --color-text-light: #666666;
+  --color-text-muted: #999999;
+
+  --color-card: #ffffff;
+  --color-border: #ccd6dd;
+  --color-border-light: #e6eaed;
+
+  --radius: 0;
+  --shadow: none;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c8cdd2;
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8afb5;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.btn,
+button.btn,
+.confirm-btn,
+.btn-cancel,
+.btn-submit,
+.btn-delete,
+.btn-add-user,
+.btn-edit-server,
+.btn-add-mon,
+.btn-scan,
+.btn-delete-mon,
+.btn-select-all,
+.reg-btn-add,
+.reg-btn-edit,
+.reg-btn-remove,
+.reg-refresh-btn,
+.res-btn-back,
+.res-btn-home,
+.res-btn-refresh,
+.res-icon-btn,
+.res-btn-upload,
+.res-btn-download,
+.topbar-login-btn,
+.btn-submit-sm,
+.login-submit,
+.btn-ack,
+.btn-sm,
+.btn-primary,
+.btn-cancel-sm,
+.btn-danger,
+.btn-save,
+.btn-clear-filter,
+.btn-add-rule,
+.btn-remove-rule,
+.res-btn-action,
+.res-btn-delete,
+.res-pagination button,
+.terminal-connect-btn,
+.term-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 14px;
+  background: #fff;
+  border: 1px solid #b8c0c6;
+  border-radius: 0;
+  font-size: 13px;
+  color: #333;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  font-family: inherit;
+}
+
+.btn:hover,
+button.btn:hover,
+.confirm-btn:hover,
+.btn-cancel:hover,
+.btn-submit:hover:not(:disabled),
+.btn-delete:hover:not(:disabled),
+.btn-add-user:hover:not(:disabled),
+.btn-edit-server:hover:not(:disabled),
+.btn-add-mon:hover:not(:disabled),
+.btn-scan:hover:not(:disabled),
+.btn-delete-mon:hover:not(:disabled),
+.btn-select-all:hover:not(:disabled),
+.reg-btn-add:hover:not(:disabled),
+.reg-btn-edit:hover:not(:disabled),
+.reg-btn-remove:hover:not(:disabled),
+.reg-refresh-btn:hover:not(:disabled),
+.res-btn-back:hover:not(:disabled),
+.res-btn-home:hover:not(:disabled),
+.res-btn-refresh:hover:not(:disabled),
+.res-icon-btn:hover:not(:disabled),
+.res-btn-upload:hover:not(:disabled),
+.res-btn-download:hover:not(:disabled),
+.topbar-login-btn:hover:not(:disabled),
+.btn-submit-sm:hover:not(:disabled),
+.login-submit:hover:not(:disabled),
+.btn-ack:hover:not(:disabled),
+.btn-sm:hover:not(:disabled),
+.btn-primary:hover:not(:disabled),
+.btn-cancel-sm:hover:not(:disabled),
+.btn-danger:hover:not(:disabled),
+.btn-save:hover:not(:disabled),
+.res-btn-action:hover:not(:disabled),
+.res-pagination button:hover:not(:disabled),
+.terminal-connect-btn:hover:not(:disabled),
+.term-btn:hover:not(:disabled) {
+  background: #e9ecef;
+  border-color: #9aa3aa;
+  color: #000;
+}
+
+.btn-primary,
+.btn-submit,
+.btn-save,
+.login-submit,
+.btn-add-rule {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled),
+.btn-submit:hover:not(:disabled),
+.btn-save:hover:not(:disabled),
+.login-submit:hover:not(:disabled),
+.btn-add-rule:hover:not(:disabled) {
+  background: #025aa5;
+  border-color: #025aa5;
+  color: #fff;
+}
+
+.btn-delete,
+.btn-delete-mon,
+.reg-btn-remove,
+.btn-danger,
+.btn-clear-filter,
+.res-btn-delete {
+  color: var(--color-danger);
+  border-color: #e0aeb0;
+  background: #fff;
+}
+
+.btn-delete:hover:not(:disabled),
+.btn-delete-mon:hover:not(:disabled),
+.reg-btn-remove:hover:not(:disabled),
+.btn-danger:hover:not(:disabled),
+.btn-clear-filter:hover:not(:disabled),
+.res-btn-delete:hover:not(:disabled) {
+  background: #f9ecec;
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.btn-sm,
+.btn-submit-sm,
+.res-btn-action,
+.res-icon-btn,
+.res-btn-back,
+.res-btn-home,
+.res-btn-refresh {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.res-icon-btn svg,
+.res-btn-action svg,
+.res-btn-download svg {
+  display: block;
+}
+
+button:disabled,
+.btn:disabled,
+.btn-submit:disabled,
+.btn-scan:disabled,
+.btn-delete-mon:disabled,
+.btn-select-all:disabled,
+.login-submit:disabled,
+.res-icon-btn:disabled,
+.res-btn-action:disabled,
+.res-pagination button:disabled,
+.term-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.form-input,
+.form-select,
+.form-textarea,
+input[type="text"],
+input[type="password"],
+input[type="number"],
+input[type="email"],
+select,
+textarea {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #b8c0c6;
+  border-radius: 0;
+  font-size: 13px;
+  color: #333;
+  background: #fff;
+  font-family: inherit;
+  transition: border-color 0.12s;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.form-input::placeholder,
+input::placeholder {
+  color: #aaa;
+}
+
+/* ── 隐藏浏览器注入的原生表单控件图标（2026-09-23）──
+   这些图标不属于本站图标体系（全站图标统一出口见 components/AppIcon.jsx），
+   而且会跟自绘图标**叠在一起**：
+
+   · `::-ms-reveal`（Edge/IE 的密码显隐按钮）—— 「设置 → 用户 → 编辑用户」的密码框
+     右边原本会同时出现**两个眼睛**：一个是浏览器原生的，一个是我们的 `.pwd-toggle`。
+     两者都在 `right` 侧、位置几乎重合，看起来像"图标重影"。
+   · `::-ms-clear`（同源的清除 ✕）—— 会在输入框右侧多出一个不受控的 ✕。
+   · `::-webkit-contacts-auto-fill-button` / `::-webkit-credentials-auto-fill-button`
+     —— Chromium 的自动填充按钮，深色/浅色下都是硬编码的浏览器样式。
+   · 数字框的微调箭头 —— 浏览器默认是**带渐变和半透明边框的内嵌小三角**，
+     与本项目"平面、直角、无 3D"的视觉取向冲突；这些框本来就都支持直接手输。
+
+   显隐能力统一由 `.pwd-toggle`（自绘 `ui-eye` / `ui-eye-off`）提供，
+   所以这里把原生的一律关掉，只留一套。 */
+
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+}
+
+/* 口令规则提示：跟在密码输入框下方的一行灰字。
+   文案由后端按「安全设置 - 密码规则」拼出（见 services/passwordRules.js），
+   这里只负责样式 —— 刻意比 .form-error 淡，提示和报错不能长得一样。 */
+.pwd-rule-hint {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-light);
+}
+
+.form-input-sm,
+.blacklist-input,
+.blacklist-select,
+.filter-rule select,
+.filter-rule input,
+.service-row-edit input {
+  padding: 5px 8px;
+  border: 1px solid #b8c0c6;
+  border-radius: 0;
+  font-size: 13px;
+  background: #fff;
+  font-family: inherit;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th {
+  background: #f5f7f9;
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 1px solid #d0d7de;
+}
+
+td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #eef0f2;
+  vertical-align: middle;
+}
+
+tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.no-access-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 100%;
+  min-height: 260px;
+  padding: 40px;
+  color: var(--color-text-muted);
+}
+
+.no-access-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.no-access-text {
+  font-size: 13px;
+}
+
+.status-badge,
+.server-count,
+.reg-status-dot,
+.alert-level-badge,
+.ack-badge,
+.role-badge,
+.port-badge,
+.filter-active-badge,
+.meta-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 0;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+}

@@ -1,0 +1,35 @@
+# 第二轮复查 R-11（依赖 CVE）：0.115.6 拖着 starlette 0.41.3（14 条已知漏洞，
+# 修于 1.3.1）。升 fastapi 才能放 starlette 1.x —— 遂一并升到 0.141.1 / 1.6.0。
+# ⚠ Starlette 1.x 有 breaking change，改动后必须跑 `t_recheck_0923.py` 之类全量回归。
+fastapi==0.141.1
+# 显式钉住：starlette 是 fastapi 的传递依赖，不写的话上游换版本会静默跟着走。
+starlette==1.6.0
+uvicorn[standard]==0.34.0
+sqlalchemy==2.0.36
+apscheduler==3.10.4
+websockets==14.1
+pydantic==2.9.2
+# 第二轮复查 R-11：0.0.20 有 12 条已知漏洞（含 CVE-2026-24486 上传路径穿越 ——
+# 启用 UPLOAD_DIR + UPLOAD_KEEP_FILENAME 时可把文件写到任意路径）。
+# 本项目没开那两个配置、不走它的落盘逻辑，所以**现状不受影响**，但升级无冲突，直接升。
+python-multipart==0.0.31
+jinja2==3.1.6
+pywinrm==0.5.0
+paramiko==5.0.0
+pywinpty==3.0.5
+# 第二轮复查 R-11：与 agent/requirements.txt 对齐（那边一直是 6.1.0）。
+# 两端跑在同一批 Windows 主机上，版本分叉只会带来"这台能装那台不能装"的麻烦。
+psutil==6.1.0
+requests==2.34.2
+# 安全加固阶段 2/3：自签 CA + 服务器证书、密码加盐慢哈希。
+# 两者都做了优雅降级（缺 cryptography → 退回 HTTP；缺 bcrypt → 用标准库 scrypt），
+# 但生产部署请装上，否则 HTTPS 与 bcrypt 都不会生效。
+# 第二轮复查 R-11：44.0.0 有 12 条已知漏洞（修于 44.0.1 / 46.x / 48.0.1 / 49.0.0 / 50.0.0），
+# 直接上到 50.0.1 一次修干净。Agent 侧同步升（见 agent/requirements.txt），
+# 两端版本必须一致 —— Agent 安装包内置 CA 与 9998 TLS 都靠它。
+cryptography==50.0.1
+bcrypt==4.2.1
+# S5：SNMPv3 采集网络设备（交换机装不了 Agent，只能服务端主动问）。
+# 纯 Python，无编译，Windows 无坑；未安装时采集会直接失败并告警，不影响其它功能。
+pysnmp==7.1.29
+pyasn1==0.6.4

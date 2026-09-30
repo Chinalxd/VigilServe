@@ -1,0 +1,15 @@
+psutil==6.1.0
+pystray==0.19.5
+# 第三轮审计 N-2（2026-09-23）：11.0.0 有 **33 条**已知漏洞（pip-audit 实测），
+# 集中在图片解码：PSD 越界写、FITS 无限制 GZIP 解压、恶意 PDF 挂死 100% CPU、
+# 字体/位图解析越界读，其中 PYSEC-2026-2257 是 `WindowsViewer.get_command()`
+# **拼 cmd.exe 命令**。全部修于 12.1.1 / 12.2.0 / 12.3.0，故直接上 12.3.0 一次修干净。
+# ⚠ 升这个必须**重打包 Agent** 并回归托盘图标与截图链路（pillow 用于图标/图像处理）。
+pillow==12.3.0
+# 第二轮复查 R-11：与 backend/requirements.txt 同步升到 50.0.1（12 条已知漏洞）。
+# 升这个必须**重打包 Agent** 并回归 9998 的 TLS 链路（自签证书 / 服务端签发 / 证书热切换）。
+cryptography==50.0.1
+py-cpuinfo==9.0.0
+websockets>=13.0
+mss>=9.0
+windows-capture>=1.0

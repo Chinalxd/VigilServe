@@ -1,0 +1,48 @@
+.datetime-input-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.datetime-text {
+  width: 120px !important;
+  height: 28px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+}
+
+.datetime-picker-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid #d0d7de;
+  border-left: none;
+  background: #fff;
+  color: #666;
+  cursor: pointer;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.datetime-picker-btn:hover {
+  background: #f5f7f9;
+  color: #333;
+}
+
+.datetime-hidden {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+  border: 0;
+  padding: 0;
+}

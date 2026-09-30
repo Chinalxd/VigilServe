@@ -1,0 +1,230 @@
+/* 网络设备「设备状态」页签 —— 沿用状态页的极简平面风格（浅灰底 / 直角 / 色块）
+   整页收进一张大卡片，自上而下：指标卡行 → 周期横条 → 图表行 → 底部采集信息
+   （周期条按需求插在两行卡片之间，所以它上下都要有分隔线） */
+
+.nds-wrap {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #e3e6ea;
+}
+
+/* 周期横条夹在指标卡行与图表行之间：上下各一条分隔线，本身不单独成卡片 */
+.nds-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #fff;
+  border: none;
+  border-top: 1px solid #e3e6ea;
+  border-bottom: 1px solid #e3e6ea;
+  border-radius: 0;
+}
+
+.nds-toolbar-label {
+  font-size: 13px;
+  color: #6c757d;
+}
+
+.nds-range-btn {
+  padding: 4px 12px;
+  font-size: 13px;
+  color: #495057;
+  background: #f5f6f8;
+  border: 1px solid #d9dde3;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.nds-range-btn:hover {
+  background: #eceff2;
+}
+
+.nds-range-btn.active {
+  color: #fff;
+  background: #0275d8;
+  border-color: #0275d8;
+}
+
+.nds-spacer {
+  flex: 1;
+}
+
+.nds-btn {
+  padding: 4px 14px;
+  font-size: 13px;
+  color: #495057;
+  background: #fff;
+  border: 1px solid #d9dde3;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.nds-btn:hover:not(:disabled) {
+  background: #f5f6f8;
+}
+
+.nds-btn:disabled {
+  color: #adb5bd;
+  cursor: not-allowed;
+}
+
+/* 🚨 `.nds-btn-primary`（蓝底实心按钮）随「立即采集」按钮一起去掉了（2026-09-21）——
+   本页现在只剩「刷新」一个中性按钮，没有主次之分，留着这个类没有任何地方在用。 */
+
+/* 指标卡行，用 auto-fit 让窄屏自己折行，别写死列数（写死会掉一张孤零零的卡到第二行）。
+   🚨 下限 196px 不是随手写的：卡片改成「图标 + 内容」横向排之后，图标占 28px + 间距 10px，
+   副行最长的一句「物理口 UP 20 · DOWN 22 · 异常 0」需要约 150px，低于 196px 就会折成三行。
+   （图标从 22px 加到 28px 时，这里跟着 +6px；别直接跳到 200 以上 —— 会掉一列。） */
+.nds-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(196px, 1fr));
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.nds-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid #e3e6ea;
+  /* 和主机「设备状态」卡片保持一致：只显示这一组参数，居中排 */
+  text-align: center;
+}
+
+/* 🚨 小卡片左侧图标（`.nds-card-icon`）的排版与颜色
+   —— 已挪到共享模块 `CardIcon.css` 的 `.stat-card-icon`，因为主机
+   「设备状态」页现在用同一套图标，两处各写一份必然漂移。
+   这里不再重复声明；JSX 里仍挂着 `nds-card-icon` 这个类名，留给本页需要时做局部覆盖。 */
+
+.nds-card-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* 风扇的旋转动画 + 「系统开了'减少动效'就不转」那条规则，都跟着图标一起
+   挪到 `CardIcon.css` 了（类名 `.stat-icon-fan`）—— 动画必须和它的 @keyframes
+   待在同一个文件里，否则哪个页面先加载哪套 CSS 会决定它转不转。 */
+
+.nds-card-label {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.nds-card-value {
+  margin-top: 4px;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.nds-card-unit {
+  margin-left: 3px;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.nds-card-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #868e96;
+}
+
+/* 「端口健康」卡片里的告警行：物理口断开要一眼看见，不能和 UP/DOWN 计数混在一行 */
+.nds-card-warn {
+  display: block;
+  margin-top: 2px;
+  color: #d9534f;
+}
+
+/* 图表行：2026-09-21 按需求，与上方的「周期」横条之间留出空白间距。
+   原来 padding-top 是 0，周期条的 border-bottom 直接贴着第一行图表的边框，
+   两块看起来是粘在一起的。这里补 12px 上边距（横向 12px 与指标卡行对齐）。 */
+.nds-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 12px 12px 10px;
+}
+
+.nds-chart {
+  background: #fff;
+  border: 1px solid #e3e6ea;
+}
+
+.nds-chart-title {
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #343a40;
+  border-bottom: 1px solid #eef0f3;
+}
+
+.nds-chart-body {
+  height: 220px;
+  padding: 6px 8px;
+}
+
+.nds-chart-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 13px;
+  color: #adb5bd;
+}
+
+/* 底部采集信息 = 大卡片内的最后一行，用一条上分隔线隔开 */
+.nds-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  padding: 8px 12px;
+  background: #fff;
+  border: none;
+  border-top: 1px solid #e3e6ea;
+}
+
+.nds-foot-row {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.nds-foot-k {
+  color: #6c757d;
+}
+
+.nds-foot-v {
+  color: #343a40;
+}
+
+.nds-foot-v b {
+  font-weight: 600;
+}
+
+.nds-up {
+  margin-left: 4px;
+  color: #5cb85c;
+}
+
+.nds-down {
+  margin-left: 4px;
+  color: #d9534f;
+}
+
+.nds-err {
+  margin-left: 6px;
+  color: #d9534f;
+}
+
+@media (max-width: 1200px) {
+  /* 卡片行不在这里写死列数 —— 上面是 auto-fit，窄屏自己折行
+     （卡片数量随设备类型变：交换机 6~9 张、NAS 最多 11 张，写死列数必然折出孤行） */
+  .nds-charts {
+    grid-template-columns: 1fr;
+  }
+}

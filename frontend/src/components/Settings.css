@@ -1,0 +1,389 @@
+.settings-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.settings-tabs {
+  display: flex;
+  gap: 0;
+  padding: 10px 0 0;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 14px;
+  flex: 0 0 auto;
+}
+
+/* 卡片内部的二级页签（运行参数 / 设备准入）：卡片已经有一圈 18px 内边距，
+   这层页签不要再套页面级的上下留白，否则内容区会被顶下去一大截。
+   选中态沿用 .stab.active（白底 + 蓝下边线），与「日志管理」卡内的 .log-tab 一致。 */
+.settings-tabs-sub {
+  padding: 0;
+  margin-bottom: 12px;
+}
+
+.stab {
+  padding: 8px 18px;
+  border: 1px solid transparent;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+  font-family: inherit;
+  margin-bottom: -1px;
+}
+
+.stab:hover { color: #333; }
+
+.stab.active {
+  color: var(--color-primary);
+  background: #fff;
+  border-color: var(--color-border);
+  border-bottom-color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* 卡片内部上下滚动：卡片撑满剩余高度，滚动条落在 .settings-panel-body 内 */
+.settings-panel {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  padding: 18px;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.settings-panel-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.settings-panel-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 0;
+  padding: 5px 0 0;
+  min-height: 32px;
+  border-top: 1px solid var(--color-border);
+  flex: 0 0 auto;
+}
+
+.settings-count {
+  font-size: 12px;
+  color: #555;
+  white-space: nowrap;
+  margin-right: auto;
+}
+
+/* 表格视觉与「日志管理」的 .log-table 对齐（灰底表头 / 紧凑行高 / hover / sticky） */
+.settings-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.settings-table th {
+  background: #f5f7f9;
+  padding: 5px 10px;
+  text-align: left;
+  border-bottom: 1px solid #d0d7de;
+  font-weight: 600;
+  color: #555;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  line-height: 1.2;
+  vertical-align: middle;
+}
+.settings-table td {
+  padding: 4px 10px;
+  border-bottom: 1px solid #eef0f2;
+  white-space: nowrap;
+  vertical-align: middle;
+  line-height: 1.3;
+}
+.settings-table tr:hover td { background: #f9fafb; }
+.settings-table td.wrap { white-space: normal; }
+.settings-table td.actions { width: 1%; white-space: nowrap; }
+.settings-table td.actions .btn-sm { margin-right: 6px; }
+
+.settings-table-fixed .col-id { width: 50px; }
+.settings-table-fixed .col-fullname { width: 120px; }
+.settings-table-fixed .col-user { width: 140px; }
+.settings-table-fixed .col-mail { width: 200px; }
+.settings-table-fixed .col-role { width: 100px; }
+.settings-table-fixed .col-status { width: 80px; }
+.settings-table-fixed .col-time { width: 150px; }
+.settings-table-fixed .col-ops { width: 130px; }
+.settings-table-fixed th, .settings-table-fixed td { box-sizing: border-box; }
+
+.required { color: var(--color-danger); margin-left: 2px; }
+
+.pwd-cell { position: relative; display: flex; align-items: center; }
+/* 2026-09-23：原来只给 .form-input-sm 留了右侧内边距，但「编辑用户」的密码框用的是
+   .form-input —— 于是自绘的眼睛图标会**压住密码文字**（输长一点就看不到最后几位）。
+   两种尺寸都留出 30px。 */
+.pwd-cell .form-input,
+.pwd-cell .form-input-sm { padding-right: 30px; }
+.pwd-toggle {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  cursor: pointer; font-size: 13px; user-select: none; opacity: 0.6; line-height: 1;
+}
+.pwd-toggle:hover { opacity: 1; }
+
+.role-badge { padding: 1px 6px; border-radius: 0; font-size: 11px; font-weight: 500; }
+.role-admin { background: #eaf4fc; color: var(--color-primary); }
+.role-viewer { background: #f0f3f5; color: #666; }
+.status-badge { padding: 1px 6px; border-radius: 0; font-size: 11px; }
+.status-active { background: #eaf6ea; color: var(--color-success); }
+.status-disabled { background: #f9ecec; color: var(--color-danger); }
+
+.form-input-sm {
+  padding: 5px 10px;
+  border: 1px solid #b8c0c6;
+  border-radius: 0;
+  font-size: 13px;
+  height: 32px;
+  background: #fff;
+}
+
+.settings-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  margin-bottom: 12px;
+}
+.settings-section-header:first-child { margin-top: 0; }
+.settings-section-header h3 { margin: 0; }
+
+.settings-page .btn-primary,
+.settings-page .btn-submit,
+.settings-page .btn-add-user {
+  background: #fff;
+  border-color: #b8c0c6;
+  color: #333;
+}
+.settings-page .btn-primary:hover:not(:disabled),
+.settings-page .btn-submit:hover:not(:disabled),
+.settings-page .btn-add-user:hover:not(:disabled) {
+  background: #e9ecef;
+  border-color: #9aa3aa;
+  color: #000;
+}
+
+.btn-sm { margin-right: 6px;  }
+.btn-danger {  }
+.btn-danger:hover { }
+.btn-cancel-sm {  }
+.btn-cancel-sm:hover { }
+
+.settings-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.settings-modal {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  width: 420px;
+  max-width: 90vw;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+.settings-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid #eef0f2;
+}
+.settings-modal-header h4 { margin: 0; font-size: 15px; font-weight: 600; color: #333; }
+.settings-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  color: #888;
+  cursor: pointer;
+}
+.settings-modal-close:hover { color: #333; }
+.settings-modal-body {
+  padding: 18px;
+}
+.settings-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px 18px;
+}
+
+.settings-form-group { margin-bottom: 14px; }
+.settings-form-group:last-child { margin-bottom: 0; }
+.settings-form-label {
+  display: block;
+  font-size: 12px;
+  color: #555;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.settings-form-group .form-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.settings-form-group .form-input:disabled,
+.settings-form-group select.form-input:disabled {
+  background: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.form-error { color: #dc3545; font-size: 13px; }
+
+.save-status {
+  font-size: 12px;
+  margin-left: 10px;
+  color: var(--color-success);
+}
+.save-status.error {
+  color: var(--color-danger);
+}
+
+/* ── 安全设置页签 ───────────────────────────────────────── */
+.sec-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.sec-group {
+  border: 1px solid var(--color-border, #e3e6ea);
+  border-radius: 0;
+  background: #fff;
+  padding: 12px 14px;
+}
+.sec-group-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text, #222);
+  margin-bottom: 10px;
+  padding-left: 8px;
+  border-left: 3px solid var(--color-primary, #2f6feb);
+  line-height: 1.2;
+}
+.sec-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  flex-wrap: wrap;
+}
+.sec-label {
+  min-width: 150px;
+  font-size: 13px;
+  color: #333;
+}
+.sec-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sec-num {
+  width: 110px;
+}
+.sec-unit {
+  font-style: normal;
+  font-size: 12px;
+  color: #666;
+}
+.sec-hint {
+  font-size: 12px;
+  color: #888;
+}
+/* 服务端证书：只读值（SAN / 到期时间） */
+.sec-value {
+  font-size: 13px;
+  color: #333;
+}
+/* CA 指纹：95 个字符的十六进制，必须能断行，否则会把卡片撑破 */
+.sec-fp-label {
+  font-size: 12px;
+  color: #555;
+  margin: 2px 0 4px;
+}
+.sec-fp {
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #333;
+  background: #f4f6f8;
+  border: 1px solid var(--color-border-light);
+  padding: 6px 8px;
+  margin: 0 0 8px;
+  word-break: break-all;
+}
+/* 数字项被清空时：输入框标红 + 提示不能留空。
+   这些项的空值绝不能当 0 存 —— 0 普遍意味着"关闭该保护"（见 Settings.jsx 注释）。 */
+.sec-num-blank {
+  border-color: #d03050 !important;
+  background: #fff6f6;
+}
+.sec-hint-blank {
+  color: #d03050;
+}
+.sec-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+}
+
+.valid-until-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.valid-until-cell .form-input {
+  flex: 1;
+}
+
+/* 「设备准入」已改成卡片内的二级页签（2026-09-21），原来那条带蓝色左边线的
+   .settings-subtitle 小标题没有使用者了，一并删掉，别留死 CSS。 */
+.settings-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  font-size: 12px;
+  border: 1px solid #d0d7de;
+  background: #f6f8fa;
+  color: #444;
+}
+.settings-badge.warn {
+  border-color: #f0c36d;
+  background: #fff4e0;
+  color: #8a5a00;
+}
+.settings-inline-warn {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #8a5a00;
+  background: #fff8ec;
+  border: 1px solid #f0c36d;
+}

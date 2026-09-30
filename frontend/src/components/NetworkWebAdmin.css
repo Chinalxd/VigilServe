@@ -1,0 +1,50 @@
+/* 网络设备「WEB管理」页签 —— 代理外壳沿用平面风（浅灰底 / 直角 / 细边框） */
+
+/* 一整张卡片：工具条在上、网页窗口在下，两者之间只用一条分隔线，中间不留缝 */
+.nwa {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  height: 100%;
+  background: #fff;
+  border: 1px solid #e3e6ea;
+}
+
+/* 工具条 = 卡片头。自己不带边框（边框在外层 .nwa 上），底色白，靠下边框分界 */
+.nwa-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #fff;
+  border: none;
+  border-bottom: 1px solid #e3e6ea;
+  flex: 0 0 auto;
+}
+
+/* 设备地址：工具条上只留它一个文字元素，所以按正文深色、等宽显示 */
+.nwa-addr {
+  font-size: 13px;
+  font-weight: 600;
+  color: #212529;
+}
+
+.nwa-spacer {
+  flex: 1;
+}
+
+.nwa-frame {
+  flex: 1;
+  min-height: 520px;
+  width: 100%;
+  background: #fff;
+  /* 边框归外层卡片，iframe 自己不再画一圈（原来两道边框套在一起） */
+  border: none;
+}
+
+.nwa-empty {
+  padding: 40px 0;
+  text-align: center;
+  font-size: 13px;
+  color: #6c757d;
+}

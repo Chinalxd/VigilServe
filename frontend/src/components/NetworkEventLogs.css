@@ -1,0 +1,238 @@
+
+
+/* ── 整页收成一张大卡片（2026-09-21）─────────────────────────────────
+   这个页面复用 RegisterManagement.css 的 .reg-section / .host-list-table-wrap /
+   .reg-panel-foot，那套是"一屏多块、每块自己带边框"的布局。这里只在本组件根类
+   .ndl-card 下面把内层边框抹掉，让边框只由外层卡片出一圈。
+   🚨 全部选择器都带 .ndl-card 前缀 —— 不加前缀就会连带改到 Agent 更新 / 主机列表。 */
+.ndl-card {
+  background: #fff;
+  border: 1px solid #e3e6ea;
+}
+
+.ndl-card .reg-section-header {
+  margin-bottom: 0;
+  padding: 8px 12px;
+  background: #fff;
+  border-bottom: 1px solid #e3e6ea;
+}
+
+/* 「上次采集」= 工具栏里紧跟标题的一行内标签（2026-09-21 上移）
+   🚨 .ndl-collect 的基础样式在下面（独占一行那套），这里只做行内化覆盖；
+      用 .reg-section-header 提高优先级，不加 !important。 */
+.ndl-card .reg-section-header .ndl-head-left {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ndl-card .reg-section-header .ndl-collect {
+  padding: 0;
+  margin: 0;
+  border: none;
+  font-size: 12.5px;
+  align-items: baseline;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* 表格区不再自己画边框，改由卡片兜住；滚动仍在这一层 */
+.ndl-card .host-list-table-wrap {
+  border: none;
+}
+
+/* 底部状态栏：去掉左右下三条边（那是给"独立块"用的），只留一条上分隔线。
+   排版（条数靠左、翻页靠右）在下面 .ndl-foot 里覆盖 —— .reg-panel-foot 是
+   复用来的类，直接改它会连带改到 Agent 更新 / 主机列表页。 */
+.ndl-card .reg-panel-foot {
+  background: #fff;
+  border: none;
+  border-top: 1px solid #e3e6ea;
+}
+
+/* 状态栏：与「主机事件日志」.el-pagination 同一套视觉（2026-09-21）
+   🚨 选择器一律带 .ndl-card 前缀 —— .reg-panel-foot 是共享类。
+   🚨 这里必须重写 display / align-items / padding —— 光靠 .ndl-foot 单类
+      **盖不住** .reg-panel-foot（共享 CSS 的加载顺序不定，实测 padding 和
+      justify-content 都被它反压回来）。两个类都挂在这一层元素上，用
+      `.ndl-card .reg-panel-foot.ndl-foot` 提高优先级最稳。 */
+.ndl-card .reg-panel-foot.ndl-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 5px 12px;
+  min-height: 32px;
+  
+  font-size: 12px;
+}
+
+.ndl-total-count {
+  margin-right: auto;   
+  font-size: 12px;
+  color: #555;
+  white-space: nowrap;
+}
+
+.ndl-page-size {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #555;
+  white-space: nowrap;
+}
+
+.ndl-page-size-select {
+  min-width: 72px;
+  height: 26px;
+  padding: 0 6px;
+  font-size: 12px;
+  line-height: 1;
+  color: #333;
+  background: #fff;
+  border: 1px solid #d0d7de;
+  border-radius: 0;
+  box-sizing: border-box;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+}
+
+.ndl-page-size-select:hover {
+  border-color: #adb5bd;
+}
+
+.ndl-page-info {
+  font-size: 12px;
+  color: #555;
+  white-space: nowrap;
+}
+
+.ndl-page-buttons {
+  display: flex;
+  gap: 2px;
+}
+
+.ndl-page-buttons .btn-sm {
+  padding: 3px 10px;
+  font-size: 12px;
+}
+
+.ndl-collect {
+  display: flex;
+  gap: 10px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  background: #fff;
+  border: 1px solid #e3e6ea;
+}
+
+.ndl-collect-k {
+  color: #6c757d;
+}
+
+.ndl-collect-v {
+  color: #343a40;
+}
+
+/* 2026-09-21：「上次采集」后面的说明文案已按需求取消显示，
+   原来那三个状态色类（.ndl-ok 绿 / .ndl-bad 红 / .ndl-warn 橙）随之没有用了，
+   一并删掉 —— 留着是死代码，下一个人还以为别处有在用。 */
+
+.ndl-time {
+  font-size: 12px;
+  color: #6c757d;
+  white-space: nowrap;
+}
+
+.ndl-msg {
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ndl-src {
+  display: inline-block;
+  padding: 1px 8px;
+  font-size: 12px;
+  border-radius: 0;
+}
+
+.ndl-src-device {
+  color: #fff;
+  background: #5bc0de;
+}
+
+.ndl-src-alert {
+  color: #fff;
+  background: #f0ad4e;
+}
+
+.ndl-src-audit {
+  color: #fff;
+  background: #6c757d;
+}
+
+.ndl-level {
+  display: inline-block;
+  padding: 1px 8px;
+  font-size: 12px;
+  border: 1px solid #d9dde3;
+}
+
+.ndl-level-info {
+  color: #495057;
+  background: #f5f6f8;
+}
+
+.ndl-level-warning {
+  color: #8a6116;
+  background: #fdf6e6;
+  border-color: #f0d9a8;
+}
+
+.ndl-level-error,
+.ndl-level-critical {
+  color: #fff;
+  background: #d9534f;
+  border-color: #d9534f;
+}
+
+/* 设备日志的助记符（ARP_DUPLICATE_IPADDR 这种）—— 放在正文前面，
+   和后面的描述用等宽字体区分开，扫一眼就能按类型归类 */
+.ndl-mnemonic {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 4px;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 11.5px;
+  color: #495057;
+  background: #eef1f4;
+  border: 1px solid #dfe3e8;
+}
+
+/* 🚨 熔断横幅：采集器因连续认证失败主动停采时必须让用户一眼看到 ——
+   否则改对了凭据也只会看到"日志不更新"，根本想不到是采集停了。 */
+.ndl-alert-bar {
+  flex: 0 0 auto;
+  padding: 7px 12px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #8a6116;
+  background: #fdf6e6;
+  border-bottom: 1px solid #f0d9a8;
+}
+
+/* 「恢复采集」按钮：常规刷新按钮是中性色，这个要有警示感（熔断是异常态） */
+.ndl-resume-btn {
+  color: #fff;
+  background: #d9534f;
+  border-color: #d9534f;
+}

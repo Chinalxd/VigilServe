@@ -1,0 +1,40 @@
+/* 「统计小卡片」左侧统一图标 —— 主机 / 网络设备两个「设备状态」页共用。
+   尺寸在 `CardIcon.jsx` 里定（`CARD_ICON_SIZE`），**图形与描边在 `AppIcon.jsx`**
+   （`card-*` 那 11 个，16 网格 / 描边 1.3 / currentColor）。
+   这里只管"怎么摆"，两页各自的定位类（.mcard-icon / .nds-card-icon）只管"摆在哪、什么颜色"。 */
+
+.stat-card-icon {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 图标**不承载状态**：一律这个灰，状态由右侧数值的颜色表达。
+     要整套换色改这一行即可。 */
+  color: #adb5bd;
+}
+
+/* 风扇：三片叶子整体绕中心转。
+   🚨 转速是**固定**的装饰动画，不代表真实转速 —— 真实转速写在副行「转速 40%」。
+   🚨 transform-box: view-box 必须写：SVG 子元素的 transform-origin 要落在**视图框**坐标系里，
+      不写的话不同浏览器会以元素自身包围盒为基准，转起来会甩出去。
+   🚨 2026-09-22：图标收编到 AppIcon.jsx 后视图框从 24×24 变成 **16×16**，
+      所以旋转中心跟着从 12px 12px 改成 **8px 8px**（写错就会绕着画外一点甩）。 */
+.stat-icon-fan {
+  transform-box: view-box;
+  transform-origin: 8px 8px;
+  animation: stat-fan-spin 2.4s linear infinite;
+}
+
+@keyframes stat-fan-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 系统开了"减少动效"就不转（前庭敏感用户会晕）。
+   🚨 这条必须和上面的动画待在同一个文件里 —— 拆到页面 CSS 里的话，
+   哪个页面先加载哪套 CSS 会决定它到底转不转。 */
+@media (prefers-reduced-motion: reduce) {
+  .stat-icon-fan {
+    animation: none;
+  }
+}

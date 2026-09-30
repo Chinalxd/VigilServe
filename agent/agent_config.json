@@ -1,0 +1,13 @@
+{
+  "server_url": "",
+  "server_host": "",
+  "server_port": 8001,
+  "server_id": 0,
+  "token": "",
+  "interval_seconds": 10,
+  "auto_start": true,
+  "minimize_to_tray": true,
+  "debug": false,
+  "api_port": 9998,
+  "business_system": ""
+}

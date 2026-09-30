@@ -1,0 +1,307 @@
+/* 远程桌面 —— 极简平面直角风格，与 VigilServe 设计系统一致
+   默认内嵌在「远程桌面」页签下方；点工具栏「全屏」弹出一个**独立窗口**（/rdp/<id>），
+   默认铺满屏幕，但可移动、可调整大小 —— 缩小或移开后能同时操作别的窗口。 */
+
+.rdp-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  /* 页签内嵌：父级 .server-detail 本身就是 flex 列（flex: 1 1 auto），
+     这里直接吃掉剩余高度，一直延伸到底部。
+     原先写死 calc(100vh - 260px)，而实际可用高度是「视口 − 顶部信息区 − 页签条」，
+     两者对不上，面板下边缘离视口底还差 118px（2026-09-15 用户要求贴底）。 */
+  flex: 1 1 auto;
+  min-height: 520px;
+  
+  margin-bottom: 24px;
+  background: #f4f5f7;
+  color: #24292f;
+  font: 13px/1.5 "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+  border: 1px solid #dfe3e8;
+}
+
+.rdp-window {
+  position: fixed;
+  inset: 0;
+  display: flex;
+}
+
+.rdp-window.rdp-window-denied {
+  align-items: center;
+  justify-content: center;
+  background: #f4f5f7;
+  color: #6b7280;
+  font: 14px/1.5 "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+}
+
+/* 独立窗口里的面板：吃掉整个窗口（去掉页签内嵌那 24px 底部留白和外框） */
+.rdp-panel.rdp-standalone {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-bottom: 0;
+  border: none;
+}
+
+/* 单行工具栏（2026-09-22 两行合并）：左侧品牌 / 主机名 / 状态指标，右侧全部按钮。
+   合并后这一行要塞 6 个状态 + 12 个按钮，所以内外间距一律收紧（gap 8px、padding 12px）——
+   按 1920 屏的可用宽度实测刚好一行；再窄就是 flex-wrap 换行降级，不会横向溢出。 */
+.rdp-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  min-height: 46px;
+  padding: 6px 8px;
+  background: #ffffff;
+  border-bottom: 1px solid #dfe3e8;
+  /* 状态指标 + 按钮较多，窄屏允许换行，避免被挤出可视区 */
+  flex-wrap: wrap;
+}
+
+.rdp-brand {
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+.rdp-brand b {
+  color: #2f6feb;
+}
+
+.rdp-target {
+  font: 12px/1 ui-monospace, Consolas, monospace;
+  color: #6b7280;
+  background: #f4f5f7;
+  border: 1px solid #dfe3e8;
+  padding: 3px 6px;
+}
+
+.rdp-spacer {
+  flex: 1;
+}
+
+.rdp-chip {
+  /* 12px（2026-09-22 三改）：一度压到 11px，是因为那一版 12 个按钮全挤在同一行，
+     12px 时「连接后」（分辨率变成 2560×1440 @125% 这种长文本）会多出 32px 而换行。
+     后来把 5 个组合键收进「快捷键」下拉菜单腾出约 330px，这里就调回 12px 了 ——
+     回调后压力场景需求宽度约 1296px，1920（可用 1598）和 1600（可用 1338）仍都是单行。 */
+  font: 12px/1 ui-monospace, Consolas, monospace;
+  color: #6b7280;
+  border: 1px solid #dfe3e8;
+  background: #f4f5f7;
+  padding: 3px 5px;
+}
+.rdp-chip b {
+  color: #24292f;
+  font-weight: 600;
+}
+
+.rdp-state.rdp-state-warn { color: #bc4c00; }
+.rdp-state.rdp-state-ok { color: #1a7f37; }
+.rdp-state.rdp-state-err { color: #cf222e; }
+
+/* 连接 / 断开 切换按钮：断开态蓝色（连接），已连接态红色（断开） */
+.rdp-connect {
+  font: 12px/1 inherit;
+  color: #ffffff;
+  cursor: pointer;
+  background: #2f6feb;
+  border: 1px solid #2f6feb;
+  padding: 5px 10px;
+}
+.rdp-connect:hover:not(:disabled) {
+  background: #2558c4;
+  border-color: #2558c4;
+}
+.rdp-disconnect {
+  font: 12px/1 inherit;
+  color: #ffffff;
+  cursor: pointer;
+  background: #cf222e;
+  border: 1px solid #cf222e;
+  padding: 5px 10px;
+}
+.rdp-disconnect:hover {
+  background: #b01b26;
+  border-color: #b01b26;
+}
+.rdp-connect:disabled,
+.rdp-disconnect:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* 状态指标组（2026-09-22 起并入第一行工具栏）。
+   自成一组是为了窄屏换行时整组一起走，不会把「状态」单独甩到别的行。
+   ⚠ 原先这里还有一段 .rdp-toolbar（第二行按钮条的独立样式），
+   两行合并后按钮直接挂在 .rdp-header 下，该规则已删除。 */
+.rdp-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.rdp-sep {
+  width: 1px;
+  height: 18px;
+  margin: 0 1px;
+  background: #dfe3e8;
+}
+
+.rdp-btn {
+  font: 12px/1 inherit;
+  color: #24292f;
+  cursor: pointer;
+  background: #ffffff;
+  border: 1px solid #dfe3e8;
+  padding: 4px 8px;
+}
+.rdp-btn:hover {
+  border-color: #2f6feb;
+  color: #2f6feb;
+}
+.rdp-btn[aria-pressed="true"] {
+  background: #2f6feb;
+  border-color: #2f6feb;
+  color: #ffffff;
+}
+
+/* ── 「快捷键」下拉菜单（2026-09-22） ──────────────────────────────────────
+   5 个组合键（任务管理器 / Ctrl+Alt+Del / Alt+Tab / 开始菜单 / 锁定）原来各占
+   一个按钮，合起来吃掉约 330px，是工具栏并成一行后最宽的一块。收成下拉菜单后
+   工具栏只剩「快捷键」一个按钮的宽度，菜单是浮层、不占布局宽度。 */
+.rdp-combo {
+  position: relative;
+  display: inline-flex;
+}
+
+.rdp-caret {
+  margin-left: 4px;
+  font-size: 10px;
+  color: #6b7280;
+}
+
+/* 展开态：描边变蓝当作「菜单开着」的反馈 —— 不加阴影，保持平面风格 */
+.rdp-btn[aria-expanded="true"] {
+  border-color: #2f6feb;
+  color: #2f6feb;
+}
+
+.rdp-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  min-width: 132px;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #dfe3e8;
+  
+  z-index: 50;
+}
+
+.rdp-menu-item {
+  font: 12px/1 inherit;
+  color: #24292f;
+  background: #ffffff;
+  border: none;
+  border-bottom: 1px solid #f0f2f5;
+  padding: 7px 12px;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.rdp-menu-item:last-child {
+  border-bottom: none;
+}
+.rdp-menu-item:hover {
+  background: #2f6feb;
+  color: #ffffff;
+}
+
+.rdp-stage {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1b1f24;
+  overflow: hidden;
+}
+
+.rdp-guac-display {
+  outline: none;
+}
+
+.rdp-error {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ffffff;
+  background: #cf222e;
+  padding: 6px 14px;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.rdp-waiting {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: 80%;
+  text-align: center;
+  color: #e6edf3;
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.rdp-waiting span {
+  font-size: 12px;
+  color: #9aa4b2;
+}
+
+.rdp-clip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  padding: 8px 16px;
+  background: #ffffff;
+  border-top: 1px solid #dfe3e8;
+  flex-wrap: wrap;
+}
+
+.rdp-input {
+  flex: 1;
+  min-width: 220px;
+  font: 12px/1.4 "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+  color: #24292f;
+  background: #ffffff;
+  border: 1px solid #dfe3e8;
+  padding: 6px 8px;
+}
+.rdp-input:focus {
+  outline: none;
+  border-color: #2f6feb;
+}
+
+.rdp-tip {
+  font-size: 12px;
+  color: #1a7f37;
+}
+
+.rdp-footer {
+  flex: none;
+  padding: 6px 16px;
+  color: #6b7280;
+  background: #ffffff;
+  border-top: 1px solid #dfe3e8;
+  font-size: 12px;
+}

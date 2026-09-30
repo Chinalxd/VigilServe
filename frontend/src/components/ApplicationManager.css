@@ -1,0 +1,266 @@
+/* 应用管理页签 —— 全部内容收进一个大卡片，列表在卡片内部上下滚动 */
+.app-manager {
+  padding: 4px 0 8px;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.am-panel {
+  background: #fff;
+  border: 1px solid #e5e8eb;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.am-view-tabs {
+  display: flex;
+  gap: 0;
+  padding: 8px 12px 0;
+  border-bottom: 1px solid #e5e8eb;
+  flex: 0 0 auto;
+}
+
+.am-view-tab {
+  padding: 6px 18px;
+  border: 1px solid #d5dae0;
+  border-bottom: none;
+  margin-right: -1px;
+  margin-bottom: -1px; /* 让选中页签压住分隔线，视觉上与下方工具栏连成一体 */
+  position: relative;
+  background: #f7f9fa;
+  color: #495057;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.am-view-tab:hover:not(:disabled) { background: #eef1f4; color: #0275d8; }
+.am-view-tab:disabled { color: #adb5bd; cursor: not-allowed; }
+.am-view-tab.active { background: #fff; color: #0275d8; font-weight: 600; }
+
+.am-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #fff;
+  border-bottom: 1px solid #e5e8eb;
+  flex-wrap: wrap;
+  flex: 0 0 auto;
+}
+
+/* 搜索框等靠右：分类按钮组在左，其余控件推到右侧 */
+.am-spacer { flex: 1 1 auto; }
+
+.am-panel-body {
+  padding: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.am-panel-foot {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: #fafbfc;
+  border-top: 1px solid #e5e8eb;
+  flex: 0 0 auto;
+}
+
+.am-filter-group { display: inline-flex; border: 1px solid #d5dae0; }
+
+.am-filter {
+  padding: 5px 14px;
+  border: none;
+  background: #fff;
+  color: #495057;
+  font-size: 13px;
+  cursor: pointer;
+  border-right: 1px solid #d5dae0;
+}
+
+.am-filter:last-child { border-right: none; }
+.am-filter:hover { background: #f4f6f8; }
+.am-filter.active { background: #0275d8; color: #fff; }
+
+.am-count { font-size: 12px; color: #6c757d; }
+
+.am-search {
+  width: 220px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid #d5dae0;
+  font-size: 13px;
+  outline: none;
+}
+
+.am-search:focus { border-color: #0275d8; }
+
+.am-btn {
+  height: 28px;
+  padding: 0 14px;
+  border: 1px solid #d5dae0;
+  background: #fff;
+  color: #333;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.am-btn:hover:not(:disabled) { background: #f4f6f8; }
+.am-btn:disabled { color: #adb5bd; cursor: not-allowed; }
+
+.am-btn-startup {
+  color: #0275d8;
+  border-color: #9dc2e8;
+}
+
+.am-btn-startup:hover:not(:disabled) { background: #eef6fd; }
+.am-btn-startup.active { background: #0275d8; border-color: #0275d8; color: #fff; }
+
+.am-btn-danger { border-color: #d9534f; color: #d9534f; }
+.am-btn-danger:hover:not(:disabled) { background: #d9534f; color: #fff; }
+.am-btn-danger:disabled { border-color: #f1c4c2; color: #c9a3a1; }
+
+.am-state { display: inline-block; padding: 1px 6px; font-size: 11.5px; }
+.am-state-on { color: #1e7e34; background: #e9f7ec; border: 1px solid #bfe5ca; }
+.am-state-off { color: #6c757d; background: #f1f3f5; border: 1px solid #d5dae0; }
+
+.am-btn-state {
+  padding: 2px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 0;
+  font-family: inherit;
+}
+
+/* 按钮文案是「动作」而不是「状态」：已启动 → 显示「关闭」（红）；已禁用 → 显示「启动」（绿） */
+.am-btn-state.on { border: 1px solid #f1c4c2; background: #fff; color: #d9534f; }
+.am-btn-state.on:hover { background: #fdecee; }
+.am-btn-state.off { border: 1px solid #bfe5ca; background: #fff; color: #1e7e34; }
+.am-btn-state.off:hover { background: #e9f7ec; }
+
+.am-col-loc { width: 260px; }
+.am-col-impact { width: 70px; }
+.am-col-state { width: 90px; }
+.am-col-cmd { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.am-col-loc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 260px; }
+
+.am-mock-tip {
+  margin: 8px 12px 0;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #856404;
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+}
+
+.am-error {
+  margin: 8px 12px 0;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: #a71d2a;
+  background: #fdecee;
+  border: 1px solid #f5c2c7;
+}
+
+.am-loading { padding: 20px 0; font-size: 13px; color: #6c757d; }
+
+.am-table-wrap { overflow-x: auto; }
+
+.am-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+
+.am-table th {
+  text-align: left;
+  font-weight: 600;
+  color: #6c757d;
+  padding: 6px 8px;
+  background: #f4f6f8;
+  border-bottom: 1px solid #e5e8eb;
+  white-space: nowrap;
+}
+
+.am-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid #f2f4f6;
+  color: #2c3e50;
+  vertical-align: middle;
+}
+
+.am-table tr:hover td { background: #fff; }
+
+.am-col-check { width: 34px; text-align: center; }
+.am-col-ver { width: 130px; }
+.am-col-pub { width: 170px; }
+.am-col-date { width: 110px; }
+.am-col-size { width: 80px; }
+.am-col-path { width: 240px; }
+.am-col-kb { width: 110px; }
+.am-col-cat { width: 100px; }
+.am-col-sev { width: 70px; }
+.am-col-ops { width: 90px; text-align: center; }
+
+.am-name { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.am-col-path, .am-col-pub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 240px; }
+
+.am-na { color: #adb5bd; font-size: 12px; }
+
+.am-link-danger {
+  border: 1px solid #d9534f;
+  background: #fff;
+  color: #d9534f;
+  font-size: 12px;
+  padding: 2px 10px;
+  cursor: pointer;
+}
+
+.am-link-danger:hover { background: #d9534f; color: #fff; }
+
+.am-empty { text-align: center; padding: 18px 0; color: #9099a1; }
+
+.am-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+}
+
+.am-modal { width: 460px; max-width: 92vw; background: #fff; border: 1px solid #e5e8eb; }
+
+.am-modal-head {
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  background: #f4f6f8;
+  border-bottom: 1px solid #e5e8eb;
+}
+
+.am-modal-body { padding: 14px; font-size: 13px; color: #333; }
+.am-modal-body p { margin: 0 0 8px; }
+
+.am-list {
+  margin: 0 0 10px;
+  padding-left: 18px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.am-list li { margin-bottom: 3px; word-break: break-all; }
+.am-list li.am-item-bad { color: #a71d2a; }
+.am-warn { color: #856404; font-size: 12px; }
+
+.am-modal-foot {
+  padding: 10px 14px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid #e5e8eb;
+}

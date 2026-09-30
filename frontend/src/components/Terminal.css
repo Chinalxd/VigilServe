@@ -1,0 +1,100 @@
+.web-terminal-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  /* 与「远程桌面」面板同源：吃掉父级 flex 列的剩余高度，底部留同样一行空白。
+     原先写死 height: calc(100vh - 240px)，与实际可用高度对不上，和远程桌面底边距不一致。 */
+  flex: 1 1 auto;
+  min-height: 460px;
+  margin-bottom: 24px;
+  background: #ffffff;
+  border: 1px solid #dfe3e8;
+  overflow: hidden;
+}
+
+.web-terminal-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #dfe3e8;
+  flex: none;
+}
+
+.term-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #333;
+  color: #d4d4d4;
+  border: 1px solid #444;
+  border-radius: 0;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.term-btn:hover {
+  background: #404045;
+  border-color: #555;
+}
+
+.term-btn:active {
+  background: #2a2a2a;
+}
+
+.term-btn svg {
+  color: #b5b5b5;
+}
+
+.term-status {
+  font-size: 11px;
+  color: #888;
+}
+
+.web-terminal {
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: #1e1e1e;
+  position: relative;
+}
+
+.terminal-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(30, 30, 30, 0.92);
+  z-index: 10;
+  border-radius: 0;
+}
+
+.terminal-connect-btn {
+  padding: 12px 32px;
+  background: #fff;
+  border: 1px solid #b8c0c6;
+  border-radius: 0;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.terminal-connect-btn:hover:not(:disabled) {
+  background: #e9ecef;
+  border-color: #9aa3aa;
+}
+
+.terminal-connect-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+

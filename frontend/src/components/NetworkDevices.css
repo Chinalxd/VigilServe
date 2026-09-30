@@ -1,0 +1,317 @@
+/* 主机管理 → 网络设备页签 —— 沿用极简平面直角风格 */
+
+.nd-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.nd-vendor { color: #555; }
+
+.nd-pill {
+  display: inline-block;
+  padding: 1px 7px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+  line-height: 18px;
+}
+
+.nd-pill-on { background: #5cb85c; }
+.nd-pill-off { background: #9aa0a6; }
+.nd-pill-err { background: #d9534f; }
+
+.nd-foot-note {
+  margin-left: auto;
+  font-size: 12px;
+  color: #9aa0a6;
+}
+
+.nd-modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.nd-modal {
+  width: 720px;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #d5dae0;
+}
+
+.nd-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #f4f6f8;
+  border-bottom: 1px solid #e5e8eb;
+  flex: 0 0 auto;
+}
+
+.nd-modal-title { font-size: 14px; font-weight: 600; color: #2c3e50; }
+
+.nd-modal-close {
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.nd-modal-close:hover { color: #d9534f; }
+
+.nd-modal-wide { width: 860px; }
+
+.nd-modal-body {
+  padding: 14px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.nd-modal-loading {
+  padding: 30px 14px;
+  text-align: center;
+  font-size: 13px;
+  color: #6c757d;
+}
+
+.nd-subhead {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 14px 0 8px;
+  padding-left: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2c3e50;
+  border-left: 3px solid #0275d8;
+}
+
+.nd-subhead:first-child { margin-top: 0; }
+
+.nd-subhead-note {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: #868e96;
+}
+
+.nd-field-wide { grid-column: 1 / -1; }
+
+.nd-inline-test {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.nd-inline-note { font-size: 12px; color: #868e96; }
+
+.nd-banner {
+  max-height: 140px;
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  overflow: auto;
+  font-family: Consolas, 'SFMono-Regular', Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #d4d4d4;
+  background: #1e1e1e;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.nd-modal-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #f8f9fa;
+  border-top: 1px solid #e5e8eb;
+  flex: 0 0 auto;
+}
+
+.nd-spacer { flex: 1 1 auto; }
+
+.nd-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  gap: 10px 18px;
+}
+
+.nd-field { display: flex; flex-direction: column; gap: 4px; }
+
+/* 账号口令自动填充开关：横向排布，和上面的输入框网格对齐 */
+.nd-field-switch {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  align-self: end;
+  padding-bottom: 7px;
+  font-size: 12.5px;
+  color: #495057;
+  cursor: pointer;
+}
+
+.nd-field-switch input[type="checkbox"] { width: 15px; height: 15px; margin: 0; cursor: pointer; }
+
+.nd-field-switch input[type="checkbox"]:disabled { cursor: not-allowed; }
+
+.nd-label {
+  font-size: 12px;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nd-label b { color: #d9534f; font-weight: 600; }
+
+.nd-hint { color: #0275d8; font-size: 11.5px; }
+
+/* 需要提醒但不是错误的地方（端口填了 162 之类），别用红色 —— 它不拦保存 */
+.nd-hint-warn { color: #b58105; }
+
+.nd-input {
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid #d5dae0;
+  border-radius: 0;
+  font-size: 13px;
+  outline: none;
+  background: #fff;
+  color: #2c3e50;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.nd-input:focus { border-color: #0275d8; }
+.nd-input:disabled { background: #f4f6f8; color: #6c757d; }
+
+/* ── 口令框的「显示 / 隐藏明文」开关 ────────────────────────────────
+   视觉规范与 ServerFormModal 的 .btn-toggle-pwd 一致（右上右下同一套：
+   无底无边、默认 0.5 透明度、hover 到 1、眼睛图标 15px），只是换成 nd- 前缀，
+   免得别处的样式改动互相串。 */
+.nd-pwd-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nd-pwd-wrap .nd-input {
+  padding-right: 32px;
+  flex: 1;
+}
+
+.nd-pwd-toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  opacity: 0.5;
+  transition: opacity 0.12s;
+  color: inherit;
+  display: flex;
+  align-items: center;
+}
+
+.nd-pwd-toggle:hover:not(:disabled) { opacity: 1; }
+
+/* 输入框本身被禁用时（noAuthNoPriv / authNoPriv 下的加密口令）没有明文可看 */
+.nd-pwd-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+}
+
+/* 多行文本输入（2026-09-22：设备编辑弹窗的「备注」改成 textarea）：
+   .nd-input 是 30px 定高，直接套在 textarea 上会被压扁；另外 textarea 默认
+   等宽字体，不写 font-family: inherit 会跟旁边的 input 字体不一致。 */
+.nd-textarea {
+  height: auto;
+  min-height: 62px;
+  padding: 5px 8px;
+  line-height: 1.5;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.nd-btn {
+  height: 30px;
+  padding: 0 14px;
+  border: 1px solid #d5dae0;
+  background: #fff;
+  color: #333;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 0;
+}
+
+.nd-btn:hover:not(:disabled) { background: #f4f6f8; }
+.nd-btn:disabled { opacity: .55; cursor: default; }
+
+.nd-btn-primary { border-color: #0275d8; background: #0275d8; color: #fff; }
+.nd-btn-primary:hover:not(:disabled) { background: #0269c2; }
+
+.nd-probe {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px solid #d5dae0;
+  background: #f8f9fa;
+}
+
+.nd-probe.ok { border-color: #b7dfb9; background: #f3faf3; }
+.nd-probe.fail { border-color: #f0c9c9; background: #fcf2f2; }
+
+.nd-probe-title { font-size: 13px; color: #2c3e50; margin-bottom: 8px; }
+.nd-probe-title b { color: #0275d8; }
+
+.nd-probe-model {
+  margin-left: 8px;
+  font-family: Consolas, 'SFMono-Regular', Menlo, monospace;
+  font-size: 12.5px;
+  color: #555;
+}
+
+.nd-probe-hint { margin-top: 6px; font-size: 12px; color: #6c757d; line-height: 1.6; }
+
+.nd-kv { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+.nd-kv th {
+  width: 96px;
+  text-align: left;
+  font-weight: 400;
+  color: #6c757d;
+  padding: 3px 12px 3px 0;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.nd-kv td { padding: 3px 0; color: #2c3e50; word-break: break-all; }
+
+.nd-mono { font-family: Consolas, 'SFMono-Regular', Menlo, monospace; font-size: 12.5px; }
+
+.nd-tip {
+  margin-top: 12px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: #856404;
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+  line-height: 1.6;
+}

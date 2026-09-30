@@ -1,0 +1,510 @@
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  height: 100vh;
+  background: var(--color-sidebar);
+  color: #d6dde4;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  user-select: none;
+  border-right: 1px solid #2c3e50;
+}
+
+.sidebar-header {
+  padding: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-logo {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.logo-svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.sidebar-logo-img {
+  width: 32px;
+  height: 32px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.logo-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+
+.logo-subtitle {
+  font-size: 11px;
+  color: #c8d4de;
+  margin-top: 2px;
+}
+
+.sidebar-user {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  cursor: pointer;
+  position: relative;
+}
+
+.sidebar-user-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: #e8eef3;
+}
+
+.sidebar-user-role {
+  font-size: 10px;
+  color: #c8d4de;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 1px 6px;
+  border-radius: 0;
+}
+
+.sidebar-user-arrow {
+  font-size: 8px;
+  color: #c8d4de;
+  margin-left: 2px;
+}
+
+/* 账号在线状态：绿=在线，红=已离线（被其他设备顶下线） */
+.sidebar-user-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 0;
+  white-space: nowrap;
+}
+
+.sidebar-user-status.on {
+  background: rgba(92, 184, 92, 0.18);
+  color: #8ee08e;
+}
+
+.sidebar-user-status.off {
+  background: rgba(217, 83, 79, 0.2);
+  color: #ffa19e;
+}
+
+.sidebar-status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.sidebar-user-status.on .sidebar-status-dot {
+  animation: sidebar-status-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes sidebar-status-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.user-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  min-width: 90px;
+  z-index: 50;
+  margin-top: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* 悬停桥接：菜单与用户行之间有 4px 空隙，没有这块透明区域的话，
+   光标往下移到菜单的途中就触发父级 mouseleave，菜单会被提前收起。 */
+.user-dropdown-menu::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -6px;
+  height: 6px;
+}
+
+.user-dropdown-item {
+  padding: 7px 14px;
+  font-size: 12px;
+  color: #333;
+  cursor: pointer;
+  text-align: center;
+  background: #fff;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.user-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.user-dropdown-item:hover {
+  background: #f0f3f5;
+}
+
+.user-dropdown-item.logout {
+  color: var(--color-danger);
+}
+
+.user-dropdown-item.logout:hover {
+  background: #f9ecec;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 8px 0;
+  overflow-y: auto;
+}
+
+.nav-section-label {
+  padding: 12px 16px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #c8d4de;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.server-count {
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 10px;
+  padding: 0 5px;
+  font-weight: 500;
+}
+
+.loading-dot {
+  color: #c8d4de;
+  font-size: 10px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  margin: 1px 0;
+  border: none;
+  border-left: 3px solid transparent;
+  background: transparent;
+  color: #e1e8ee;
+  text-decoration: none;
+  font-size: 13px;
+  transition: background 0.12s, color 0.12s;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+
+.nav-item:hover {
+  background: var(--color-sidebar-hover);
+  color: #fff;
+}
+
+.nav-item.active {
+  background: var(--color-sidebar-active);
+  color: #fff;
+  border-left-color: var(--color-primary);
+}
+
+.nav-item-wrapper {
+  position: relative;
+}
+
+.nav-item-wrapper.drag-over {
+  border-top: 2px solid var(--color-primary);
+}
+
+.group-add-icon {
+  margin-left: auto;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 500;
+  color: #c8d4de;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.12s, background 0.12s;
+}
+
+.group-add-icon:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-group {
+  margin: 2px 0;
+  transition: background 0.12s ease;
+}
+
+.nav-group.drag-over {
+  background: rgba(2, 117, 216, 0.12);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+}
+
+.nav-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px 7px 14px;
+  color: #e1e8ee;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+.nav-group-header:hover {
+  background: var(--color-sidebar-hover);
+}
+
+.group-toggle {
+  cursor: pointer;
+  font-size: 10px;
+  color: #c8d4de;
+  width: 14px;
+  text-align: center;
+}
+
+.group-toggle:hover {
+  color: #fff;
+}
+
+/* 名称只占自身宽度，让后面的数量统计紧挨在名称右侧（与「主机列表」的计数位置一致） */
+.group-name {
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: inherit;
+}
+
+.group-rename-input {
+  flex: 1;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-primary);
+  border-radius: 0;
+  color: #fff;
+  font-size: 12px;
+  padding: 3px 6px;
+  outline: none;
+}
+
+.group-default-tag {
+  margin-left: 6px;
+  font-size: 9px;
+  font-weight: 400;
+  color: #c8d4de;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 0 3px;
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+
+.group-count {
+  font-size: 10px;
+  color: #c8d4de;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0 5px;
+}
+
+.group-actions {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: auto; 
+}
+
+.group-action-icon {
+  font-size: 13px;
+  color: #c8d4de;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.12s, color 0.12s, background 0.12s;
+}
+
+.nav-group-header:hover .group-action-icon {
+  opacity: 1;
+}
+
+.group-action-icon:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.group-action-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  min-width: 90px;
+  z-index: 50;
+  overflow: hidden;
+}
+
+.group-action-item {
+  padding: 7px 12px;
+  font-size: 12px;
+  color: #333;
+  cursor: pointer;
+  white-space: nowrap;
+  background: #fff;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.group-action-item:last-child {
+  border-bottom: none;
+}
+
+.group-action-item:hover {
+  background: #f0f3f5;
+}
+
+.group-action-danger {
+  color: var(--color-danger);
+}
+
+.group-action-danger:hover {
+  background: #f9ecec;
+}
+
+.nav-group-servers {
+  padding-left: 8px;
+}
+
+.group-empty {
+  padding: 7px 10px 7px 28px;
+  font-size: 11px;
+  color: #c8d4de;
+}
+
+.group-empty-hint {
+  padding: 8px 12px 8px 18px;
+  line-height: 1.6;
+}
+
+.nav-item-wrapper.drop-before::before,
+.nav-item-wrapper.drop-after::after {
+  content: '';
+  display: block;
+  height: 2px;
+  background: var(--color-primary);
+  margin: 0 8px;
+}
+
+.nav-item-wrapper.drop-before::before {
+  margin-bottom: -1px;
+}
+
+.nav-item-wrapper.drop-after::after {
+  margin-top: -1px;
+}
+
+.nav-icon {
+  font-size: 15px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* 侧边栏图标：2026-09-22 从 emoji **全部**换成内置 SVG（SidebarIcon.jsx）——
+   设备行（主机按系统 / 网络设备按类型）和底部菜单（看板 / 设备管理 / 日志管理 / 系统设置）
+   现在是同一套画风：同一个 16×16 外壳、描边 1.3、圆头圆角。
+   颜色走 currentColor，所以 hover / 选中时跟着文字一起变亮，不需要另配色。
+   上面 `.nav-icon` 的 `font-size` / `text-align` 是给老 emoji 留的行内对齐，
+   现在只是"无害残留"——先别动，等确认没有别的 emoji 混进来再说。 */
+.nav-icon svg.device-icon {
+  display: block;
+  width: 16px;
+  height: 16px;
+  margin: 0 auto;
+}
+
+.nav-server-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.nav-server-name {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-server-os {
+  font-size: 10px;
+  color: #c8d4de;
+}
+
+.nav-item.active .nav-server-os {
+  color: #a8d6ff;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sidebar-footer {
+  padding: 0 16px 12px;
+  font-size: 11px;
+  color: #c8d4de;
+  text-align: center;
+}
+
+.footer-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 4px 0 10px;
+}
+
+.sidebar-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 0 16px;
+}
+
+.sidebar-bottom-nav {
+  padding: 4px 0 8px;
+}

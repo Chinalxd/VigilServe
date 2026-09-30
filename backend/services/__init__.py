@@ -1,0 +1,1 @@
+from services.collector import collect_all_servers

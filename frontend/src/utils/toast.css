@@ -1,0 +1,121 @@
+#vigilserve-toast-container,
+#vigilserve-toast-center {
+  position: fixed;
+  z-index: 9999;
+  display: flex;
+  pointer-events: none;
+}
+
+#vigilserve-toast-container {
+  top: 20px;
+  right: 20px;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#vigilserve-toast-center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.vtoast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 220px;
+  max-width: 420px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  border-left: 4px solid #4361ee;
+  font-size: 13px;
+  color: #212529;
+  opacity: 0;
+  transform: translateX(30px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: auto;
+  cursor: default;
+}
+
+.vtoast-center {
+  transform: translateY(20px);
+}
+
+.vtoast-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.vtoast-center.vtoast-visible {
+  transform: translateY(0);
+}
+
+.vtoast-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  /* 2026-09-23：图标从字符换成自绘 SVG 后，字号/字重不再起作用（原来是给
+     `✓ ✕ ! ℹ` 定的 12px/700）。颜色仍由下面各 type 的 `color` 提供，
+     SVG 靠 `stroke="currentColor"` 继承。 */
+  flex-shrink: 0;
+}
+
+.vtoast-info .vtoast-icon {
+  background: #e7f1ff;
+  color: #4361ee;
+}
+
+.vtoast-success .vtoast-icon {
+  background: #e6f9f0;
+  color: #06d6a0;
+}
+
+.vtoast-warning .vtoast-icon {
+  background: #fff3cd;
+  color: #f0ad4e;
+}
+
+.vtoast-error .vtoast-icon {
+  background: #f8d7da;
+  color: #d9534f;
+}
+
+.vtoast-success {
+  border-left-color: #06d6a0;
+}
+
+.vtoast-warning {
+  border-left-color: #f0ad4e;
+}
+
+.vtoast-error {
+  border-left-color: #d9534f;
+}
+
+.vtoast-message {
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.vtoast-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #e7f1ff;
+  border-top-color: #4361ee;
+  border-radius: 50%;
+  animation: vtoast-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes vtoast-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

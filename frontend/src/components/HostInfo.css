@@ -1,0 +1,254 @@
+/* 主机信息页签 —— 极简平面直角风格，与系统其余部分一致 */
+/* 卡片内部上下滚动：外层撑满剩余高度，滚动条落在 .hi-panel-body 内 */
+.host-info {
+  padding: 4px 0 8px;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.hi-collected {
+  font-size: 12px;
+  color: #6c757d;
+  flex: 1;
+}
+
+.hi-search {
+  width: 200px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid #d5dae0;
+  border-radius: 0;
+  font-size: 13px;
+  outline: none;
+}
+
+.hi-search:focus { border-color: #0275d8; }
+
+.hi-btn {
+  height: 28px;
+  padding: 0 14px;
+  border: 1px solid #d5dae0;
+  background: #fff;
+  color: #333;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 0;
+}
+
+.hi-btn:hover { background: #f4f6f8; }
+
+.hi-mock-tip {
+  margin: 8px 12px 0;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #856404;
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+}
+
+.hi-panel {
+  background: #fff;
+  border: 1px solid #e5e8eb;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.hi-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #fff;
+  border-bottom: 1px solid #e5e8eb;
+  flex: 0 0 auto;
+}
+
+/* 列表在卡片内部上下滚动，全部项目一页显示、不翻页 */
+.hi-panel-body {
+  padding: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* 分类名即行标题：横跨整行，样式与卡片头部一致 */
+.hi-row {
+  display: block;
+}
+
+.hi-row-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 12px;
+  background: #f4f6f8;
+  border-top: 1px solid #e5e8eb;
+  border-bottom: 1px solid #e5e8eb;
+}
+
+.hi-row:first-child .hi-row-head { border-top: none; }
+
+.hi-row-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2c3e50;
+  line-height: 1.3;
+}
+
+.hi-col-access { white-space: nowrap; line-height: 1.55; }
+
+.hi-acc-list { display: flex; flex-direction: column; gap: 1px; }
+
+.hi-acc-item { white-space: nowrap; word-break: keep-all; }
+
+/* 单行显示、不换行（列宽已加宽，超出由 .hi-table-wrap 横向滚动兜底） */
+.hi-table td.hi-nowrap { white-space: nowrap; }
+
+.hi-row-body {
+  padding: 8px 12px;
+}
+
+.hi-kv {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.hi-kv th {
+  width: 1%;
+  text-align: left;
+  font-weight: 400;
+  color: #6c757d;
+  padding: 4px 18px 4px 0;
+  vertical-align: top;
+  white-space: nowrap;
+  /* 标签列（首列）恒白底：不加这句会继承 index.css 里全局 th 的 #f5f7f9 灰底 */
+  background: #fff;
+}
+
+.hi-kv td {
+  padding: 4px 0;
+  color: #2c3e50;
+  word-break: break-all;
+}
+
+.hi-kv tr + tr th, .hi-kv tr + tr td { border-top: 1px solid #f2f4f6; }
+
+.hi-sub {
+  margin: 10px 0 4px;
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.hi-table-wrap { overflow-x: auto; }
+
+.hi-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.hi-table th {
+  text-align: left;
+  font-weight: 600;
+  color: #6c757d;
+  padding: 5px 8px;
+  background: #fafbfc;
+  border-bottom: 1px solid #e5e8eb;
+  white-space: nowrap;
+}
+
+.hi-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid #f2f4f6;
+  color: #2c3e50;
+  vertical-align: top;
+}
+
+.hi-table tr:hover td { background: #fff; }
+
+.hi-empty { color: #adb5bd; }
+
+.hi-empty-box {
+  padding: 10px 0;
+  font-size: 12.5px;
+  color: #9099a1;
+  text-align: center;
+}
+
+.hi-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 11.5px;
+  border: 1px solid transparent;
+}
+
+.hi-tag.ok { color: #1e7e34; background: #e9f7ec; border-color: #bfe5ca; }
+.hi-tag.bad { color: #a71d2a; background: #fdecee; border-color: #f5c2c7; }
+.hi-tag.warn { color: #856404; background: #fff8e1; border-color: #ffe9a8; }
+
+.hi-loading { padding: 20px 0; font-size: 13px; color: #6c757d; }
+.hi-error { padding: 10px; font-size: 13px; color: #a71d2a; background: #fdecee; border: 1px solid #f5c2c7; }
+
+.hi-cores {
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+  margin-top: 10px;
+  height: 60px;
+}
+
+.hi-core { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+
+.hi-core-bar {
+  width: 100%;
+  height: 44px;
+  background: #f1f3f5;
+  display: flex;
+  align-items: flex-end;
+}
+
+.hi-core-fill { width: 100%; transition: height 0.2s; }
+.hi-core-label { font-size: 11px; color: #6c757d; }
+
+.hi-disk + .hi-disk { margin-top: 12px; border-top: 1px solid #f2f4f6; padding-top: 8px; }
+.hi-disk-head { font-size: 12.5px; font-weight: 600; color: #2c3e50; margin-bottom: 4px; }
+.hi-disk-meta { font-weight: 400; color: #6c757d; margin-left: 6px; }
+
+.hi-mini-bar { display: flex; align-items: center; gap: 6px; }
+.hi-mini-bar > div:first-child {
+  flex: 1;
+  height: 8px;
+  background: #f1f3f5;
+}
+.hi-mini-fill { height: 100%; }
+.hi-mini-bar span { width: 38px; font-size: 11.5px; color: #6c757d; }
+
+.hi-layout {
+  position: relative;
+  background: #fafbfc;
+  border: 1px solid #f0f2f4;
+  margin-bottom: 8px;
+}
+
+.hi-screen {
+  position: absolute;
+  border: 2px solid #9aa5af;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.hi-screen.primary { border-color: #0275d8; background: #eef6fd; }
+.hi-screen-idx { font-size: 15px; font-weight: 600; color: #495057; }
+.hi-screen-res { font-size: 11px; color: #6c757d; }
+.hi-screen-main { font-size: 10px; color: #0275d8; }

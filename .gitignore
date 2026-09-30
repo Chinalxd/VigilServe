@@ -1,0 +1,104 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Runtime / secrets
+backend/monitor.db
+backend/monitor.db-*
+# 冒烟脚本 run_backend_test.py 会复制一份生产库副本出来 —— 绝不能进仓库
+backend/monitor_test.db
+backend/monitor_test.db-*
+backend/email_config.json
+backend/backend.log
+backend/.env
+agent/agent_config.json
+agent/agent.log
+agent/ca/
+# 2026-09-23 开源加固 ①：Agent 客户端身份（RSA 私钥 + 服务端签发的客户端证书）
+#   目录未跟踪，一旦 add 就会把 node.key 私钥推上仓库 → 任何人都能冒充这台机器。
+#   api_tls/ 是 9998 HTTPS 的自签/CA 证书与私钥，同样绝不能进仓库。
+agent/identity/
+agent/api_tls/
+agent/local_token
+backend/certs/
+backend/data/secret.key
+agent/data/
+tray/data/
+**/*.log
+test_py.py
+frontend/nul
+
+# 上面两条会顺带把**空的配置模板**也排除掉，但它们是打包输入：
+#   agent/agent_config.json    —— installer/build_installer.py 的前置产物校验
+#                                 明确要求它存在（注释写着「应随源码提交」），
+#                                 缺了从仓库 clone 出来直接 abort。
+#   backend/email_config.json  —— 告警邮件的配置骨架。
+# 两份随仓库的都是**全空模板**（server_url/token/smtp_* 为空串，没有任何凭据），
+# 运行时真正的值由程序写进 %LOCALAPPDATA%\VigilServe\Config\Agent 与后台页面，不进仓库。
+!agent/agent_config.json
+!backend/email_config.json
+
+# 托盘「用户协议 / 免责声明 / 支持作者 / 联系作者」四份文档的**源 .docx**。
+# 它们的正文已 base64 内嵌在 tray/docs_bundle.py 里，运行时不需要源文件；
+# 且 852 KB 二进制 + 含个人联系方式与捐赠收款码，不随代码分发。
+# 需要重新生成 docs_bundle.py 时，把 docx 放回 tray/docs/ 再跑 tray/build_docs_bundle.py。
+tray/docs/
+
+# 2026-09-23 补齐的缺口（交付审查 P3）
+# ⚠ 上一行那条的**拼写是错的**：实际目录叫 VigilServe_backup（驼峰 + 下划线），
+# 结果整个备份目录一直没被忽略，110 个未跟踪项里就有它。两个写法都留着。
+VigilServe_backup/
+vigilserve-backup*/
+# 构建中间产物 / 产物：installer/source 有 5000+ 个文件，且是构建时重建的，
+# 进仓库只会让"旧快照"这个坑反复出现（见 installer/build_installer.py 的说明）
+installer/source/
+installer/output/
+installer/__pycache__/
+# 运行时数据目录（除 secret.key 外还有初始口令文件等）
+backend/data/
+backend/.deps_installed
+backend/monitor.db.bak-*
+# 构建/排查过程中落在根目录的临时文件
+.tmp_*
+.rebuild_result.txt
+.dbbackup/
+.workbuddy/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+*.spec.bak
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+frontend/dist_new*/
+frontend/.vite/
+*.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Agent / tray build artifacts
+agent/dist/
+agent/build/
+agent/installer/output/
+tray/dist/
+tray/build/
+outputs/
+
+# Workspace backups
+vigilserve-backup-*/

@@ -1,0 +1,152 @@
+.login-bg {
+  position: fixed;
+  inset: 0;
+  background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.login-card {
+  width: 360px;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  padding: 32px 28px;
+  box-shadow: none;
+}
+
+.login-brand {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.login-logo {
+  font-size: 40px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.login-logo-img {
+  width: 56px;
+  height: 56px;
+  display: block;
+  margin: 0 auto 10px;
+}
+
+.login-brand h1 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.login-brand p {
+  font-size: 12px;
+  color: #777;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.login-form label {
+  font-size: 12px;
+  color: #555;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.login-form .form-input {
+  padding: 8px 10px;
+  border: 1px solid #b8c0c6;
+  border-radius: 0;
+  font-size: 14px;
+  outline: none;
+}
+
+.login-form .form-input:focus {
+  border-color: var(--color-primary);
+}
+
+/* 登录失败提示。连不上后端时 auth.jsx 给的是多行排障文案（含实际请求地址），
+   所以这里必须 pre-line，否则换行会被折成一坨；允许选中，方便直接复制给运维。 */
+.login-form .form-error {
+  white-space: pre-line;
+  line-height: 1.6;
+  user-select: text;
+}
+
+.login-submit {
+  margin-top: 14px;
+  width: 100%;
+  /* 登录按钮加高：从默认 33px 抬到 42px，与主输入框视觉分量一致 */
+  height: 42px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+
+.login-submit:hover:not(:disabled) {
+}
+
+.login-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 被顶下线提示：同一账号在别处登录后，本机退回登录页时显示 */
+.login-kick-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: #fdf3f3;
+  border: 1px solid #f0c6c4;
+  border-left: 3px solid var(--color-danger);
+  color: #a94442;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.login-kick-icon {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.login-hint {
+  text-align: center;
+  font-size: 11px;
+  color: #999;
+  margin-top: 16px;
+}
+
+.pwd-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.pwd-input-wrap .form-input {
+  padding-right: 34px;
+  flex: 1;
+}
+
+.pwd-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  opacity: 0.5;
+  font-size: 15px;
+  user-select: none;
+}
+
+.pwd-toggle:hover {
+  opacity: 1;
+}
