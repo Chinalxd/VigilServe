@@ -146,7 +146,7 @@ def prepare_client(client, server, db=None, port: int = None) -> None:
                         hk.add(name, pin.key_type, key)
                     except Exception:  # noqa: BLE001
                         pass
-            # 已钉扎 → 任何未命中的密钥都不许过（含密钥类型换了的情况）
+            # 已钉扎 任何未命中的密钥都不许过（含密钥类型换了的情况）
             client.set_missing_host_key_policy(paramiko.RejectPolicy())
         else:
             client.set_missing_host_key_policy(

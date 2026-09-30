@@ -5,9 +5,9 @@
 反过来 ICMP 被 ACL 挡掉而 SNMP 正常也很常见。两条路分开看才分得清是"设备挂了"
 还是"代理卡了"。
 
-🚨 直接调系统的 ping 子进程，**不自己造 ICMP 包**：造原始套接字在 Windows 要
+ 直接调系统的 ping 子进程，**不自己造 ICMP 包**：造原始套接字在 Windows 要
    管理员、在 Linux 要 CAP_NET_RAW，本服务两种都没有。
-🚨 只发 3 个包、每包 1 秒超时，整个探测 5 秒内必回。采集周期是 5 分钟，
+ 只发 3 个包、每包 1 秒超时，整个探测 5 秒内必回。采集周期是 5 分钟，
    这里多花两三秒无所谓，但**绝不能**拖成几十秒 —— 一轮采集里有几十台设备时
    会直接把周期撑爆。
 """
@@ -73,8 +73,8 @@ def probe_icmp(ip: str, count: int = COUNT, timeout: int = TIMEOUT_SEC) -> dict:
 
     # 数"回包行"比解析"丢包百分比"稳：百分比那行在中文/英文 Windows 上分别是
     # "丢失" / "loss"，编码一错就匹配不到；回包行里的时间数字是 ASCII，永远好认。
-    #   中文 Windows：来自 <ip> 的回复: 字节=32 时间=1ms TTL=64
-    #   Linux/macOS ：64 bytes from <ip>: icmp_seq=1 ttl=64 time=1.23 ms
+    # 中文 Windows：来自 <ip> 的回复: 字节=32 时间=1ms TTL=64
+    # Linux/macOS ：64 bytes from <ip>: icmp_seq=1 ttl=64 time=1.23 ms
     reply_lines = [ln for ln in out.splitlines()
                    if ("回复" in ln) or re.search(r"\breply\b", ln, re.I)
                    or re.search(r"bytes from", ln, re.I)]

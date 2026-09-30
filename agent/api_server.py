@@ -36,20 +36,20 @@ except Exception:
 
 AGENT_VERSION = "1.1.68"
 
-# ── 9998 接口鉴权（安全加固阶段 1） ───────────────────────────────────
-# 免鉴权白名单：
-# ⚠ /config **不再是**白名单成员（第二轮复查 R-7）。以前它是"只要来自 127.0.0.1
-#   就无条件放行"，但 Agent 通常以 SYSTEM / 管理员权限运行 ⇒ 本机**任意一个**
-#   用户态进程都能无凭据读写它的配置（改服务端地址、改 token）。现在要求同时满足
+# 9998 接口鉴权（安全加固阶段 1）
+# 免鉴权白名单
+# /config **不再是**白名单成员（第二轮复查 R-7）。以前它是"只要来自 127.0.0.1
+# 就无条件放行"，但 Agent 通常以 SYSTEM / 管理员权限运行 本机**任意一个**
+# 用户态进程都能无凭据读写它的配置（改服务端地址、改 token）。现在要求同时满足
 _OPEN_PATHS = {"/ping"}
 
-# ── 绑定地址与来源白名单（2026-09-23 动态审计 D-2）──────────────────────
+# 绑定地址与来源白名单（2026-09-23 动态审计 D-2）
 # 背景：Agent API 原来把监听地址**硬编码成 0.0.0.0**，等于对任何可达的网络开放，
 # 而它装在每一台被监控机上（含生产服务器）。防护全靠外部防火墙。
-# ⚠ 为什么**不能**简单改成只听 127.0.0.1：Agent 是**分布式**部署的，服务端会
-#   **主动**来连每台机器的这个端口（电源操作、主机信息采集、远程桌面…）。
+# 为什么**不能**简单改成只听 127.0.0.1：Agent 是**分布式**部署的，服务端会
+# **主动**来连每台机器的这个端口（电源操作、主机信息采集、远程桌面…）。
 # 正确的收紧姿势是这两条（都不配 = 维持原行为，不影响现有部署）。
-# ⚠ 2026-09-23：第一条**直到今天才真的生效** —— `_build_tls_server()` 里写死了
+# 2026-09-23：第一条**直到今天才真的生效**，`_build_tls_server()` 里写死了
 _AGENT_BIND_ENV = "VIGILSERVE_AGENT_BIND_HOST"
 
 # 更新包签名的时间戳新鲜性窗口（秒）。必须与服务端
@@ -158,7 +158,7 @@ def verify_update_package(data: bytes, version: str, sha_hdr: str, sig_hdr: str,
         X-Pkg-Timestamp = 签发时刻（Unix 秒）
         X-Pkg-Signature = hmac_sha256(**update_key**, "{version}:{sha256}:{timestamp}")
 
-    🚨 2026-09-23 开源加固 ④ 的两处改动，都是对着"一次泄露 = 永久 RCE"来的：
+ 2026-09-23 开源加固 ④ 的两处改动，都是对着"一次泄露 = 永久 RCE"来的：
 
     1. **密钥从 token 换成了独立的 update_key**。token 是 9998 的认证头，每次
        服务端↔Agent 调用都在网络上跑，抓一次包就能拿到 —— 而以前它同时又是
@@ -167,7 +167,7 @@ def verify_update_package(data: bytes, version: str, sha_hdr: str, sig_hdr: str,
     2. **签名串里加了 timestamp**。原来只有 `{version}:{sha256}`，同一个包在
        任何时刻的签名都一模一样，截获一次就能无限次重放。
 
-    ⚠ 不做旧口径回退（用户 2026-09-23 拍板）：旧服务端推来的包会被拒绝。
+ 不做旧口径回退（用户 2026-09-23 拍板）：旧服务端推来的包会被拒绝。
 
     :param now: 仅测试用，注入"当前时间"以验证时间窗口。
     """
@@ -227,7 +227,7 @@ class AgentAPIHandler(BaseHTTPRequestHandler):
     def _error(self, status, detail):
         self._json({"detail": detail}, status)
 
-    # ── 鉴权 ──────────────────────────────────────────────────────
+    # 鉴权
     def _client_is_loopback(self) -> bool:
         host = (self.client_address[0] if self.client_address else "") or ""
         return host in ("127.0.0.1", "::1", "localhost")
@@ -276,7 +276,7 @@ class AgentAPIHandler(BaseHTTPRequestHandler):
             return False
         if path in _OPEN_PATHS:
             return True
-        # 本机配置页（GET/POST /config）：第二轮复查 R-7 —— 见 `_local_token()` 的说明。
+        # 本机配置页（GET/POST /config）：第二轮复查 R-7，见 `_local_token()` 的说明。
         # 口令两个来源：`?t=`（托盘打开的 URL 首进带）与 `X-Local-Token`（页面里
         # fetch 提交时带，免得口令留在浏览器历史/Referer 里）。
         if path == "/config" and self._client_is_loopback():
@@ -284,13 +284,13 @@ class AgentAPIHandler(BaseHTTPRequestHandler):
         expected = str(_agent_cfg().get("token") or "").strip()
         if not expected:
             # 2026-09-22 P0-3：这里原本**无条件放行**（fail-open），理由是"没 token
-            #   就没法比对，否则主机永远注册不上"。但注册是 Agent 主动 outbound 到
-            #   服务端完成的（connector.py 打 /api/agent/register、/api/agent/enroll），
-            #   服务端并不需要回调本机 9998，所以放行不是注册必需的，却让同网段任意
-            #   机器匿名访问 /files/*、/ws/terminal（直起 cmd.exe）、/power。
-            # 2026-09-29 S-3：上一版收成"只放行 loopback"，但**没限定路径** ——
-            #   Agent 常以 SYSTEM 运行，本机任意用户态进程仍可白嫖 /ws/terminal
-            #   与 /power。本版取消按来源放行。
+            # 就没法比对，否则主机永远注册不上"。但注册是 Agent 主动 outbound 到
+            # 服务端完成的（connector.py 打 /api/agent/register、/api/agent/enroll），
+            # 服务端并不需要回调本机 9998，所以放行不是注册必需的，却让同网段任意
+            # 机器匿名访问 /files/*、/ws/terminal（直起 cmd.exe）、/power。
+            # 2026-09-29 S-3：上一版收成"只放行 loopback"，但**没限定路径**，
+            # Agent 常以 SYSTEM 运行，本机任意用户态进程仍可白嫖 /ws/terminal
+            # 与 /power。本版取消按来源放行。
             # token 丢失时 Agent 会自动重新 enroll 领新 token，不会把自己锁死。
             _api_log.warning(
                 f"[auth] 拒绝未注册状态下的访问：path={path} "
@@ -619,9 +619,9 @@ class AgentAPIHandler(BaseHTTPRequestHandler):
             boundary = boundary.strip(b'"')
             parts = data.split(boundary)
             if len(parts) >= 2:
-                # 🚨 requests 的 `data={"version": ...}` 是 multipart 表单字段，
+                # requests 的 `data={"version": ...}` 是 multipart 表单字段，
                 # 不是 URL query；只读 qs 会拿到空版本，签名串变成 ":<sha>"，
-                # 与服务端的 "1.1.53:<sha>" 不符 → "签名不匹配"（2026-09-22 现场）。
+                # 与服务端的 "1.1.53:<sha>" 不符 "签名不匹配"（2026-09-22 现场）。
                 for part in parts:
                     if b"\r\n\r\n" not in part:
                         continue
@@ -645,9 +645,9 @@ class AgentAPIHandler(BaseHTTPRequestHandler):
         except Exception as e:
             return self._error(500, f"保存安装包失败: {e}")
 
-        # P1-2（更新包验签，fail-closed）+ 2026-09-23 开源加固 ④：
+        # P1-2（更新包验签，fail-closed）+ 2026-09-23 开源加固 ④
         # 服务端签名头缺失、哈希不符、时间戳不新鲜或签名校验失败，
-        # 一律删除已落盘的包并拒绝执行 —— 防止被篡改/伪造的包在本机静默提权执行。
+        # 一律删除已落盘的包并拒绝执行，防止被篡改/伪造的包在本机静默提权执行。
         # 具体校验见 `verify_update_package()`（抽成模块级函数就是为了能单测）。
         def _reject_pkg(reason: str):
             try:
@@ -1439,7 +1439,7 @@ def open_web_config_browser(port):
         import time; time.sleep(0.5)
         try:
             # P1-1：9998 已全链路 TLS（本机自签/服务端签发），浏览器打开需 https。
-            # R-7：URL 里带上本机配置口令 —— 这是唯一一次明文出现在地址栏，
+            # R-7：URL 里带上本机配置口令，这是唯一一次明文出现在地址栏，
             # 之后的提交走 X-Local-Token 头，不留历史/Referer。
             webbrowser.open(f"https://127.0.0.1:{port}/config?t={_local_token()}")
         except: pass
@@ -1615,7 +1615,7 @@ def _pick_api_tls_material():
         import identity as _identity
         if _identity.load_api_cert_pem() and os.path.isfile(_identity.API_KEY_PATH):
             return _identity.API_CERT_PATH, _identity.API_KEY_PATH
-        # 没有正式证书 → 自签一张，保证通道加密（服务端会因 CA 链不符而拒绝，等领证后热切换）
+        # 没有正式证书 自签一张，保证通道加密（服务端会因 CA 链不符而拒绝，等领证后热切换）
         cert, key = _identity.ensure_self_signed_cert()
         return cert, key
     except Exception as e:  # noqa: BLE001
@@ -1629,12 +1629,12 @@ def _build_tls_server(port: int):
     拿不到任何可用证书时**默认不监听**（返回 (None, None)），而不是退明文 ——
     详见 `_allow_plaintext_api()` 的说明。
     """
-    # ⚠ 2026-09-23 开源加固 ③：这里**曾经硬编码 0.0.0.0**，于是下面那套
-    #   `VIGILSERVE_AGENT_BIND_HOST` 说明写了半天、`_agent_bind_host()` 却是**死代码**
-    #   （全仓库没有任何调用点）—— 运维照文档配了环境变量，端口照样对外全开。
-    #   现在真正接上。默认值仍是 0.0.0.0：Agent 是分布式部署的，服务端要**主动**
-    #   来连这个端口做电源操作 / 文件管理 / 远程桌面，改成回环会直接切断远程管理能力
-    #   （用户 2026-09-23 拍板：只接开关，默认不动）。
+    # 2026-09-23 开源加固 ③：这里**曾经硬编码 0.0.0.0**，于是下面那套
+    # `VIGILSERVE_AGENT_BIND_HOST` 说明写了半天、`_agent_bind_host()` 却是**死代码**
+    # （全仓库没有任何调用点），运维照文档配了环境变量，端口照样对外全开。
+    # 现在真正接上。默认值仍是 0.0.0.0：Agent 是分布式部署的，服务端要**主动**
+    # 来连这个端口做电源操作 / 文件管理 / 远程桌面，改成回环会直接切断远程管理能力
+    # （用户 2026-09-23 拍板：只接开关，默认不动）。
     server = ThreadingHTTPServer((_agent_bind_host(), port), AgentAPIHandler)
     cert, key = _pick_api_tls_material()
     if cert and key:
@@ -1645,7 +1645,7 @@ def _build_tls_server(port: int):
             _api_log.info(f"Agent API (port {port}) running over TLS (cert: {cert})")
             return server, cert
         except Exception as e:  # noqa: BLE001
-            # 证书与私钥不配（例如重装丢了 key 但正式证书还在）→ 退自签再试一次
+            # 证书与私钥不配（例如重装丢了 key 但正式证书还在） 退自签再试一次
             _api_log.warning(f"加载 9998 TLS 证书失败（{e}），改用本地自签兜底")
             try:
                 import identity as _identity
@@ -1701,7 +1701,7 @@ def reload_tls_if_updated():
     if _api_httpd is None:
         try:
             start_api_server(_api_port)
-        except Exception:  # noqa: BLE001  下一轮再试
+        except Exception:  # noqa: BLE001 下一轮再试
             pass
         return
     try:
@@ -1737,7 +1737,7 @@ def _tls_watcher():
 def start_api_server(port=9998):
     # 必须是多线程：单线程 + HTTP/1.1 keep-alive 时，一个长连接就会把整个服务占住，
     # 主机信息 / 应用列表这类要跑十几秒的采集会把心跳和其它接口全部堵死。
-    # P1-1：socket 层包 TLS —— 正式证书（服务端 CA 签发）优先，自签兜底。
+    # P1-1：socket 层包 TLS，正式证书（服务端 CA 签发）优先，自签兜底。
     global _api_httpd, _api_port, _api_tls_cert, _tls_watcher_started
     server, cert = _build_tls_server(int(port or 9998))
     _api_httpd = server

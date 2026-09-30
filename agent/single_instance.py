@@ -4,7 +4,7 @@ Uses named mutexes to ensure only one agent tray process and one config
 window run at a time. If a second instance is started, it brings the existing
 window to the foreground and exits without creating duplicate tray icons.
 
-⚠ 2026-09-28：Agent 的单实例判断**必须跨会话**，见下面 `_agent_mutex_handles`
+ 2026-09-28：Agent 的单实例判断**必须跨会话**，见下面 `_agent_mutex_handles`
    的注释。配置窗口仍然是会话内的 —— 窗口本来就属于会话。
 """
 import logging
@@ -18,13 +18,13 @@ SYNCHRONIZE = 0x00100000
 _AGENT_MUTEX_BASE = "VigilServeAgent_SingleInstance_Mutex"
 _CONFIG_MUTEX_BASE = "VigilServeAgent_Config_SingleInstance_Mutex"
 
-# 🚨 为什么要同时占**两个**名字（2026-09-28）
+# 为什么要同时占**两个**名字（2026-09-28）
 # Windows 上不带前缀的互斥名落在**调用者所在会话**的命名空间里，只有加 `Global\`
 # 前缀才能跨会话。而 Agent 恰恰会跨会话重复启动：托盘通常跑在用户的交互会话，
 # 服务 / 计划任务跑在 session 0；配置面板在 RDP 的另一个会话里打开时，
-# `is_agent_running()` 只看会话内那把 → 判定"后台没人" → **再拉起一个采集进程**。
+# `is_agent_running()` 只看会话内那把 判定"后台没人" **再拉起一个采集进程**。
 # 两个采集循环共用同一份 `agent_config.json`，各自把内存里的整份 cfg 覆盖写盘，
-# 于是 A 刚登记回来的 server_id / token 会被 B 的旧快照抹掉 —— 现象就是
+# 于是 A 刚登记回来的 server_id / token 会被 B 的旧快照抹掉，现象就是
 # 「注册成功几秒后又变回未注册」。所以：**两把都要占**，任一把已被占 = 重复启动。
 _agent_mutex_handles: list = []
 _config_mutex_handles: list = []
@@ -37,9 +37,9 @@ def _mutex_names(base: str) -> tuple:
 
 def _kernel32():
     k = ctypes.WinDLL("kernel32", use_last_error=True)
-    # 🚨 restype 必须显式给：ctypes 对 windll 的默认返回类型是 c_int，会把 64 位
-    #    HANDLE 截断成 32 位 —— 截断后 CloseHandle 会关错对象，而且**不报任何错**，
-    #    只会在别处莫名其妙地失败。这里统一改成 c_void_p。
+    # restype 必须显式给：ctypes 对 windll 的默认返回类型是 c_int，会把 64 位
+    # HANDLE 截断成 32 位，截断后 CloseHandle 会关错对象，而且**不报任何错**，
+    # 只会在别处莫名其妙地失败。这里统一改成 c_void_p。
     k.CreateMutexW.argtypes = [ctypes.c_void_p, ctypes.c_bool, ctypes.c_wchar_p]
     k.CreateMutexW.restype = ctypes.c_void_p
     k.OpenMutexW.argtypes = [ctypes.c_ulong, ctypes.c_bool, ctypes.c_wchar_p]
@@ -93,7 +93,7 @@ def _acquire(handles: list, base: str, names: tuple) -> bool:
         if st == "ok":
             got.append(h)
     if not got:
-        # 一把都没建起来 —— 判不出有没有重复实例。宁可放行（功能不能因为判不出来
+        # 一把都没建起来，判不出有没有重复实例。宁可放行（功能不能因为判不出来
         # 就锁死），但必须留下痕迹，否则又会变成"偶发起了两个却查无实据"。
         try:
             logging.getLogger(__name__).warning(

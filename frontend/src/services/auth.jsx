@@ -114,12 +114,12 @@ export function AuthProvider({ children }) {
       throw new Error(err.detail || '登录失败')
     }
     const data = await res.json()
-    // ⚠ 已知取舍（第二轮复查 R-6）：令牌存 localStorage，同源 JS 都能读到 ——
+    // 已知取舍（第二轮复查 R-6）：令牌存 localStorage，同源 JS 都能读到 ——
     // 一旦出现 XSS，会话就会被完整劫走，且服务端无法吊销。
     // 后台目前只发 Bearer 令牌、不下发 httpOnly Cookie，所以短期内没有更安全的
     // 存放位置；换 httpOnly + SameSite Cookie 要改整条鉴权链路（含 8009 独立源
     // 代理那一路），属于另一次改造。**在此期间靠两件事兜底**：
-    //   ② 会话有时长上限（服务端「安全设置 - 登录超时」，默认 24h 绝对时长），
+    // ② 会话有时长上限（服务端「安全设置 - 登录超时」，默认 24h 绝对时长），
     localStorage.setItem('token', data.token)
     kickedRef.current = false
     setKickedInfo(null)

@@ -10,7 +10,7 @@ Fernet 对称加密，密钥放在库外的 `backend/data/secret.key`：
   * 兼容旧数据：读的时候认不出 `enc1$` 前缀就当明文原样返回，写入时才升级成密文，
     所以老库不用停机迁移，改一次主机口令就自动加密。
 
-⚠️ 这是"防拖库"而不是"防本机管理员"——服务端进程本身必须能解密才能去连主机，
+ 这是"防拖库"而不是"防本机管理员"——服务端进程本身必须能解密才能去连主机，
 所以拿到服务器整机权限的人依然能解。要彻底根治只能改用域账号 / 密钥认证。
 """
 
@@ -77,7 +77,7 @@ def decrypt_secret(stored: str) -> str:
         return stored  # 历史明文数据，原样使用
     try:
         return _cipher_obj().decrypt(stored[len(_PREFIX):].encode("ascii")).decode("utf-8")
-    except Exception:  # noqa: BLE001  密钥换了 / 数据坏了，宁可空也别抛到调用方
+    except Exception:  # noqa: BLE001 密钥换了 / 数据坏了，宁可空也别抛到调用方
         return ""
 
 

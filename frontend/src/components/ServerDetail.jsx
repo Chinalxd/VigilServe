@@ -145,7 +145,7 @@ function MetricCell({ value, unit, history, dataKey, color }) {
 }
 
 /* 终止进程：圆里一个横杠 / 圆里一个叉（2026-09-22 换成全站那套 `status-minus` / `status-bad`）。
-   class 仍在**外层 span** 上（`.terminate-icon { display: block }` 需要它），图标本身不接 className。 */
+ class 仍在**外层 span** 上（`.terminate-icon { display: block }` 需要它），图标本身不接 className。 */
 function TerminateIcon({ variant = 'minus', className = '' }) {
   return (
     <span className={`terminate-icon ${className}`}>
@@ -159,9 +159,9 @@ function StatusIcon({ status, type = 'alive' }) {
   const info = map[status] || map.unknown
   if (type === 'alert') {
     /* 2026-09-22：原来是"实心色块 + 白色符号"（两套画风），改成**描边图形 + 状态色** ——
-       颜色由外层 span 的 `style.color` 给（下面 info.color 绿/黄/红），图形走全站那套，
-       形状仍两两可分（圆+勾 / 三角+叹号 / 圆+叉），所以颜色信息没丢。
-       用户拍板："描边 + 保留状态色"。 */
+ 颜色由外层 span 的 `style.color` 给（下面 info.color 绿/黄/红），图形走全站那套，
+ 形状仍两两可分（圆+勾 / 三角+叹号 / 圆+叉），所以颜色信息没丢。
+ 用户拍板："描边 + 保留状态色"。 */
     if (status === 'normal') {
       return (
         <span className="status-icon status-icon-alert status-icon-normal" title={info.label}
@@ -243,7 +243,7 @@ function MetricCard({ label, value, unit, color, sub, detail, icon }) {
       title={detail ? '悬停查看详细参数' : undefined}
     >
       {/* 图标在左、内容在右，和网络设备「设备状态」的小卡片同一个排法。
-          🚨 图标**不承载状态**：颜色一律同灰（见 CardIcon.css），状态由右侧数值的颜色表达。 */}
+ 图标**不承载状态**：颜色一律同灰（见 CardIcon.css），状态由右侧数值的颜色表达。 */}
       {icon ? <CardIcon name={icon} className="mcard-icon" /> : null}
       <div className="mcard-left">
         <div className="mcard-label">{label}</div>
@@ -468,12 +468,12 @@ export default function ServerDetail({ serverId, onEdit, onDelete, isAdmin = tru
   // 资源管理 / 远程桌面这些页签的数据源全在 Agent 上，对它显示出来只会是一片
   // 空白。这里按 device_kind 决定"哪些页签有数据来源"，再和角色权限取交集 ——
   // 网络设备保留四个页签，内容全部换成设备自己的实现（不是主机的那套）：
-  //   status   设备状态 → 设备运行状态：CPU / 内存 / 端口流量图表 + 端口 UP/DOWN
-  //   info     系统信息 → 设备系统及硬件信息：sysDescr / 资产 / 端口表 / SSH 指纹
-  //   events   事件日志 → 设备日志：服务端记的告警 + 审计
+  // status 设备状态 → 设备运行状态：CPU / 内存 / 端口流量图表 + 端口 UP/DOWN
+  // info 系统信息 → 设备系统及硬件信息：sysDescr / 资产 / 端口表 / SSH 指纹
+  // events 事件日志 → 设备日志：服务端记的告警 + 审计
   // 原来的「网络」页签已删除 —— SNMPv3 凭据改到「主机管理 - 网络设备」页维护。
   const isNetworkDevice = !!server && server.device_kind === 'network'
-  // 🚨 主机侧要**显式排除** webadmin：TAB_ORDER 里带着它，若直接 `new Set(TAB_ORDER)`
+  // 主机侧要**显式排除** webadmin：TAB_ORDER 里带着它，若直接 `new Set(TAB_ORDER)`
   // 就会因为角色有 `host/webadmin` 权限而把「WEB管理」显示在普通主机上 ——
   // 主机没有"设备自带的 Web 管理界面"，点进去是一片空白。
   const APPLICABLE = isNetworkDevice
@@ -504,9 +504,9 @@ export default function ServerDetail({ serverId, onEdit, onDelete, isAdmin = tru
 
   // ── 头部「编辑」图标（2026-09-22）─────────────────────────────────────
   // 网络设备 → EditDeviceModal（与「设备管理 - 网络设备」的编辑同一个弹窗）
-  // 🚨 存的是**点击那一刻的快照**，不是 server 本体：详情会被 WS / 轮询刷新，
-  //    若把 server 对象直接当 initialData，刷新一次弹窗里的表单就被重置回原值。
-  // 🚨 这几个 hook 必须在 `loadingStatic` / `!server` 的提前 return **之前** ——
+  // 存的是**点击那一刻的快照**，不是 server 本体：详情会被 WS / 轮询刷新，
+  // 若把 server 对象直接当 initialData，刷新一次弹窗里的表单就被重置回原值。
+  // 这几个 hook 必须在 `loadingStatic` / `!server` 的提前 return **之前** ——
   const [editHost, setEditHost] = useState(null)
   const [editDevice, setEditDevice] = useState(null)
   const [noteTip, setNoteTip] = useState(false)
@@ -607,7 +607,7 @@ export default function ServerDetail({ serverId, onEdit, onDelete, isAdmin = tru
   }, [serverId])
 
   // 头部「编辑主机」弹窗的提交（保存后重拉详情，页头名称/备注立即刷新）
-  // 🚨 必须定义在 `loadServer` **之后**：useCallback 的依赖数组在渲染时求值，
+  // 必须定义在 `loadServer` **之后**：useCallback 的依赖数组在渲染时求值，
   const submitHostEdit = useCallback(async (data) => {
     await updateServer(serverId, data)
     await loadServer()
@@ -813,8 +813,8 @@ export default function ServerDetail({ serverId, onEdit, onDelete, isAdmin = tru
     }
   }
 
-  // 🚨 2026-09-23：旧的 `handleRemoteDesktopMeshCentral` 已随 MeshCentral 集成
-  //    整体下线删除。它在移除前本来就是**死代码**（全项目只有定义、没有任何调用点），
+  // 2026-09-23：旧的 `handleRemoteDesktopMeshCentral` 已随 MeshCentral 集成
+  // 整体下线删除。它在移除前本来就是**死代码**（全项目只有定义、没有任何调用点），
 
   const handleGroupTerminate = async (mode) => {
     if (!groupTerminateModal) return
@@ -1140,8 +1140,8 @@ export default function ServerDetail({ serverId, onEdit, onDelete, isAdmin = tru
         <div className="detail-topbar-info">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {/* 标题 + 备注气泡：光标悬停主机名显示备注（server.description），移开自动收起。
-                气泡 absolute 挂在标题下方；pointer-events:none 防止鼠标碰到气泡本身
-                又被判成 leave → 一进一出地闪。 */}
+ 气泡 absolute 挂在标题下方；pointer-events:none 防止鼠标碰到气泡本身
+ 又被判成 leave → 一进一出地闪。 */}
             <span
               className="detail-title-wrap"
               onMouseEnter={onTitleEnter}
@@ -1153,8 +1153,8 @@ export default function ServerDetail({ serverId, onEdit, onDelete, isAdmin = tru
               )}
             </span>
             {/* 编辑图标：插在「主机名 / 设备名」和「在线状态」之间（2026-09-22 需求）。
-                主机弹 ServerFormModal，网络设备弹 EditDeviceModal；
-                没有编辑权限就不显示（权限点同列表页）。 */}
+ 主机弹 ServerFormModal，网络设备弹 EditDeviceModal；
+ 没有编辑权限就不显示（权限点同列表页）。 */}
             {canEditThis && (
               <button
                 className="detail-edit-btn"
@@ -1240,7 +1240,7 @@ export default function ServerDetail({ serverId, onEdit, onDelete, isAdmin = tru
           </button>
         )}
         {/* WEB管理只对网络设备 —— 这里再挡一道 isNetworkDevice，双保险：
-            主机详情页绝不能出现这个页签（主机没有"设备自带的 Web 管理界面"） */}
+ 主机详情页绝不能出现这个页签（主机没有"设备自带的 Web 管理界面"） */}
         {tabShow.webadmin && isNetworkDevice && (
           <button className={`detail-tab ${activeTab === 'webadmin' ? 'active' : ''}`} onClick={() => setActiveTab('webadmin')}>
             WEB管理
@@ -1275,7 +1275,7 @@ export default function ServerDetail({ serverId, onEdit, onDelete, isAdmin = tru
       )}
 
       {/* Live metrics — only on status tab（网络设备走自己的运行状态视图）
-          主机侧：指标卡片行 + 周期横条 + 6 张图表收进同一张大卡片 */}
+ 主机侧：指标卡片行 + 周期横条 + 6 张图表收进同一张大卡片 */}
       {activeTab === 'status' && !isNetworkDevice && (
       <div className="status-wrap">
       <div className="metrics-row">
@@ -2263,8 +2263,8 @@ export default function ServerDetail({ serverId, onEdit, onDelete, isAdmin = tru
       />
 
       {/* 头部「编辑」图标点开的两个弹窗（2026-09-22）：
-          主机复用「注册管理」的 ServerFormModal，但**不传 onDelete** ——
-          详情页里没有"删除主机"这个动作（删主机仍在注册管理做）。 */}
+ 主机复用「注册管理」的 ServerFormModal，但**不传 onDelete** ——
+ 详情页里没有"删除主机"这个动作（删主机仍在注册管理做）。 */}
       <ServerFormModal
         visible={!!editHost}
         onClose={() => setEditHost(null)}

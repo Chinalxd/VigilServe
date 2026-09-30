@@ -61,7 +61,7 @@ router = APIRouter(prefix="/api/servers", tags=["file-explorer"],
 
 
 def _client_ip(request: Request) -> str:
-    """⚠ 2026-09-23 动态审计 D-1：取值规则已统一到 `services/client_ip.py`
+    """ 2026-09-23 动态审计 D-1：取值规则已统一到 `services/client_ip.py`
     （默认不信任 X-Forwarded-For，只认直连 IP；确实走了反向代理时用
     `VIGILSERVE_TRUSTED_PROXIES` 显式声明代理地址）。这里保留同名薄封装，
     是为了不动本文件里散落的 `ip_address=_client_ip(request)`。"""
@@ -82,7 +82,7 @@ _UPLOAD_MB = MAX_UPLOAD // (1024 * 1024)
 def _enforce_upload_limit(request: Optional[Request], size: int) -> None:
     """累计写入超过上限就报 413。
 
-    🚨 以前这里是 `f.write(await file.read(MAX_UPLOAD))` —— `read(n)` 只保证**最多**
+ 以前这里是 `f.write(await file.read(MAX_UPLOAD))` —— `read(n)` 只保证**最多**
     读 n 字节，超出的部分被**静默丢弃**：客户端认为上传成功，落地的文件其实被截断
     了。现在改成边读边计数，超限直接拒绝，不留半个坏文件。
     """
@@ -121,7 +121,7 @@ def _cache_get(key: str, ttl: float = 5.0):
 # agents are never blocked by a lingering keep-alive socket.
 _PROXY_SESSION = _requests.Session()
 _PROXY_SESSION.trust_env = False
-# P1-1：Agent 9998 全链路 TLS —— 用服务端本地 CA 校验 Agent 的服务器证书
+# P1-1：Agent 9998 全链路 TLS，用服务端本地 CA 校验 Agent 的服务器证书
 try:
     from services.agent_auth import agent_ca_verify as _agent_ca_verify
     _PROXY_SESSION.verify = _agent_ca_verify()

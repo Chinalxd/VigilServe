@@ -62,16 +62,16 @@ OID_HR_STORAGE_RAM = "1.3.6.1.2.1.25.2.1.2"
 OID_HR_STORAGE_DESCR = "1.3.6.1.2.1.25.2.3.1.3"
 OID_HR_STORAGE_UNITS = "1.3.6.1.2.1.25.2.3.1.4"
 
-# ── Linux / 群晖 NAS 的补充指标（2026-09-21 现场反馈加）────────────────
+# Linux / 群晖 NAS 的补充指标（2026-09-21 现场反馈加）
 # NAS（Linux）会把空闲内存拿去做磁盘缓存，hrStorageTable 算出来的"内存使用率"
-# 常年 90%+ —— 那不是告警，是缓存。真正要盯的是"应用实际占用"：
+# 常年 90%+，那不是告警，是缓存。真正要盯的是"应用实际占用"
 # 分项只有 net-snmp 自带的 UCD-SNMP-MIB 给得起。
 OID_UCD_MEM_TOTAL = "1.3.6.1.4.1.2021.4.5"
 OID_UCD_MEM_AVAIL = "1.3.6.1.4.1.2021.4.6"
 OID_UCD_MEM_BUFFER = "1.3.6.1.4.1.2021.4.14"
 OID_UCD_MEM_CACHED = "1.3.6.1.4.1.2021.4.15"
 
-# ⚠ 每一列的含义是 2026-09-21 在 RISUN NAS（DSM，sysObjectID 报的是 net-snmp 的
+# 每一列的含义是 2026-09-21 在 RISUN NAS（DSM，sysObjectID 报的是 net-snmp 的
 SYNO_DISK_NAME = "1.3.6.1.4.1.6574.2.1.1.2"
 SYNO_DISK_MODEL = "1.3.6.1.4.1.6574.2.1.1.3"
 SYNO_DISK_STATUS = "1.3.6.1.4.1.6574.2.1.1.5"
@@ -79,15 +79,15 @@ SYNO_DISK_TEMP = "1.3.6.1.4.1.6574.2.1.1.6"
 SYNO_RAID_NAME = "1.3.6.1.4.1.6574.3.1.1.2"
 SYNO_RAID_STATUS = "1.3.6.1.4.1.6574.3.1.1.3"
 # 群晖没公开完整的状态枚举，实测"正常"是 1。**只认 1 为正常**，其余一律报异常
-# 并把原始值带上 —— 不认识的取值不许自己编文案说它正常。
+# 并把原始值带上，不认识的取值不许自己编文案说它正常。
 SYNO_STATUS_OK = "1"
 
-# ── 硬件健康：电源 / 风扇 / 温度 / 整机功率（2026-09-21 现场探 + 华为官方文档核对）──
-#   ③ 标准 ENTITY-SENSOR-MIB（1.3.6.1.2.1.99）—— 华为和这台 NAS 都没开，
-#      但思科 / H3C / 锐捷常见，留着给别的设备用
-#   温度  1.1.1.1.11 = 当前温度(℃)  .12 = 温度阈值(℃)  —— 只有主控板那一行有值，其余行是 0
-#   风扇  10.1：.1 槽位 .2 编号 .3 已注册 .4 调速模式 .5 转速(满速百分比) .6 在位 .7 状态(1正常/2异常)
-#   电源  18.1：.1 槽位 .2 编号 .4 交直流 .5 在位 .6 状态(1供电/2不供电/3休眠/4未知)
+# 硬件健康：电源 / 风扇 / 温度 / 整机功率（2026-09-21 现场探 + 华为官方文档核对）
+# ③ 标准 ENTITY-SENSOR-MIB（1.3.6.1.2.1.99），华为和这台 NAS 都没开，
+# 但思科 / H3C / 锐捷常见，留着给别的设备用
+# 温度 1.1.1.1.11 = 当前温度(℃) .12 = 温度阈值(℃)，只有主控板那一行有值，其余行是 0
+# 风扇 10.1：.1 槽位 .2 编号 .3 已注册 .4 调速模式 .5 转速(满速百分比) .6 在位 .7 状态(1正常/2异常)
+# 电源 18.1：.1 槽位 .2 编号 .4 交直流 .5 在位 .6 状态(1供电/2不供电/3休眠/4未知)
 OID_HW_TEMP = "1.3.6.1.4.1.2011.5.25.31.1.1.1.1.11"
 OID_HW_TEMP_THRESHOLD = "1.3.6.1.4.1.2011.5.25.31.1.1.1.1.12"
 OID_HW_FAN_TABLE = "1.3.6.1.4.1.2011.5.25.31.1.1.10.1"
@@ -121,20 +121,20 @@ RETRIES = 1
 MAX_REPETITIONS = 25
 
 
-# ── 采集熔断（2026-09-21 加）────────────────────────────────────────
+# 采集熔断（2026-09-21 加）
 # 起因（真机实证）：某台采集机曾带着错误的 SNMPv3 参数去采华为 S5731S，
 # 这台服务器被反复锁了 34 轮。华为的 "SNMP 登录攻击防御" 是**一次认证失败就锁源 IP
 # 约 10 秒，锁定期内静默丢包，且在锁定期内继续打会把锁越续越长**。
-# 而调度器当时是每 5 分钟无条件重试一次：凭据错 → 失败 → 5 分钟后再错 → 再锁，
+# 而调度器当时是每 5 分钟无条件重试一次：凭据错 失败 5 分钟后再错 再锁，
 # 永远停不下来。所以必须在**采集器这一侧**自己踩刹车，不能指望设备宽容。
-# 分两类处理，因为两类错误的"重试成本"完全不同：
-#   · auth（用户名/口令/鉴权协议/加密协议不对）—— **重试毫无意义且必然继续锁 IP**，
-#     所以阈值很低，一确认就长时间停采，等管理员改对凭据。
-#   · network（超时/不可达）—— 可能只是抖动或设备重启，阈值放宽；
-#     但连续失败也可能是"被锁了"，所以同样要有上限，不能无限打。
+# 分两类处理，因为两类错误的"重试成本"完全不同
+# · auth（用户名/口令/鉴权协议/加密协议不对），**重试毫无意义且必然继续锁 IP**，
+# 所以阈值很低，一确认就长时间停采，等管理员改对凭据。
+# · network（超时/不可达），可能只是抖动或设备重启，阈值放宽；
+# 但连续失败也可能是"被锁了"，所以同样要有上限，不能无限打。
 AUTH_FAIL_TRIP = 2
 NET_FAIL_TRIP = 5
-# 熔断时长（分钟），按"这台设备已经被熔断过几次"递增 —— 反复犯同一个错就罚得更久。
+# 熔断时长（分钟），按"这台设备已经被熔断过几次"递增，反复犯同一个错就罚得更久。
 PAUSE_MINUTES_AUTH = (30, 120, 480)
 PAUSE_MINUTES_NET = (15, 30, 60)
 
@@ -195,7 +195,7 @@ def _pause_minutes(kind: str, pause_count: int) -> int:
     return table[min(idx, len(table) - 1)]
 
 
-# ── 凭据 → pysnmp 的 USM 对象 ──────────────────────────────────────
+# 凭据 pysnmp 的 USM 对象
 
 
 def _auth_protocol(name: str):
@@ -224,7 +224,7 @@ def _auth_protocol(name: str):
 def _priv_protocol(name: str):
     """加密协议名 → pysnmp 的 priv 协议常量。
 
-    🚨 **AES192 / AES256 在 RFC 3826 里根本没有定义**（3826 只有 AES-128），业界
+ **AES192 / AES256 在 RFC 3826 里根本没有定义**（3826 只有 AES-128），业界
     有 **两种互不兼容的密钥扩展方言**，加密密钥算出来不一样，用错就解不开：
 
       * **Reeder**（思科系）—— pysnmp 叫 `usmAesCfb192Protocol` / `usmAesCfb256Protocol`，
@@ -261,12 +261,12 @@ def _priv_protocol(name: str):
     }.get(str(name or "").upper(), usmAesCfb128Protocol)
 
 
-# 🚨 **首选必须放 Blumenthal，不能放 Reeder。** 这不是口味问题，是踩出来的：
-#    华为交换机有"SNMP 登录攻击防御"，**一次登录失败就把源 IP 锁 10 秒左右，
-#    锁定期间所有 SNMP 请求被静默丢弃（回都不回）**；而且在锁定期内继续重试
-#    会把锁**越续越长**（实测被续到过 5 分钟）。所以"先试错的方言、失败了再换"
-#    这条路走不通 —— 换的那次必定落在锁窗口里，只会把 IP 锁得更久。
-#    一次失败计数都不产生。Reeder 只作为思科系的兜底，见 _DIALECT_RETRY_DELAY。
+# **首选必须放 Blumenthal，不能放 Reeder。** 这不是口味问题，是踩出来的
+# 华为交换机有"SNMP 登录攻击防御"，**一次登录失败就把源 IP 锁 10 秒左右，
+# 锁定期间所有 SNMP 请求被静默丢弃（回都不回）**；而且在锁定期内继续重试
+# 会把锁**越续越长**（实测被续到过 5 分钟）。所以"先试错的方言、失败了再换"
+# 这条路走不通，换的那次必定落在锁窗口里，只会把 IP 锁得更久。
+# 一次失败计数都不产生。Reeder 只作为思科系的兜底，见 _DIALECT_RETRY_DELAY。
 _PRIV_DIALECTS = {
     "AES192": ("AES192-BLUMENTHAL", "AES192"),
     "AES256": ("AES256-BLUMENTHAL", "AES256"),
@@ -278,12 +278,12 @@ _PRIV_DIALECTS = {
 _DIALECT_RETRY_DELAY = 12
 
 
-# ── 凭据的本地前置校验 ──────────────────────────────────────────────
-# 有两类凭据问题**本机就能判定**，不必发包。pysnmp 自己也会拒，但拒法极难排查：
-#      🚨 2026-09-30 实测钉死：对着**不可达地址**（RFC 5737 的 192.0.2.1）也照样
-#      在发包前抛出同一个错，换用户名、换鉴权协议都不变；口令一到 8 位就正常发出。
-#      也就是说它 100% 是本机校验，把管理员引到设备侧纯属误导。
-#      RFC 3414 本来就要求 passphrase 至少 8 个八位组，这是标准约束，不是 pysnmp 的怪癖。
+# 凭据的本地前置校验
+# 有两类凭据问题**本机就能判定**，不必发包。pysnmp 自己也会拒，但拒法极难排查
+# 2026-09-30 实测钉死：对着**不可达地址**（RFC 5737 的 192.0.2.1）也照样
+# 在发包前抛出同一个错，换用户名、换鉴权协议都不变；口令一到 8 位就正常发出。
+# 也就是说它 100% 是本机校验，把管理员引到设备侧纯属误导。
+# RFC 3414 本来就要求 passphrase 至少 8 个八位组，这是标准约束，不是 pysnmp 的怪癖。
 # 空格、`@#$%`、纯数字等都是**合法**口令（实测 8 位即可正常发出），所以这里只拦上面两类，
 _MIN_PASSPHRASE_LEN = 8
 
@@ -378,7 +378,7 @@ def _usm_candidates(server) -> list:
 def _is_priv_dialect_error(err) -> bool:
     """判断错误是不是"加密方言/密钥扩展不一致"造成的（这种才值得换方言重试）。
 
-    🚨 只认这一种字样。**鉴权失败（Wrong SNMP PDU digest）绝不能触发重试** ——
+ 只认这一种字样。**鉴权失败（Wrong SNMP PDU digest）绝不能触发重试** ——
     那是口令问题，换方言白搭，而且华为交换机有 SNMP 限流，多打几次反而更容易被丢包。
     """
     low = str(err or "").lower()
@@ -388,15 +388,15 @@ def _is_priv_dialect_error(err) -> bool:
 
 # 把 pysnmp / 网络层的原始报错翻译成管理员能照着排查的话。原始信息**同时保留**
 # （截断后附在括号里），因为排障时它是唯一能拿去搜索的线索。
-# 🚨 唯一的例外是 `WrongValueError` —— 它是**本机**错误，见 friendly_snmp_error()，
-#    绝不能附"（设备返回：一堆 OID）"，那会把人引到设备侧。
-#    （2026-09-30 更正：此前这里记的是"v3 用户名不存在时会抛 WrongValueError"。
-#     对着不可达地址实测后确认那个归因是错的 —— 用户名不存在时 pysnmp 回的是
+# 唯一的例外是 `WrongValueError`，它是**本机**错误，见 friendly_snmp_error()，
+# 绝不能附"（设备返回：一堆 OID）"，那会把人引到设备侧。
+# （2026-09-30 更正：此前这里记的是"v3 用户名不存在时会抛 WrongValueError"。
+# 对着不可达地址实测后确认那个归因是错的，用户名不存在时 pysnmp 回的是
 _ERROR_HINTS = (
-    # 🚨 这条里必须带上"源 IP 被锁"的可能性：华为等设备有 SNMP 登录攻击防御，
+    # 这条里必须带上"源 IP 被锁"的可能性：华为等设备有 SNMP 登录攻击防御，
     # **连续认证失败后会临时锁定源 IP，锁定期内静默丢包（一个包都不回）**，
     # 表现和"IP 不通 / 端口 161 错"一模一样。更要命的是在锁定期内继续点重试
-    # 会把锁**越续越长**（实测被续到 5 分钟）——所以文案要劝管理员"停手等一等"。
+    # 会把锁**越续越长**（实测被续到 5 分钟），所以文案要劝管理员"停手等一等"。
     ("no snmp response received before timeout",
      "设备没有响应（核对 IP / UDP 端口 161 / 防火墙；若刚才反复失败过，"
      "可能是设备把本机 IP 临时锁了 —— 华为这类设备锁定期会静默丢包，停手等几分钟再试，"
@@ -409,20 +409,20 @@ _ERROR_HINTS = (
      "等几分钟再试）"),
     ("unknown usm user", "设备上没有这个 SNMPv3 用户名 —— 请核对设备上的 usm-user 配置"),
     ("unknown user name", "设备上没有这个 SNMPv3 用户名 —— 请核对设备上的 usm-user 配置"),
-    # ⚠ "wrongvalueerror" 不在这张表里 —— 它必须单独处理，见 friendly_snmp_error()：
-    #   它其实是**本机**抛的（口令短于 8 位），映射成"设备不接受参数"会把管理员
-    #   引到设备侧白查一轮。
+    # "wrongvalueerror" 不在这张表里，它必须单独处理，见 friendly_snmp_error()
+    # 它实际是**本机**抛的（口令短于 8 位），映射成"设备不接受参数"会把管理员
+    # 引到设备侧白查一轮。
     ("authentication failure", "SNMPv3 鉴权失败：鉴权口令不对，或鉴权协议与设备不一致"),
-    # 🚨 华为交换机鉴权不过时回的就是 "Wrong SNMP PDU digest"（中间有空格，
+    # 华为交换机鉴权不过时回的就是 "Wrong SNMP PDU digest"（中间有空格，
     # 拼不成 "wrongdigest"），实测漏掉这条就会原样把英文砸到弹窗上。
     ("wrong snmp pdu digest", "SNMPv3 鉴权失败：鉴权口令不对，或鉴权协议与设备不一致"),
     ("wrongdigest", "SNMPv3 鉴权失败：鉴权口令不对，或鉴权协议与设备不一致"),
     ("decryption error", "SNMPv3 解密失败：加密口令不对，或加密协议与设备不一致"),
     ("encryption error", "SNMPv3 解密失败：加密口令不对，或加密协议与设备不一致"),
-    # 🚨 设备回这句常见于三种情况，**都不是"口令错"**，所以文案不能只写口令：
-    #    ① 两边 AES 位数不一样（界面选 AES128、设备配的是 aes256 → 最常见）
-    #    ② AES192/256 的密钥扩展方言不一样（华为系 vs 思科系，互不兼容）
-    #    ③ 加密口令确实填错了
+    # 设备回这句常见于三种情况，**都不是"口令错"**，所以文案不能只写口令
+    # ① 两边 AES 位数不一样（界面选 AES128、设备配的是 aes256 最常见）
+    # ② AES192/256 的密钥扩展方言不一样（华为系 vs 思科系，互不兼容）
+    # ③ 加密口令确实填错了
     # 第二个原因系统会自动换另一套方言重试一次，两条都试完还失败才把这句话递到界面上。
     ("ciphering services not available",
      "SNMPv3 解密失败：加密协议与设备不一致（先核对设备上是 aes128 / aes192 / aes256，"
@@ -442,13 +442,13 @@ _ERROR_HINTS = (
 )
 
 
-# ── 错误归属：界面靠它决定"要不要提示网络类原因"──────────────────────
-# 🚨 为什么要有这个：以前不管什么错，失败框下面都固定挂着一段
-#    「常见原因：IP 不通 / UDP 161 被防火墙挡了 / 用户名或口令不对 / 安全级别与设备端
-#    这段话**只在"设备根本没响应"时才成立**。设备明明回了错（unknownUserName、
-#    鉴权失败、errorStatus…）时还挂着它，等于把人往网络方向带 —— 2026-09-30 现场
-#    就是这么被带偏的（真正的错在设备的 errorStatus 里，却去查了防火墙）。
-#    所以：**设备有没有回应**这件事必须由后端判定，不能让界面猜文案。
+# 错误归属：界面靠它决定"要不要提示网络类原因"
+# 为什么要有这个：以前不管什么错，失败框下面都固定挂着一段
+# 「常见原因：IP 不通 / UDP 161 被防火墙挡了 / 用户名或口令不对 / 安全级别与设备端
+# 这段话**只在"设备根本没响应"时才成立**。设备明明回了错（unknownUserName、
+# 鉴权失败、errorStatus…）时还挂着它，等于把人往网络方向带，2026-09-30 现场
+# 就是这么被带偏的（真正的错在设备的 errorStatus 里，却去查了防火墙）。
+# 所以：**设备有没有回应**这件事必须由后端判定，不能让界面猜文案。
 KIND_NO_RESPONSE = "no-response"
 KIND_DEVICE_REPLY = "device-reply"
 KIND_LOCAL = "local"
@@ -489,10 +489,10 @@ def error_kind(text) -> str:
     return KIND_DEVICE_REPLY
 
 
-# 🚨 不翻译的话界面上就是一串裸 OID（如 `1.3.6.1.6.3.11.2.1.3`），等于什么都没说。
-#    2026-09-30 现场正是撞到这一串 —— 它其实是设备的一句明确的话，而且是**好消息**：
-#    能走到 USM 之后的报告，说明用户名存在、鉴权通过、加密也没问题。
-#    下面两张表是 RFC 3412（MPD 消息处理层）与 RFC 3414（USM 安全层）定义的全部计数器。
+# 不翻译的话界面上就是一串裸 OID（如 `1.3.6.1.6.3.11.2.1.3`），等于什么都没说。
+# 2026-09-30 现场正是撞到这一串，它实际是设备的一句明确的话，而且是**好消息**
+# 能走到 USM 之后的报告，说明用户名存在、鉴权通过、加密也没问题。
+# 下面两张表是 RFC 3412（MPD 消息处理层）与 RFC 3414（USM 安全层）定义的全部计数器。
 _REPORT_OID_HINTS = {
     # SNMP-MPD-MIB（1.3.6.1.6.3.11.2.1）
     "1.3.6.1.6.3.11.2.1.1": "设备不认识这个安全模型（安全模型号不对）",
@@ -529,10 +529,10 @@ def friendly_snmp_error(raw) -> str:
         return (f"设备回了一份报告 PDU，计数器 OID {text}"
                 "（这一串还没收录，把它发给我们就能补进去）")
     low = text.lower()
-    # 🚨 单独拦这一条，且**不附原文**：`WrongValueError` 是本机抛的（pysnmp 只把自家
-    #    MIB 的 OID 塞在里面），跟设备一点关系都没有 —— 对着不可达地址也照样报它。
-    #    配上"（设备返回：…）"会让人去查设备，实测就是这么被带偏的。
-    #    正常情况下 `validate_credentials()` 已经先拦掉了，这里是兜底。
+    # 单独拦这一条，且**不附原文**：`WrongValueError` 是本机抛的（pysnmp 只把自家
+    # MIB 的 OID 塞在里面），跟设备一点关系都没有，对着不可达地址也照样报它。
+    # 配上"（设备返回：…）"会让人去查设备，实测就是这么被带偏的。
+    # 正常情况下 `validate_credentials()` 已经先拦掉了，这里是兜底。
     if "wrongvalueerror" in low:
         return (f"SNMPv3 口令不满足要求：鉴权／加密口令至少 {_MIN_PASSPHRASE_LEN} 位，"
                 "且只能使用 ASCII 字符（这是本机校验，与设备无关）")
@@ -544,10 +544,10 @@ def friendly_snmp_error(raw) -> str:
     return f"SNMP 交互失败：{text[:100]}"
 
 
-# 🚨🚨 这是**设备明确回了一个错**，和"超时 / 没响应"完全是两码事，但以前这里
-#        设备明明说了话 → 我们当它没说话 → 界面上显示「设备未返回 sysDescr」
-#    2026-09-30 现场就是被这句话带偏的：管理员照着"IP 不通 / 端口被挡 / 口令不对"
-#    查了一圈，其实设备早就把真正的原因写在 status 里了。设备说了什么就照实转达。
+# 这是**设备明确回了一个错**，和"超时 / 没响应"完全是两码事，但以前这里
+# 设备明明说了话 我们当它没说话 界面上显示「设备未返回 sysDescr」
+# 2026-09-30 现场就是被这句话带偏的：管理员照着"IP 不通 / 端口被挡 / 口令不对"
+# 查了一圈，其实设备早就把真正的原因写在 status 里了。设备说了什么就照实转达。
 _ERROR_STATUS_HINTS = {
     1: ("tooBig", "设备说回应包太大（tooBig）"),
     2: ("noSuchName", "设备说没有这个 OID（noSuchName）—— 老设备是 SNMPv1 语义，"
@@ -619,7 +619,7 @@ def describe_varbind(var_binds) -> str:
 def _scalar(result):
     """pysnmp 的 varBind 值 → Python 原生（字符串/整数/None）。
 
-    🚨 OctetString **不能**直接用 `prettyPrint()`：只要里面有一个字节不是可打印
+ OctetString **不能**直接用 `prettyPrint()`：只要里面有一个字节不是可打印
     ASCII，pysnmp 就把整串打成十六进制（实测 `to-办公区接入交换机` →
     `0x746f2de58a9e...`）。中文端口描述 / 中文 sysLocation 在国内部署里很常见，
     全都会变成一串看不懂的东西。所以字符串一律自己按字节解码。
@@ -659,7 +659,7 @@ async def _walk_column(engine, usm, target, ctx, oid) -> dict:
 
     pysnmp 7 里 `bulk_walk_cmd` 是 async generator（老的 `bulk_cmd` 只做单次 GETBULK）。
 
-    🚨🚨 **`lexicographicMode=False` 绝对不能省** —— 这个参数**默认是 `True`**，
+ **`lexicographicMode=False` 绝对不能省** —— 这个参数**默认是 `True`**，
     意思是"从起点一路走到 MIB 尽头"（pysnmp 源码 `options.get("lexicographicMode", True)`）。
     不传它，walk `ifX ifName` 就会顺着字典序继续走 ifDescr → ifType → …… 把整个
     `1.3.6.1.2.1.31` 乃至后面所有子树全部拉回来，我们只是**本地丢弃**不匹配的条目，
@@ -685,8 +685,8 @@ async def _walk_column(engine, usm, target, ctx, oid) -> dict:
             for vb in var_binds:
                 try:
                     name = str(vb[0])
-                    # 🚨 GETBULK 会把前缀之后的下一批 OID 一起带回来（这是协议行为，
-                    # 不是设备的问题）—— 所以必须自己限定前缀，否则 hrStorage 的值
+                    # GETBULK 会把前缀之后的下一批 OID 一起带回来（这是协议行为，
+                    # 不是设备的问题），所以必须自己限定前缀，否则 hrStorage 的值
                     # 会被当成端口数据（实测：ifName 的 walk 里混进了 hrStorageUsed）。
                     if not name.startswith(prefix):
                         continue
@@ -765,10 +765,10 @@ async def _collect_async(server) -> dict:
     """
     from pysnmp.hlapi.v3arch.asyncio import ContextData, SnmpEngine, UdpTransportTarget
 
-    # 🚨 最后一个能"在发包前拦住"的位置（`collect_snmp_device` 是调度、测试连接、
-    #    新增/编辑设备三条路线的共同入口）。口令短于 8 位或含非 ASCII 时，
-    #    pysnmp 会在本地抛一个只带自家 MIB OID 的 WrongValueError —— 见上方
-    #    `_check_passphrase` 的说明。提前拦掉，顺带省掉一次注定失败的发包。
+    # 最后一个能"在发包前拦住"的位置（`collect_snmp_device` 是调度、测试连接、
+    # 新增/编辑设备三条路线的共同入口）。口令短于 8 位或含非 ASCII 时，
+    # pysnmp 会在本地抛一个只带自家 MIB OID 的 WrongValueError，见上方
+    # `_check_passphrase` 的说明。提前拦掉，顺带省掉一次注定失败的发包。
     validate_credentials(server)
 
     # pysnmp 7：地址不在 __init__ 里给，要用异步工厂 create()（它会解析地址再回填）
@@ -801,13 +801,13 @@ async def _collect_async(server) -> dict:
             first_result = result
         # 只有"加密方言不对"才值得换另一套再试。口令错（Wrong SNMP PDU digest）/
         # 超时 / 用户不存在这几种换方言毫无意义，而且华为交换机有 SNMP 限流，
-        # 白打一顿反而更容易被丢包 —— 直接返回，别重试。
+        # 白打一顿反而更容易被丢包，直接返回，别重试。
         if idx + 1 >= len(candidates) or not _is_priv_dialect_error(raw_err):
             break
-        # 🚨 换方言前必须先等一等：设备（华为实测）一次登录失败就把源 IP 锁 ~10s，
+        # 换方言前必须先等一等：设备（华为实测）一次登录失败就把源 IP 锁 ~10s，
         # 锁定期内静默丢包。立刻重试等于往锁上撞，不但这轮采集白跑，还会把锁**续长**。
         await asyncio.sleep(_DIALECT_RETRY_DELAY)
-    # 换方言那次又失败时，报**第一次**（用户配的那套协议）的错误：
+    # 换方言那次又失败时，报**第一次**（用户配的那套协议）的错误
     # 重试失败多半是限流/抖动的噪音，而"解密方式不一致"才是真正要用户去改的东西。
     return first_result or result
 
@@ -830,9 +830,9 @@ async def _collect_once(engine, usm, target, ctx):
         if _ind is not None:
             return ({"ok": False, "error": friendly_snmp_error(_ind),
                      "kind": error_kind(_ind)}, str(_ind))
-        # 🚨 errorStatus ≠ 0 —— 设备**明确回了错**。不拦这一下的话，按 RFC 3416 它的
-        #    varbind 值是 unSpecified（pysnmp 里就是 `Null('')`），会一路掉进下面的
-        #    "未返回 sysDescr" 分支，把设备写在 status 里的真正原因整个丢掉。
+        # errorStatus ≠ 0，设备**明确回了错**。不拦这一下的话，按 RFC 3416 它的
+        # varbind 值是 unSpecified（pysnmp 里就是 `Null('')`），会一路掉进下面的
+        # "未返回 sysDescr" 分支，把设备写在 status 里的真正原因整个丢掉。
         if _status_code(status):
             raw = f"errorStatus={_status_code(status)}"
             return ({"ok": False, "error": error_status_hint(status, _idx),
@@ -841,7 +841,7 @@ async def _collect_once(engine, usm, target, ctx):
         if sys_descr is None or not str(sys_descr).strip():
             return ({"ok": False,
                      "error": f"设备未返回 sysDescr（实际拿到：{describe_varbind(var_binds)}）",
-                     # 能走到这说明设备把这个请求答完了 —— 属于"设备回了错"，不是没响应
+                     # 能走到这说明设备把这个请求答完了，属于"设备回了错"，不是没响应
                      "kind": KIND_DEVICE_REPLY},
                     None)
 
@@ -890,16 +890,16 @@ async def _collect_once(engine, usm, target, ctx):
         mem = await _memory_percent(engine, usm, target, ctx)
         # 全是 0.0，一条 NULL 都没有），并不等于"没实现"。真实占用在华为私有 MIB
         # 里，标准表给不出东西时再去那儿拿一次。
-        # 只在 sysObjectID 属于华为（1.3.6.1.4.1.2011）时才试 —— 不然每台设备
+        # 只在 sysObjectID 属于华为（1.3.6.1.4.1.2011）时才试，不然每台设备
         # 每轮都要白打两个不存在的 OID，白白加重设备限流风险。
         if _is_huawei(sysinfo.get(OID_SYS_OBJECT_ID)) and (not cpu or not mem):
             if not cpu:
                 cpu = await _huawei_cpu_percent(engine, usm, target, ctx)
             if not mem:
                 mem = await _huawei_memory_percent(engine, usm, target, ctx)
-            # 两套都拿不到（标准表恒 0 + 设备没开私有 MIB 视图）→ 剩下的 0 **不是真实值**，
+            # 两套都拿不到（标准表恒 0 + 设备没开私有 MIB 视图） 剩下的 0 **不是真实值**，
             # 按"未提供"处理，别在卡片上摆一个假的 0%。
-            # 只在这一支里动 0 —— 别的设备真采到 0 还是 0，不乱改。
+            # 只在这一支里动 0，别的设备真采到 0 还是 0，不乱改。
             if not cpu:
                 cpu = None
             if not mem:
@@ -1023,7 +1023,7 @@ async def _cpu_percent(engine, usm, target, ctx):
 
 # 返回 0，hrStorageTable 的 RAM 行也算不出占用率。真实的 CPU / 内存占用在华为
 # 自己的 MIB 里，索引是实体号（MPU、交换网板、接口板各一行），大部分行给 0
-# 或不支持，只有主控板那几行是真值 —— 所以取**非零行**的平均。
+# 或不支持，只有主控板那几行是真值，所以取**非零行**的平均。
 OID_HW_ENTITY_CPU = "1.3.6.1.4.1.2011.5.25.31.1.1.1.1.5"
 OID_HW_ENTITY_MEM = "1.3.6.1.4.1.2011.5.25.31.1.1.1.1.7"
 OID_HW_ENTERPRISE = "1.3.6.1.4.1.2011."
@@ -1072,7 +1072,7 @@ async def _memory_percent(engine, usm, target, ctx):
 def _is_linux(sys_descr) -> bool:
     """是不是 Linux 系设备（决定要不要去问 UCD-SNMP / 群晖私有 MIB）。
 
-    🚨 **不能靠 sysObjectID 认**：群晖 DSM 的 sysObjectID 报的是 net-snmp 的
+ **不能靠 sysObjectID 认**：群晖 DSM 的 sysObjectID 报的是 net-snmp 的
     `1.3.6.1.4.1.8072.3.2.10`，根本不是群晖自己的 6574；但它的 sysDescr 一定是
     "Linux <主机名> 4.4.302+ ..."。拿 sysObjectID 去认群晖，百分之百认不出来。
     """
@@ -1115,7 +1115,7 @@ async def _linux_memory_detail(engine, usm, target, ctx):
 async def _linux_storage(engine, usm, target, ctx):
     """hrStorageTable 里挑最大的那个卷当"存储池"。
 
-    🚨 群晖上 /volume1 会重复出现七八次（@docker、@appdata/… 这些子卷都报同一份
+ 群晖上 /volume1 会重复出现七八次（@docker、@appdata/… 这些子卷都报同一份
     容量），**取最大那个、只留一行**，别把 16 TB 加七遍算成 112 TB。
     返回 None 表示没找到任何挂载点。
     """
@@ -1213,7 +1213,7 @@ ENT_SENSOR_OK = "1"
 def _split_table(raw: dict) -> dict:
     """把 {"<列号>.<索引>": 值} 拆成 {索引: {列号: 值}}。
 
-    🚨 华为风扇表 / 电源表的索引是**两段**（槽位.编号，实测 `10.1.2.0.7`），
+ 华为风扇表 / 电源表的索引是**两段**（槽位.编号，实测 `10.1.2.0.7`），
     群晖风扇表是一段加个 .0（`6574.1.4.1.0`）。统一按"第一段是列号、剩下的是索引"切。
     """
     out = {}
@@ -1366,7 +1366,7 @@ async def _entity_env(engine, usm, target, ctx) -> dict:
 async def _sensor_env(engine, usm, target, ctx) -> dict:
     """最后一条路子：标准 ENTITY-SENSOR-MIB 的摄氏度 / 转速传感器。
 
-    ⚠ 本机两台设备（NAS 的 net-snmp、华为 S5731S）都**没开**这张表，这条分支
+ 本机两台设备（NAS 的 net-snmp、华为 S5731S）都**没开**这张表，这条分支
     没能真机验证过，只按 RFC 3433 的换算规则实现：
         real = value × 10^((scale − 9) × 3) ÷ 10^precision
     （scale 枚举 9=units，每档 10^3；precision 是小数位数）
@@ -1386,7 +1386,7 @@ async def _sensor_env(engine, usm, target, ctx) -> dict:
         scale = _to_int(scales.get(i), 9)
         prec = _to_int(precs.get(i), 0)
         # scale 是 1..17 的枚举（9=units）、precision 是小数位数；越界一律当这行坏了丢掉，
-        # 不然 `10 ** ((scale-9)*3)` 会算出天文数字 → float 溢出 → 整轮采集一起挂掉
+        # 不然 `10 ** ((scale-9)*3)` 会算出天文数字 float 溢出 整轮采集一起挂掉
         if not (1 <= scale <= 17) or not (0 <= prec <= 9):
             continue
         try:
@@ -1466,7 +1466,7 @@ def collect_snmp_device(server) -> dict:
             finally:
                 loop.close()
     except SnmpCredentialError as e:
-        # 凭据不满足 SNMPv3 硬性要求 —— 这是本机就能判定、且管理员照着改就行的结论，
+        # 凭据不满足 SNMPv3 硬性要求，这是本机就能判定、且管理员照着改就行的结论，
         # 原样递上去；不要再套 "SNMP 交互失败："，也不要附 pysnmp 的原始 OID 字典。
         return {"ok": False, "error": str(e), "kind": KIND_LOCAL}
     except ImportError as e:
@@ -1557,11 +1557,11 @@ def collect_and_store(db, server) -> dict:
 
     now = datetime.now(timezone.utc)
     extra = dict(server.extra_config or {})
-    # 🚨 必须**在原有 snmp 字典上改**，不能整个换掉 —— 否则 consecutive_failures
+    # 必须**在原有 snmp 字典上改**，不能整个换掉，否则 consecutive_failures
     # 每次都从 0 重新开始，「连续 3 次失败才告警」永远不会触发。
     snmp_info = dict(extra.get("snmp") or {})
 
-    # ── 熔断检查（2026-09-21）：在**发第一个包之前**先看有没有被自己停下 ──
+    # 熔断检查（2026-09-21）：在**发第一个包之前**先看有没有被自己停下
     # 这一步必须早于 collect_snmp_device()。凭据错的时候设备已经在锁我们了，
     # 熔断期内再打一个包就是往锁上再撞一次，会把锁续长（华为实测能续到 5 分钟）。
     paused, until_iso = snmp_pause_state(snmp_info)
@@ -1577,7 +1577,7 @@ def collect_and_store(db, server) -> dict:
 
     res = collect_snmp_device(server)
     # ICMP 探测：SNMP 由设备的代理进程应答，ICMP 由内核应答，两条路分开看才能分清
-    # "设备挂了"和"SNMP 代理卡了"。**放在 SNMP 成败判断之前** —— 恰恰是 SNMP 不通
+    # "设备挂了"和"SNMP 代理卡了"。**放在 SNMP 成败判断之前**，恰恰是 SNMP 不通
     # 的时候最需要知道"那 ping 通不通"。
     try:
         from services.icmp_probe import probe_icmp
@@ -1597,8 +1597,8 @@ def collect_and_store(db, server) -> dict:
         err = res.get("error", "")
         kind = classify_snmp_error(err)
 
-        # auth：凭据错就是凭据错，重试只会让设备一次次锁我们 → 阈值低、停得久。
-        # network：可能是抖动，也可能是被锁了 → 阈值高一些，但同样不能无限打。
+        # auth：凭据错就是凭据错，重试只会让设备一次次锁我们 阈值低、停得久。
+        # network：可能是抖动，也可能是被锁了 阈值高一些，但同样不能无限打。
         trip = (kind == "auth" and streak >= AUTH_FAIL_TRIP) or \
                (kind == "network" and streak >= NET_FAIL_TRIP)
         if trip:
@@ -1620,7 +1620,7 @@ def collect_and_store(db, server) -> dict:
 
         from models import Alert
 
-        # 连续 3 次不通才告警 —— 单次抖动就告警，48 台设备能把告警页淹掉
+        # 连续 3 次不通才告警，单次抖动就告警，48 台设备能把告警页淹掉
         if streak == 3 or trip:
             is_auth = kind == "auth"
             title = (f"SNMP 认证失败，已暂停采集：{server.name}" if trip and is_auth
@@ -1649,7 +1649,7 @@ def collect_and_store(db, server) -> dict:
             db.commit()
         return res
 
-    # 采通了就把熔断解除 —— 说明凭据是对的、设备也在应答，没必要继续罚它。
+    # 采通了就把熔断解除，说明凭据是对的、设备也在应答，没必要继续罚它。
     snmp_info["paused_until"] = None
     snmp_info["pause_count"] = 0
     snmp_info["pause_reason"] = ""
@@ -1662,13 +1662,13 @@ def collect_and_store(db, server) -> dict:
         "sys_object_id": res.get("sys_object_id", ""),
         "uptime_seconds": res.get("uptime", 0),
         "interface_count": len(res.get("interfaces", [])),
-        # 交换机那台是 None —— 前端靠"有没有这个键"决定要不要显示那几张卡片。
+        # 交换机那台是 None，前端靠"有没有这个键"决定要不要显示那几张卡片。
         "nas": res.get("nas"),
         "env": res.get("env"),
     })
     server.extra_config = extra
     server.last_seen = now
-    # 采通了就把"离线"翻回"在管" —— 离线是采集侧判出来的，恢复也该由采集侧判。
+    # 采通了就把"离线"翻回"在管"，离线是采集侧判出来的，恢复也该由采集侧判。
     # 但「断开」（管理员主动停采集）不动：那是人下的决定，不能因为设备还通着就自作主张恢复。
     if server.status in ("offline", "unknown"):
         server.status = "monitored"
@@ -1676,7 +1676,7 @@ def collect_and_store(db, server) -> dict:
         server.offline_time = None
 
     # 单端口速率的基线：上一轮每个口的累计字节 + 时间戳。
-    # 没有基线 / 间隔算不出来 → dt_if 保持 0，本轮所有口写 NULL（不是 0）。
+    # 没有基线 / 间隔算不出来 dt_if 保持 0，本轮所有口写 NULL（不是 0）。
     prev_if_raw = (server.extra_config or {}).get("snmp", {}).get("if_counters") or {}
     prev_if = prev_if_raw.get("c") or {}
     dt_if = 0.0
@@ -1726,18 +1726,18 @@ def collect_and_store(db, server) -> dict:
         if idx not in seen:
             db.delete(row)
 
-    # 🚨 必须重新赋值一次：snmp_info 是在 server.extra_config 里就地改的，
-    #    JSON 列对"原地修改"不敏感，不重新赋值这一轮可能不落库。
+    # 必须重新赋值一次：snmp_info 是在 server.extra_config 里就地改的，
+    # JSON 列对"原地修改"不敏感，不重新赋值这一轮可能不落库。
     snmp_info["if_counters"] = {"at": now.isoformat(), "c": cur_if}
     server.extra_config = extra
 
     # 指标：与 Agent 上报的主机写同一张表，交换机就能进仪表盘和图表
     in_mbps, out_mbps = _rate_mbps(db, server, res.get("total_in_octets", 0),
                                    res.get("total_out_octets", 0), now)
-    # 🚨 CPU / 内存**不能把"没采到"写成 0**：交换机大多不实现 HOST-RESOURCES-MIB
+    # CPU / 内存**不能把"没采到"写成 0**：交换机大多不实现 HOST-RESOURCES-MIB
     # （华为 S5731 就是，62 个端口全采得到，hrProcessorLoad / hrStorageTable 一个都没有）。
     # 以前 `float(res.get("cpu_percent") or 0)` 把 None 压成 0.0 存库，前端 `cpu == null`
-    # 永远不成立 → 卡片显示成"CPU 0%"，看着像设备快饿死了，实际是没这个指标。
+    # 永远不成立 卡片显示成"CPU 0%"，表现类似设备快饿死了，实际是没这个指标。
     # 现在设备不给就存 NULL，前端显示"未提供"。
     _cpu = res.get("cpu_percent")
     _mem = res.get("memory_percent")
@@ -1780,7 +1780,7 @@ def _rate_mbps(db, server, total_in: int, total_out: int, now) -> tuple:
         return 0.0, 0.0
     din = max(0, total_in - int(prev.get("in") or 0))
     dout = max(0, total_out - int(prev.get("out") or 0))
-    # 计数器回绕（设备重启 / 32 位绕回）→ 这一轮算不出来就报 0，别报负数或天文数字
+    # 计数器回绕（设备重启 / 32 位绕回） 这一轮算不出来就报 0，别报负数或天文数字
     if din > 10 ** 13 or dout > 10 ** 13:
         return 0.0, 0.0
     return round(din * 8 / dt / 1_000_000, 3), round(dout * 8 / dt / 1_000_000, 3)

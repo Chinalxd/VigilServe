@@ -213,7 +213,7 @@ class CliSession:
 def open_cli_session(server, cols: int = 80, rows: int = 24, db=None, timeout: int = CONNECT_TIMEOUT) -> CliSession:
     """登录设备并拿到一个交互式 shell。失败抛 `CliError`（消息可直接给管理员看）。
 
-    ⚠ 这里是同步阻塞的，WS 端点必须放线程池里跑，别直接 await。
+ 这里是同步阻塞的，WS 端点必须放线程池里跑，别直接 await。
     """
     t = cli_target(server)
     username = t["username"]

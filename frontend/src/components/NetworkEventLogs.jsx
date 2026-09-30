@@ -3,16 +3,15 @@
  * 主机那套事件日志是「服务端 → Agent → Windows 事件日志」，网络设备装不上 Agent，
  * 也没有 Windows 事件日志可拉。所以这里合并三条流：
  *
- *   · 设备（device）       —— 2026-09-21 起，走「路线 A：只读 SSH 轮询」从设备
- *     内部拉回来的运行日志（华为 logbuffer / trapbuffer）。只发 display 命令，
- *     不改设备配置。设备日志只活在内存里（环形缓冲，实测已被覆盖 2207 次、重启即丢），
- *     不主动拉就查不到。
- *   · 告警（Alert）        —— 采集失败、端口 DOWN、指标越线、SSH 主机密钥变更
- *   · 审计（OperationLog）—— 新增 / 连接 / 断开 / 改凭据 / 命令行登录
+ * · 设备（device） —— 2026-09-21 起，走「路线 A：只读 SSH 轮询」从设备
+ * 内部拉回来的运行日志（华为 logbuffer / trapbuffer）。只发 display 命令，
+ * 不改设备配置。设备日志只活在内存里（环形缓冲，实测已被覆盖 2207 次、重启即丢），
+ * 不主动拉就查不到。
+ * · 告警（Alert） —— 采集失败、端口 DOWN、指标越线、SSH 主机密钥变更
+ * · 审计（OperationLog）—— 新增 / 连接 / 断开 / 改凭据 / 命令行登录
  *
  * 这仍**不是** syslog。设备主动推日志给服务端（UDP 514 / 162）是另一条路，
- * 需要动设备配置并在服务端起监听，页面底部如实写了这一点，不假装已经支持。
- */
+ * 需要动设备配置并在服务端起监听，页面底部如实写了这一点，不假装已经支持。 */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { parseServerTime } from '../utils/format'
 import { collectDeviceLogs, fetchNetworkDeviceLogs, resumeSnmpCollect } from '../services/api'
@@ -127,15 +126,15 @@ export default function NetworkEventLogs({ serverId }) {
     <div className="reg-section ndl-card">
       <div className="reg-section-header">
         {/* 2026-09-21：「上次采集」原先单独占卡片第二行，按需求上移到工具栏标题后面。
-            用一个 .ndl-head-left 把标题和它包起来，右侧按钮组仍旧靠右排。
-            🚨 这里显示的是**设备日志**那条链路的状态（deviceLogs），不是 SNMP 的
-            collect —— 这个页签讲的是设备内部日志，摆 SNMP 的"成功，10 个端口"
-            只会让人以为内部日志拉成功了。
+ 用一个 .ndl-head-left 把标题和它包起来，右侧按钮组仍旧靠右排。
+ 这里显示的是**设备日志**那条链路的状态（deviceLogs），不是 SNMP 的
+ collect —— 这个页签讲的是设备内部日志，摆 SNMP 的"成功，10 个端口"
+ 只会让人以为内部日志拉成功了。
 
-            🚨 2026-09-21 再改：按需求**只留时间**，后面那串说明文案（「成功，新增 N 条」
-            /「失败：…」/「不支持，…」）全部取消显示。
-            状态本身没有丢 —— 「拉取设备日志」按钮的悬浮提示里写着原因，
-            不支持时按钮还是灰的；采集失败也仍然会在点按钮后以红字报出来。 */}
+ 2026-09-21 再改：按需求**只留时间**，后面那串说明文案（「成功，新增 N 条」
+ /「失败：…」/「不支持，…」）全部取消显示。
+ 状态本身没有丢 —— 「拉取设备日志」按钮的悬浮提示里写着原因，
+ 不支持时按钮还是灰的；采集失败也仍然会在点按钮后以红字报出来。 */}
         <div className="ndl-head-left">
           <h3 className="reg-section-title">设备日志</h3>
           {deviceLogs && deviceLogs.last_attempt_at && (
@@ -243,8 +242,8 @@ export default function NetworkEventLogs({ serverId }) {
       )}
 
       {/* 状态栏：条数 + 每页条数 + 翻页 —— 与「主机事件日志」(.el-pagination) 同一套样式。
-          2026-09-21：按需求把原本跟在「共 N 条」后面的描述文字（设备日志上次采集 / 底部说明）
-          全部删掉，「上次采集」已经上移到工具栏标题后面了。 */}
+ 2026-09-21：按需求把原本跟在「共 N 条」后面的描述文字（设备日志上次采集 / 底部说明）
+ 全部删掉，「上次采集」已经上移到工具栏标题后面了。 */}
       <div className="reg-panel-foot ndl-foot">
         <span className="ndl-total-count">共 {total} 条</span>
         <div className="ndl-page-size">

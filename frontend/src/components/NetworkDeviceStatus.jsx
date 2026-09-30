@@ -2,13 +2,12 @@
  *
  * 主机那套状态页（CPU / 磁盘 / 内存 / 磁盘 IO / TCP 连接）对交换机没意义：
  * 它没有磁盘、没有进程、也数不出 TCP 连接。所以这里换成设备真正有的指标：
- *   · CPU / 内存（HOST-RESOURCES，设备不支持就显示"未提供"）
- *   · 入站 / 出站总流量（IF-MIB 汇总，64 位计数）
- *   · 端口 UP / DOWN 统计 + 错包（运维最关心的两件事）
- *   · 采集状态（上次成功时间、连续失败次数）
+ * · CPU / 内存（HOST-RESOURCES，设备不支持就显示"未提供"）
+ * · 入站 / 出站总流量（IF-MIB 汇总，64 位计数）
+ * · 端口 UP / DOWN 统计 + 错包（运维最关心的两件事）
+ * · 采集状态（上次成功时间、连续失败次数）
  *
- * 图表 / 卡片 / 周期工具栏都按现有状态页的样式来，只是内容换掉。
- */
+ * 图表 / 卡片 / 周期工具栏都按现有状态页的样式来，只是内容换掉。 */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { parseServerTime } from '../utils/format'
 import {
@@ -95,8 +94,8 @@ function StatChart({ title, data, keys, colors, unit, emptyText }) {
           <div className="nds-chart-empty">{rows.length === 0 ? '该时间范围内还没有采集数据' : emptyMsg}</div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            {/* 🚨 X 轴必须用接口返回的 timestamp（以前写成了 time，字段对不上 →
-                整张图一条线都画不出来，看起来就是"没有线条颜色"） */}
+            {/* X 轴必须用接口返回的 timestamp（以前写成了 time，字段对不上 →
+ 整张图一条线都画不出来，看起来就是"没有线条颜色"） */}
             <LineChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: -12 }}>
               <CartesianGrid stroke="#eceef1" strokeDasharray="3 3" />
               <XAxis
@@ -183,12 +182,12 @@ export default function NetworkDeviceStatus({
   }, [range])
 
   // 刷新：重拉图表数据 + 端口表，并顺带让父级刷新设备信息 / 最新指标。
-  // 🚨 2026-09-21 按需求删掉了「立即采集」按钮 —— 它原来调 `collectSnmp()`
-  //    去触发一次服务端 SNMP 采集，但和「刷新」在用户眼里就是一回事，
-  //      · 只留「刷新」（纯读，不触发采集，因此**不需要**采集权限）
-  //      · 采集节奏完全交给服务端的采集周期，不再提供手动催采
-  //    `onCollect` 这个 prop 保留 —— 它是父级的刷新回调（重载设备信息/指标），
-  //    跟着刷新一起调用仍然有意义，所以没有连带删掉。
+  // 2026-09-21 按需求删掉了「立即采集」按钮 —— 它原来调 `collectSnmp()`
+  // 去触发一次服务端 SNMP 采集，但和「刷新」在用户眼里就是一回事，
+  // · 只留「刷新」（纯读，不触发采集，因此**不需要**采集权限）
+  // · 采集节奏完全交给服务端的采集周期，不再提供手动催采
+  // `onCollect` 这个 prop 保留 —— 它是父级的刷新回调（重载设备信息/指标），
+  // 跟着刷新一起调用仍然有意义，所以没有连带删掉。
   const onRefresh = async () => {
     setBusy('refresh')
     try {
@@ -241,7 +240,7 @@ export default function NetworkDeviceStatus({
   }, [history])
 
   // 图表上标注数据粒度：300 秒采集周期下"近 1 小时"只有 12 个点，
-  // 不写清楚的话曲线看着像断断续续，其实是采样就这么稀（2026-09-21 现场反馈）
+  // 不写清楚的话曲线表现类似断断续续，实际是采样就这么稀（2026-09-21 现场反馈）
   const granularity = useMemo(() => {
     const p = (net && net.asset && net.asset.collect_period_sec) || server?.collect_period_sec
     return periodLabel(p)
@@ -270,9 +269,9 @@ export default function NetworkDeviceStatus({
   const envPower = (env && env.power) || null
   const envFan = (env && env.fan) || null
   const envUsage = (env && env.power_usage) || null
-  // 🚨 电源卡原来还会把"未供电"的槽位名点出来（如 `未供电：0/5`），2026-09-21 按需求去掉：
-  //    这台交换机两个电源槽只插了一个，天天挂着一条红字纯属噪音；1/2 这个数本身已经说明问题。
-  //    风扇卡下面的"异常"点名保留 —— 风扇真坏了是要立刻处理的，和"备用槽没插"不是一回事。
+  // 电源卡原来还会把"未供电"的槽位名点出来（如 `未供电：0/5`），2026-09-21 按需求去掉：
+  // 这台交换机两个电源槽只插了一个，天天挂着一条红字纯属噪音；1/2 这个数本身已经说明问题。
+  // 风扇卡下面的"异常"点名保留 —— 风扇真坏了是要立刻处理的，和"备用槽没插"不是一回事。
   const envBadFan = ((envFan && envFan.items) || []).filter((i) => i.ok === false)
 
   // 内存到底该显示哪个数：Linux 上 hrStorageTable 算出来的"使用率"把磁盘缓存也算成
@@ -312,8 +311,8 @@ export default function NetworkDeviceStatus({
               : ''}
         />
         {/* 入/出站卡片只讲带宽：实时值 + 本周期峰值。
-            以前把「UP / DOWN 端口数」挂在这两张卡下面，跟"流量"没关系，
-            看着像"入站 20 / 出站 42"是某种流量配比，实际是端口状态（2026-09-21 拆走）。 */}
+ 以前把「UP / DOWN 端口数」挂在这两张卡下面，跟"流量"没关系，
+ 表现类似"入站 20 / 出站 42"是某种流量配比，实际是端口状态（2026-09-21 拆走）。 */}
         <MetricBox
           icon="in"
           label="入站流量"
@@ -331,8 +330,8 @@ export default function NetworkDeviceStatus({
           sub={peak.out > 0 ? `区间峰值 ${peak.out.toFixed(2)} Mbps` : '区间内暂无峰值'}
         />
         {/* 只留 UP / DOWN / 异常三计数：以前下面还挂一行「已断开：GE0/0/1、GE0/0/2 等 N 个」，
-            小卡片塞不下就折成三行、把数字挤没了（2026-09-21 按需求去掉）；
-            具体是哪些口断开，看下方端口表格。 */}
+ 小卡片塞不下就折成三行、把数字挤没了（2026-09-21 按需求去掉）；
+ 具体是哪些口断开，看下方端口表格。 */}
         <MetricBox
           icon="port"
           label="端口健康"
@@ -342,7 +341,7 @@ export default function NetworkDeviceStatus({
           sub={<span>物理口 UP {portStat.up} · DOWN {portStat.down} · 异常 {portStat.abnormal}</span>}
         />
         {/* 网络延迟 / 丢包：ICMP 由内核应答，SNMP 由代理进程应答。
-            SNMP 超时但 ping 得通 = 链路在、控制面卡了；两条路分开显示才看得出来。 */}
+ SNMP 超时但 ping 得通 = 链路在、控制面卡了；两条路分开显示才看得出来。 */}
         {icmp ? (
           <MetricBox
             icon="latency"
@@ -359,9 +358,9 @@ export default function NetworkDeviceStatus({
           />
         ) : null}
         {/* 硬件健康三张卡：温度 / 电源 / 风扇。
-            后端按「华为私有 → 群晖私有 → 思科 ENVMON → 标准 ENTITY-MIB → ENTITY-SENSOR」
-            自动选路，所以 NAS / 路由 / 防火墙 / 交换机共用同一套卡片；
-            某项设备没提供就是 null，对应卡片整张不渲染。 */}
+ 后端按「华为私有 → 群晖私有 → 思科 ENVMON → 标准 ENTITY-MIB → ENTITY-SENSOR」
+ 自动选路，所以 NAS / 路由 / 防火墙 / 交换机共用同一套卡片；
+ 某项设备没提供就是 null，对应卡片整张不渲染。 */}
         {envTemp ? (
           <MetricBox
             icon="temp"
@@ -438,9 +437,9 @@ export default function NetworkDeviceStatus({
       </div>
 
       {/* 周期条按用户要求插在两行卡片之间（指标卡片行 ↑ / 图表行 ↓）。
-          2026-09-21 按需求去掉「立即采集」按钮 —— 「刷新」已经能拉最新数据，
-          两个按钮功能上重叠，只留一个。采集节奏由服务端的采集周期决定，
-          手动"立即采集"并不会真的提前下一次采集，容易让人误以为能催。 */}
+ 2026-09-21 按需求去掉「立即采集」按钮 —— 「刷新」已经能拉最新数据，
+ 两个按钮功能上重叠，只留一个。采集节奏由服务端的采集周期决定，
+ 手动"立即采集"并不会真的提前下一次采集，容易让人误以为能催。 */}
       <div className="nds-toolbar">
         <span className="nds-toolbar-label">周期：</span>
         {RANGES.map((r) => (

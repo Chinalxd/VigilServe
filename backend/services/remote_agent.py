@@ -32,12 +32,11 @@ class RemoteAgent:
     def _connect_winrm(self) -> bool:
         from winrm.protocol import Protocol
 
-        # 🚨 交付审查 P1-6 复核（2026-09-23）：这里原先写死了 `http://`，于是那个
-        # `server_cert_validation='ignore'` 是**死参数** —— http 连接根本没有 TLS，
-        # 参数不起作用，看着像"关掉了证书校验"，实际暴露的是另一件事：整条管理链路
+        # 交付审查 P1-6 复核（2026-09-23）：这里原先写死了 `http://`，于是那个
+        # `server_cert_validation='ignore'` 是**死参数**，http 连接根本没有 TLS，
+        # 参数不起作用，表现类似"关掉了证书校验"，实际暴露的是另一件事：整条管理链路
         # （含 NTLM 凭据与被执行的命令）跑在明文上。
-        #
-        # 现在按端口选协议：5986 是 WinRM 的 HTTPS 端口 → 走 TLS 并用本地 CA 校验；
+        # 现在按端口选协议：5986 是 WinRM 的 HTTPS 端口 走 TLS 并用本地 CA 校验；
         # 其余（5985 等）维持 http，**现有部署行为不变**，但代码不再自欺欺人。
         # 要让某台主机真正加密，在设备上开 WinRM HTTPS 监听并把连接端口改到 5986。
         port = int(self.server.connection_port or 0)
@@ -79,7 +78,7 @@ class RemoteAgent:
     def _connect_ssh(self) -> bool:
         import paramiko
         self.session = paramiko.SSHClient()
-        # S5：主机密钥钉扎 —— 认证前比对，防中间人。
+        # S5：主机密钥钉扎，认证前比对，防中间人。
         # 原来这里是 WarningPolicy（只打日志就放行、不落盘不比对），等于连谁都信。
         # prepare_client() 会把已钉扎的公钥塞进 known_hosts 并设好首连策略。
         from services import ssh_pinning as pin
@@ -103,7 +102,7 @@ class RemoteAgent:
             )
         except Exception:
             # 认证前就被 paramiko 拦下（密钥不匹配）时，把对方出示的密钥记进 pending
-            # 并告警 —— 否则管理员只看到一句 SSHException，不知道对面现在是什么指纹。
+            # 并告警，否则管理员只看到一句 SSHException，不知道对面现在是什么指纹。
             try:
                 pin.note_connect_failure(self.server, self.session)
             except Exception:  # noqa: BLE001

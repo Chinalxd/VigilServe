@@ -38,7 +38,7 @@ a = Analysis(
         ('connector.py', '.'), ('config.py', '.'), ('api_server.py', '.'),
         ('agent_headless.py', '.'),
         # 卸载上报（2026-09-28）：卸载前向服务端通报，好让主机列表立刻置离线。
-        # 漏登记 → 打包后 `import uninstall_report` 失败，而它被 try/except 兜住，
+        # 漏登记 打包后 `import uninstall_report` 失败，而它被 try/except 兜住，
         # 于是上报**静默失效**，只能等心跳超时才显示离线（且「是否清配置」的
         # 分支永远不会生效）。
         ('uninstall_report.py', '.'),
@@ -49,17 +49,17 @@ a = Analysis(
         # below or the packaged Agent silently loses remote desktop.
         ('remote_desktop.py', '.'),
         # TLS 工具（安全加固阶段 2）：用它加载随包内置的本地 CA 校验服务端证书。
-        # 漏登记 → 打包后的 Agent 在服务端切 HTTPS 后报
+        # 漏登记 打包后的 Agent 在服务端切 HTTPS 后报
         # "ModuleNotFoundError: No module named 'tls_util'"，且**静默**退回不校验。
         ('tls_util.py', '.'),
         # 设备身份（安全演进 S1）：node_id + RSA 密钥对 + CSR + 请求签名。
-        # 漏登记 → 打包后的 Agent 静默退回遗留 HMAC token 认证（永远拿不到证书）。
+        # 漏登记 打包后的 Agent 静默退回遗留 HMAC token 认证（永远拿不到证书）。
         ('identity.py', '.'),
         ('meshagent.py', '.'),
-        # Agent 自身完整性自检（开源加固 ⑥）。漏登记 → 打包后的 Agent 在
+        # Agent 自身完整性自检（开源加固 ⑥）。漏登记 打包后的 Agent 在
         # connector.heartbeat 里的 `import self_check` 抛 ModuleNotFoundError，
         # 而它被 try/except 兜住了，于是**静默**不再上报指纹、服务端永远登记
-        # 不了基线 —— 比直接崩更糟，因为没人看得出来。
+        # 不了基线，比直接崩更糟，因为没人看得出来。
         ('self_check.py', '.'),
         ('agent_icon.ico', '.'),
         ('tray_idle.ico', '.'), ('tray_running.ico', '.'),

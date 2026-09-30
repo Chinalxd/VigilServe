@@ -46,10 +46,10 @@ def _maybe_issue_api_cert(db: Session, agent_key: "AgentKey", server: Server, da
                     f"api 证书公钥已更换 server_id={server.id}，拒绝重签（防顶替）")
                 return {}
             if cur_pub is not None and not tls_util.cert_issued_by_current_ca(agent_key.api_cert):
-                # 🚨 2026-09-28：`cert_needs_renew()` 只看日期。服务端**重装 / 重建 CA**
+                # 2026-09-28：`cert_needs_renew()` 只看日期。服务端**重装 / 重建 CA**
                 # 之后，库里这份证书虽然没到期，却已经不是当前 CA 签的了。原样发回去，
                 # Agent 的 9998 会永久挂在 CA 链校验失败上；而 Agent 侧因为证书未到期，
-                # 永远不上送 api_csr —— 两边都"觉得没问题"，通道就此永久断掉。
+                # 永远不上送 api_csr，两边都"觉得没问题"，通道就此永久断掉。
                 # 现场症状：资源管理器/远程桌面全报「无法连接到 Agent {ip}:9998」。
                 logger.info(
                     f"库内 api 证书已不归当前 CA（服务端 CA 变更过），"
@@ -95,12 +95,12 @@ def _is_valid_agent_ip(ip: str) -> bool:
     return True
 
 
-# ── 待审核队列防护（S0，2026-09-18） ─────────────────────────────────────
+# 待审核队列防护（S0，2026-09-18）
 # `/register` 是**零鉴权**接口（Agent 专用，设计如此），也就是说它是一个
-# 「任何人都能写」的表面。在给它接上客户端证书（S1）之前，先补三道闸门：
-#   ① 同一来源 IP 的滑动窗口限速 —— 拦住脚本批量刷注册
-#   ② 全局队列上限 + 同一 IP 名下条目上限 —— 防止管理员被垃圾条目淹没
-#   ③ TTL 清理 —— 无人处理的条目不能无限期躺在库里
+# 「任何人都能写」的表面。在给它接上客户端证书（S1）之前，先补三道闸门
+# ① 同一来源 IP 的滑动窗口限速，拦住脚本批量刷注册
+# ② 全局队列上限 + 同一 IP 名下条目上限，防止管理员被垃圾条目淹没
+# ③ TTL 清理，无人处理的条目不能无限期躺在库里
 # 这里改成自动加后缀 + 标记撞车，由注册管理页给出「名称重复」警告。
 _PENDING_TOTAL_LIMIT = 200
 _PENDING_PER_IP_LIMIT = 3
@@ -367,12 +367,12 @@ def _verify_auth_ex(server_id: int, token: str, db: Session) -> "tuple[Server | 
     `"prev"` 表示这把 token 是**轮换前**的旧货 —— 调用方应当顺手把新 token
     下发给 Agent，让它自己换过来（见心跳接口）。
 
-    ⚠ 遗留路径（安全演进 S1 之前的实现）。`AgentKey.secret_key` 是对称密钥，
+ 遗留路径（安全演进 S1 之前的实现）。`AgentKey.secret_key` 是对称密钥，
     服务端和 Agent 都能算出同一个 token —— 一旦这台机器上任意进程读到配置里的
     token，就能冒充该主机。新版本 Agent 由 `_authenticate()` 切到客户端证书路线；
     这里只在本机 Agent 还没迁移时兜底，并打告警。
 
-    🚨 2026-09-23 开源加固 ⑤：原来是 `expected[:32] == token[:32]` 的**截断比较**
+ 2026-09-23 开源加固 ⑤：原来是 `expected[:32] == token[:32]` 的**截断比较**
        （只比前 32 个 hex 字符），碰撞面被人为放大了一倍。改成全量比对 ——
        Agent 侧发的本来就是完整的 64 位，不影响任何现有部署。
     """
@@ -398,7 +398,7 @@ def _authenticate(request: Request, db: Session,
     设备身份 = `node_id` + **服务端库里登记的公钥**。每个请求都必须用对应的私钥
     对规范串签名（含时间戳 + nonce），服务端拿登记的公钥验。
 
-    🚨 改之前这里有两套凭据（客户端证书 / 静态 token）并且**互相回落**，一共 15
+ 改之前这里有两套凭据（客户端证书 / 静态 token）并且**互相回落**，一共 15
     个分支。回落的边界情况穷举不完 —— 光「服务端换机器部署」这一个场景就连着长出
     两条 401（未知 node_id、IP mismatch），界面表现都是「注册成功几秒后又变回
     未注册」，而根因完全不同、排查只能靠猜。现在只有一条路，没有回落。
@@ -410,7 +410,7 @@ def _authenticate(request: Request, db: Session,
       · 反过来，被砍掉的静态 token 才是**真后门** —— 它是配置文件里的一把静态串，
         本机任意进程读到就能冒充这台主机上报，且吊销机制拦不住。
 
-    ⚠ `token` 并没有消失，它降级成了**仅服务端回调本机 9998 用的下行凭据**
+ `token` 并没有消失，它降级成了**仅服务端回调本机 9998 用的下行凭据**
     （Agent 侧叫 callback key）。它**不再**能用于上行认证 —— 上行的唯一凭据是签名。
 
     为什么签名挂在应用层而不是做 mTLS：见 `services/agent_identity.py` 顶部注释。
@@ -424,7 +424,7 @@ def _authenticate(request: Request, db: Session,
     未准入设备连心跳都签不了名 → 一直显示离线，管理员以为机器没连上。现在
     **在线 = 网络连通**（心跳通就行），**准入 = 能不能上报数据**（仍然是 pub_key
     这一道闸）—— 两件事分开。
-    ⚠ 暂存公钥同样要**验签**，不是免认证：没有它，任何人拿一个 node_id 就能把
+ 暂存公钥同样要**验签**，不是免认证：没有它，任何人拿一个 node_id 就能把
     主机刷成在线。所以这里不是"放开一条免鉴权通道"，只是换了把钥匙去验。
 
     返回 `(Server, 认证方式)`，失败一律 `(None, 原因)`。
@@ -490,7 +490,7 @@ def _authenticate(request: Request, db: Session,
 def _record_agent_online(server: Server, now: datetime, db: Session = None) -> None:
     """Agent 联系到服务端时更新上下线时间。
 
-    🚨 2026-09-28 用户提的缺陷：**未加入管理的主机「上线时间」永远是第一次安装
+ 2026-09-28 用户提的缺陷：**未加入管理的主机「上线时间」永远是第一次安装
     上线那一刻**，断线再连上也不变。
 
     根因是 `online_time` 原来挂在"状态迁移"上：只有 `offline/unknown/warning/
@@ -511,7 +511,7 @@ def _record_agent_online(server: Server, now: datetime, db: Session = None) -> N
       · `warning` / `critical`（在线但有告警）不再刷新上线时间 —— 它没有掉线，
         刷新反而把"最近一次上线"写成告警持续的那一刻。
 
-    ⚠ 调用点必须在**写 `last_seen` 之前**：这里要比的是"上一次联系"的时间，
+ 调用点必须在**写 `last_seen` 之前**：这里要比的是"上一次联系"的时间，
     写完就比不出来了（heartbeat 里正是先调本函数、后写 `last_seen`）。
     """
     # 状态恢复：`join_time` 非空 = 曾被纳入管理，否则保持 registered。
@@ -521,7 +521,7 @@ def _record_agent_online(server: Server, now: datetime, db: Session = None) -> N
     try:
         from services import device_status as _ds
         _was_offline = not _ds.is_online(server, _ds.load_config(db), now)
-    except Exception:  # noqa: BLE001  判不出来就退回"只补一次"的旧行为
+    except Exception:  # noqa: BLE001 判不出来就退回"只补一次"的旧行为
         _was_offline = False
 
     if _was_offline or server.online_time is None:
@@ -539,7 +539,7 @@ def agent_ping():
 def agent_ca():
     """把本服务端的本地 CA 证书发给 Agent（**免鉴权**，Agent 入户前的信任引导）。
 
-    🚨 为什么必须免鉴权，以及为什么不冲突于 `/api/tls/ca.crt` 的管理员限制：
+ 为什么必须免鉴权，以及为什么不冲突于 `/api/tls/ca.crt` 的管理员限制：
 
     每台 VigilServe 服务端都在**首次启动时自己生成一把本地 CA**（`services/tls.py`），
     所以任何"预先打进 Agent 安装包"的 CA 只对打包那台机器有效。换个服务端部署，
@@ -578,7 +578,7 @@ def agent_scan(request: Request, server_id: int, db: Session = Depends(get_db)):
     authed, _why = _authenticate(request, db)
     if not (authed and authed.id == server_id):
         # 管理员分支：2026-09-22 安全审计 P0-4。
-        # 旧写法只判断 Authorization 头「非空」（`if not auth: raise 401`）→ 任意值即可通过，
+        # 旧写法只判断 Authorization 头「非空」（`if not auth: raise 401`） 任意值即可通过，
         # 且上面 import 的 require_admin 从头到尾没被调用过。现在改为真正校验管理员身份。
         require_admin_full(request.headers.get("authorization"), db)
 
@@ -703,19 +703,17 @@ def agent_register(request: Request, data: dict, db: Session = Depends(get_db)):
 
     server = None
 
-    #    注释说是防「拷贝安装配置劫持别的主机」。这条在 **L1（DHCP 换 IP）场景下
-    #    会直接误伤** —— 一台已纳管的主机换了 IP 就认不回来，掉到第 2/3 步按新 IP
-    #    匹配，匹配不上就在待审核队列里多出一条副本（评估文档 §3.3 点名要改）。
-    #
-    #    现在身份锚是 node_id + 登记的公钥，**IP 只是联络地址**：
-    #      · 带 node_id 且已登记公钥未吊销 → 直接认领，不看 IP；
-    #      · 遗留 HMAC 路径 → token 本身就是持有证明，IP 只作为兜底判据，
-    #        再放宽一步「IP 不同但主机名相同」也认，让换 IP 的老机能自己接回来。
-    #
-    #    ⚠ 2026-09-28：判据原来是 `_k.client_cert`。方案 A（1.1.51）砍掉客户端
-    #    证书之后 `client_cert` **再无写入点**，这一支恒假 —— 已纳管的主机换 IP
-    #    认不回来，掉到下面按 IP 匹配，匹配不上就变成待审核队列里的重复条目。
-    #    「已登记身份」在方案 A 下的等价判据是 `pub_key` 非空。
+    # 注释说是防「拷贝安装配置劫持别的主机」。这条在 **L1（DHCP 换 IP）场景下
+    # 会直接误伤**，一台已纳管的主机换了 IP 就认不回来，掉到第 2/3 步按新 IP
+    # 匹配，匹配不上就在待审核队列里多出一条副本（评估文档 §3.3 点名要改）。
+    # 现在身份锚是 node_id + 登记的公钥，**IP 只是联络地址**
+    # · 带 node_id 且已登记公钥未吊销 直接认领，不看 IP；
+    # · 遗留 HMAC 路径 token 本身就是持有证明，IP 只作为兜底判据，
+    # 再放宽一步「IP 不同但主机名相同」也认，让换 IP 的老机能自己接回来。
+    # 2026-09-28：判据原来是 `_k.client_cert`。方案 A（1.1.51）砍掉客户端
+    # 证书之后 `client_cert` **再无写入点**，这一支恒假，已纳管的主机换 IP
+    # 认不回来，掉到下面按 IP 匹配，匹配不上就变成待审核队列里的重复条目。
+    # 「已登记身份」在方案 A 下的等价判据是 `pub_key` 非空。
     _claimed_by_identity = False
     _node_id = str(data.get("node_id") or "").strip()
     if _node_id.startswith("vnode-"):
@@ -770,7 +768,7 @@ def agent_register(request: Request, data: dict, db: Session = Depends(get_db)):
                 ),
             )
 
-    # ── S0：走到这里说明上面三步都没匹配到，即将新建一条待审核条目。
+    # S0：走到这里说明上面三步都没匹配到，即将新建一条待审核条目。
     # 这是零鉴权接口唯一的写入点，过一遍队列防护。
     name_conflict_with = None
     if not server:
@@ -785,7 +783,7 @@ def agent_register(request: Request, data: dict, db: Session = Depends(get_db)):
         hostname, name_conflict_with = _unique_server_name(db, hostname)
 
     if server:
-        # ⚠ S3：按**设备身份**（node_id）认领到位时**不做**这次清理 ——
+        # S3：按**设备身份**（node_id）认领到位时**不做**这次清理，
         # 清理的判据是 IP，而 IP 是可以共用的（NAT / 出口同一个公网地址 / 同一
         # 台机器上跑两个 Agent）。身份已经确定的情况下再按 IP 删同址记录，
         # 等于把别人的主机记录删掉（评估文档 §3.5：改这套时必须显式关掉自动清理）。
@@ -850,7 +848,7 @@ def agent_register(request: Request, data: dict, db: Session = Depends(get_db)):
             extra_cfg["os_version"] = data["os_version"]
         if name_conflict_with:
             # 主机名与已有记录撞车（不同来源）。名字已经加了后缀，这里留下标记，
-            # 让注册管理页能显示「⚠ 名称与已存在主机重复」而不是悄悄另起一条。
+            # 让注册管理页能显示「 名称与已存在主机重复」而不是悄悄另起一条。
             extra_cfg["name_conflict_with"] = name_conflict_with
         server = Server(
             name=hostname,
@@ -874,12 +872,11 @@ def agent_register(request: Request, data: dict, db: Session = Depends(get_db)):
 
     agent_key = db.query(AgentKey).filter(AgentKey.server_id == server.id).first()
     # 这个 node_id 没被别的设备占用时才能登记到本条记录上（避免两台机器抢同一身份）。
-    #
-    # 🚨 S3：以前这里**只建 secret_key、不写 node_id**，于是走 /register 入户的
-    #    机器在库里永远没有设备身份。它本地一旦有客户端证书（从另一台服务端带
-    #    来的、或更早版本领的），心跳就会带上签名头，而服务端按 node_id 查不到
-    #    记录 → 「未知 node_id」→ 掉线死循环（见 _authenticate() 里的注释）。
-    #    登记的只是联络信息，不发证，所以不会给零鉴权的 /register 开口子。
+    # S3：以前这里**只建 secret_key、不写 node_id**，于是走 /register 入户的
+    # 机器在库里永远没有设备身份。它本地一旦有客户端证书（从另一台服务端带
+    # 来的、或更早版本领的），心跳就会带上签名头，而服务端按 node_id 查不到
+    # 记录 「未知 node_id」 掉线死循环（见 _authenticate() 里的注释）。
+    # 登记的只是联络信息，不发证，所以不会给零鉴权的 /register 开口子。
     _node_free = _node_id.startswith("vnode-") and db.query(AgentKey).filter(
         AgentKey.node_id == _node_id).first() is None
     if not agent_key:
@@ -900,7 +897,7 @@ def agent_register(request: Request, data: dict, db: Session = Depends(get_db)):
 
     # 1.1.52：让 Agent 配置面板能区分「已注册、尚未加入管理」与「已加入管理」。
     # 以前只回 server_id，面板一律显示"注册成功"，操作员会以为接入已经完成，
-    # 于是卡在"服务端一直看不到这台机器"上 —— 实际还差服务端「加入管理」一步。
+    # 于是卡在"服务端一直看不到这台机器"上，实际还差服务端「加入管理」一步。
     _managed = bool(agent_key.pub_key) and not agent_key.revoked
 
     # 2026-09-23 开源加固 ④：更新包验签密钥，与 token **故意分开**下发
@@ -940,7 +937,7 @@ def agent_enroll(request: Request, data: dict, db: Session = Depends(get_db)):
       - 已授权的设备再送一把**新公钥**来 → 拒绝，必须先吊销重新入户
         （换密钥 = 身份漂移，不能悄悄放行，否则偷到 node_id 的人就能换锁）
 
-    ⚠ 这个接口和 `/register` 一样是**零鉴权**的（否则新机器永远进不来），
+ 这个接口和 `/register` 一样是**零鉴权**的（否则新机器永远进不来），
     所以它继承了 S0 那套队列防护：来源 IP 限速、队列上限、TTL 清理、同名检测。
     """
     try:
@@ -965,7 +962,7 @@ def agent_enroll(request: Request, data: dict, db: Session = Depends(get_db)):
 
             pub_pem = _x.load_pem_x509_csr(_legacy_csr.encode("utf-8")).public_key(
             ).public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo).decode("utf-8")
-        except Exception:  # noqa: BLE001  解析不了就当没带，下面会给出明确原因
+        except Exception:  # noqa: BLE001 解析不了就当没带，下面会给出明确原因
             pub_pem = ""
     mfp = str(data.get("machine_fingerprint") or "").strip()
 
@@ -985,8 +982,8 @@ def agent_enroll(request: Request, data: dict, db: Session = Depends(get_db)):
 
     name_conflict_with = None
     if server is None:
-        # ── 兼容升级：Agent 手里还有旧的 server_id + 遗留 token，直接认主，
-        #    不必再走一次 IP / 主机名匹配（那正是我们想摆脱的东西）。
+        # 兼容升级：Agent 手里还有旧的 server_id + 遗留 token，直接认主，
+        # 不必再走一次 IP / 主机名匹配（那正是我们想摆脱的东西）。
         known_server_id = data.get("server_id")
         known_token = data.get("token")
         if known_server_id and known_token:
@@ -998,7 +995,7 @@ def agent_enroll(request: Request, data: dict, db: Session = Depends(get_db)):
                 agent_key = db.query(AgentKey).filter(
                     AgentKey.server_id == server.id).first()
 
-        #    用机器指纹把还在队列里那条旧记录接住，避免队列里堆同一台机的副本。
+        # 用机器指纹把还在队列里那条旧记录接住，避免队列里堆同一台机的副本。
         if server is None and mfp:
             reuse = (
                 db.query(AgentKey, Server)
@@ -1026,7 +1023,7 @@ def agent_enroll(request: Request, data: dict, db: Session = Depends(get_db)):
                 old_key.revoked_reason = ""
 
         if server is None:
-            # ── 全新条目：走 S0 队列防护（这一支才是零鉴权写入点）
+            # 全新条目：走 S0 队列防护（这一支才是零鉴权写入点）
             if _register_too_frequent(client_host or ip):
                 raise HTTPException(status_code=429, detail="注册过于频繁，请稍后再试")
             _cleanup_pending(db)
@@ -1066,9 +1063,9 @@ def agent_enroll(request: Request, data: dict, db: Session = Depends(get_db)):
 
             # 批量部署场景不想一台台点「加入管理」。开了之后新入户的设备直接置为
             # 已纳管，下一个周期就能拿到证书。
-            # ⚠ 只对**全新**条目生效：被吊销过的机器不能靠这个开关自己回来，
-            #   那等于给了一条绕过吊销的后门。
-            # ⚠ 默认 0。置 1 意味着任何能连到本服务端的机器都能领到证书。
+            # 只对**全新**条目生效：被吊销过的机器不能靠这个开关自己回来，
+            # 那等于给了一条绕过吊销的后门。
+            # 默认 0。置 1 意味着任何能连到本服务端的机器都能领到证书。
             _auto = False
             try:
                 from models import GlobalConfig
@@ -1083,10 +1080,10 @@ def agent_enroll(request: Request, data: dict, db: Session = Depends(get_db)):
                 _now = datetime.now(timezone.utc)
                 server.status = "monitored"
                 server.join_time = _now
-                # 🚨 `online_time` 刻意**不写**（口径同 routes/servers.py::
-                #    _apply_status_change）。它被纳管是"管理员准入"这个人工动作，
-                #    不代表主机此刻已经上线；上线时刻由 _record_agent_online
-                #    在真正收到心跳时写入（本次 enroll 之后的心跳就会填上）。
+                # `online_time` 刻意**不写**（口径同 routes/servers.py::
+                # _apply_status_change）。它被纳管是"管理员准入"这个人工动作，
+                # 不代表主机此刻已经上线；上线时刻由 _record_agent_online
+                # 在真正收到心跳时写入（本次 enroll 之后的心跳就会填上）。
                 db.flush()
                 logger.warning(
                     f"[auto_approve] 新设备免审批直接纳管：name={hostname} ip={ip} "
@@ -1100,7 +1097,7 @@ def agent_enroll(request: Request, data: dict, db: Session = Depends(get_db)):
                         category="identity",
                         action="auto_approve",
                         level="warning",
-                        # 注意：warning 是「这事值得你知道」，不是「操作失败了」——
+                        # 注意：warning 是「这事值得你知道」，不是「操作失败了」，
                         # 设备确实已免审批纳管成功，所以 status 是 success。
                         status="success",
                         message=f"auto_approve 已开启：设备 {hostname}（{ip}）免人工审批直接纳管",
@@ -1146,7 +1143,7 @@ def agent_enroll(request: Request, data: dict, db: Session = Depends(get_db)):
                     f"属性漂移 {_res['level']}（入户）：server_id={server.id} "
                     f"{server.name} —— {_res['detail']}"
                 )
-        except Exception as _e:  # noqa: BLE001  漂移检测失败不能挡住入户
+        except Exception as _e:  # noqa: BLE001 漂移检测失败不能挡住入户
             logger.warning(f"入户漂移分级失败 server_id={server.id}：{_e}")
 
     # 已有主机：同步硬件 / 端口 / 安装路径（与 /register 保持一致的行为）
@@ -1188,14 +1185,13 @@ def agent_enroll(request: Request, data: dict, db: Session = Depends(get_db)):
         # 这里只是把状态提前标出来，好让注册管理页能显示"已批准、待首次入户登记"。
         agent_key.identity_state = "approved"
 
-    # ── 登记公钥（方案 A：身份就这一把公钥，不再签发证书）────────────
+    # 登记公钥（方案 A：身份就这一把公钥，不再签发证书）
     # 以前这里要解 CSR、调 CA 签一张 90 天的客户端证书、还要判「是不是同一把公钥
     # 在续期」「剩余有效期够不够」。现在只做一件事：把这把公钥记下来。
-    #
-    # 为什么换公钥仍要走吊销重来（下面那条判断没删）：
-    #   偷到 node_id 的人只要送一把**自己的**公钥来，就能把真机挤下线。所以一旦
-    #   登记过，只接受同一把公钥重复登记（重装 / 重新入户时是正常的），换锁必须
-    #   管理员先吊销。这条是身份体系的地基，与用不用证书无关。
+    # 为什么换公钥仍要走吊销重来（下面那条判断没删）
+    # 偷到 node_id 的人只要送一把**自己的**公钥来，就能把真机挤下线。所以一旦
+    # 登记过，只接受同一把公钥重复登记（重装 / 重新入户时是正常的），换锁必须
+    # 管理员先吊销。这条是身份体系的地基，与用不用证书无关。
     issue_error = ""
     _registered_now = False
     if not pub_pem:
@@ -1217,10 +1213,10 @@ def agent_enroll(request: Request, data: dict, db: Session = Depends(get_db)):
             if agent_key.pub_key and agent_key.key_fingerprint != aid.pubkey_fingerprint(spki):
                 issue_error = "公钥已更换，需先吊销该设备后重新入户"
             elif not approved:
-                # 还没批准 → pub_key 先**不**登记。登记了就等于承认它的身份，
+                # 还没批准 pub_key 先**不**登记。登记了就等于承认它的身份，
                 # 而「上报数据」的闸门正是 pub_key。
                 # 但公钥要**暂存**一份（pending_pub_key）：未准入设备的心跳需要
-                # 它来验签，否则 `last_seen` 永远是空、主机一直显示离线 ——
+                # 它来验签，否则 `last_seen` 永远是空、主机一直显示离线，
                 # 在线是"网络连通"的事实，不该被"是否已加入管理"拖住。
                 agent_key.pending_pub_key = new_pub.public_bytes(
                     Encoding.PEM, PublicFormat.SubjectPublicKeyInfo).decode("utf-8")
@@ -1244,34 +1240,34 @@ def agent_enroll(request: Request, data: dict, db: Session = Depends(get_db)):
     db.commit()
     token = hmac.new(agent_key.secret_key.encode(), str(server.id).encode(), "sha256").hexdigest()
 
-    # P1-1：Agent 9998 的服务器证书（传输层，与设备身份是两件事 —— 它让服务端
+    # P1-1：Agent 9998 的服务器证书（传输层，与设备身份是两件事，它让服务端
     # 回调时能走真正的 TLS，而不是"信任何证书"）。失败不影响入户流程。
     api_cert_out = _maybe_issue_api_cert(db, agent_key, server, data)
 
-    # 🚨 配对码要不要回给 Agent，看的是**这台设备登记过公钥没有**，而不是这次
-    #    有没有登记。按「本次没登记就给」写，已经准入的机器每次入户都会收到
-    #    配对码，Agent 面板于是长期停在"本机配对码"上，看着像一直没批准。
-    #    再排除一种情形：**被吊销**。吊销时 `pub_key` 是刻意保留的（审计要留痕，
-    #    且吊销靠 `revoked` 标记生效），若只看 pub_key，设备吊销后重新入户时
-    #    配对码照样不回，管理员就没法核对"重来的这台"是不是同一台机器。
+    # 配对码要不要回给 Agent，看的是**这台设备登记过公钥没有**，而不是这次
+    # 有没有登记。按「本次没登记就给」写，已经准入的机器每次入户都会收到
+    # 配对码，Agent 面板于是长期停在"本机配对码"上，表现类似一直没批准。
+    # 再排除一种情形：**被吊销**。吊销时 `pub_key` 是刻意保留的（审计要留痕，
+    # 且吊销靠 `revoked` 标记生效），若只看 pub_key，设备吊销后重新入户时
+    # 配对码照样不回，管理员就没法核对"重来的这台"是不是同一台机器。
     _authorized = bool(agent_key.pub_key) and not agent_key.revoked
 
     from services.agent_auth import compute_update_key
     return {
         "server_id": server.id,
-        # ⚠ 这个 token **只用于服务端回调本机 9998**（下行）；上行认证一律用私钥
+        # 这个 token **只用于服务端回调本机 9998**（下行）；上行认证一律用私钥
         # 签名，token 不能当身份用（方案 A，见 _authenticate 的说明）。
         "token": token,
         # 2026-09-23 开源加固 ④：更新包验签密钥（与 token 分离，见 agent_auth 的说明）
         "update_key": compute_update_key(agent_key.secret_key, server.id),
         "node_id": agent_key.node_id,
-        # 🚨 `enrolled` 是**本次有没有登记成功**，不是"这台设备有没有授权过"。
-        #    两者混为一谈会有实际后果：换公钥被拒时，设备本来已授权 → 按后者写会
-        #    回 enrolled=True，Agent 于是以为自己通过了，其实服务端刚刚拒绝了它。
-        #    设备是否已授权看 `identity_state` / 有没有 pairing_code。
+        # `enrolled` 是**本次有没有登记成功**，不是"这台设备有没有授权过"。
+        # 两者混为一谈会有实际后果：换公钥被拒时，设备本来已授权 按后者写会
+        # 回 enrolled=True，Agent 于是以为自己通过了，其实服务端刚刚拒绝了它。
+        # 设备是否已授权看 `identity_state` / 有没有 pairing_code。
         "enrolled": _registered_now,
         "identity_state": agent_key.identity_state,
-        # 登记过公钥就永远不再往网络上回配对码 —— 它只在人工比对那一次有用
+        # 登记过公钥就永远不再往网络上回配对码，它只在人工比对那一次有用
         "pairing_code": agent_key.pairing_code if not _authorized else "",
         "issue_error": issue_error,
         "status": server.status,
@@ -1703,7 +1699,7 @@ def agent_push(request: Request, data: dict, db: Session = Depends(get_db)):
 def agent_heartbeat(request: Request, data: dict, db: Session = Depends(get_db)):
     """Agent keepalive — returns 200 if authenticated.
 
-    ⚠ 这是**唯一**允许未准入设备通过的接口（`allow_pending=True`）：`last_seen`
+ 这是**唯一**允许未准入设备通过的接口（`allow_pending=True`）：`last_seen`
     只在这里更新，而它就是"在线"的唯一依据。未准入 ≠ 没连上，两者不能混为一谈。
     """
     server, auth_mode = _authenticate(request, db, allow_pending=True)
@@ -1716,21 +1712,18 @@ def agent_heartbeat(request: Request, data: dict, db: Session = Depends(get_db))
     agent_ip = _best_agent_ip(data.get("ip_address", ""), client_host)
     prev_ip = server.ip_address or ""
     if agent_ip and server.ip_address and server.ip_address != agent_ip:
-        # 🚨 换了 IP **一律只更新、不拒绝** —— IP 只是联络地址，不是身份
+        # 换了 IP **一律只更新、不拒绝**，IP 只是联络地址，不是身份
         # （NAT / DHCP 换址 / 多网卡选中另一个 / 搬机房 / 上云都会变）。
         # 这条日志将来就是 L1 漂移的证据。
-        #
         # 改之前这里对**非证书**通道是硬拒 401「IP mismatch」，理由是防「拷贝安装
         # 配置指向别的主机」。但它其实挡不住：`ip_address` 是 Agent 在 payload 里
-        # 自己填的字段，真要冒充照填就行 —— 一笔**防不住攻击者、只误伤正常机器**
-        # 的账。而误伤是硬的：心跳 401 → Agent 清空本地注册 → 重新注册 → 再 401，
+        # 自己填的字段，真要冒充照填就行，一笔**防不住攻击者、只误伤正常机器**
+        # 的账。而误伤是硬的：心跳 401 Agent 清空本地注册 重新注册 再 401，
         # 界面上就是「注册成功几秒后又变回未注册」，服务端一直离线。
-        #
         # 真正的防冒充不靠 IP，靠身份本身：证书通道用私钥签名（私钥不出本机，
         # 抄走配置文件也没用），以及「已发证设备不许退回静态 token」（加固 ⑤）。
-        # 这两条都没动。
-        # ⚠ 服务端回调本机 9998 用的也是 `server.ip_address`，不更新的话回调会打
-        #   到旧地址上 —— 所以这里必须写回。
+        # 服务端回调本机 9998 用的也是 `server.ip_address`，不更新的话回调会打
+        # 到旧地址上，所以这里必须写回。
         logger.info(
             f"来源 IP 变化但设备身份未变：server_id={server.id} "
             f"{server.ip_address} -> {agent_ip}（已更新，认证方式={auth_mode}）"
@@ -1751,10 +1744,10 @@ def agent_heartbeat(request: Request, data: dict, db: Session = Depends(get_db))
         server.mesh_node_id = str(data["mesh_node_id"])[:64]
 
     # 心跳是唯一 5 秒一次都走的通道，换 IP / 换主板只能靠它发现。
-    # 老版本 Agent 不带 fingerprint_parts，这里直接跳过 —— 等它升级后第一次
+    # 老版本 Agent 不带 fingerprint_parts，这里直接跳过，等它升级后第一次
     # 上报会自动登记基线，不会误报。
-    # ⚠ 只对**已准入**的设备做：未准入的机器还没被承认，给它记基线、发漂移告警
-    #   只是噪音，取不到任何安全收益。
+    # 只对**已准入**的设备做：未准入的机器还没被承认，给它记基线、发漂移告警
+    # 只是噪音，取不到任何安全收益。
     _parts = data.get("fingerprint_parts")
     if _authorized and isinstance(_parts, dict) and _parts:
         try:
@@ -1769,12 +1762,12 @@ def agent_heartbeat(request: Request, data: dict, db: Session = Depends(get_db))
                         f"属性漂移 {_res['level']}：server_id={server.id} "
                         f"{server.name} —— {_res['detail']}"
                     )
-        except Exception as _e:  # noqa: BLE001  漂移检测失败绝不能影响存活上报
+        except Exception as _e:  # noqa: BLE001 漂移检测失败绝不能影响存活上报
             logger.warning(f"漂移分级失败 server_id={server.id}：{_e}")
 
-    # ── 开源加固 ⑥：Agent 代码完整性比对（对标 MeshCentral agentTampering）──
+    # 开源加固 ⑥：Agent 代码完整性比对（对标 MeshCentral agentTampering）
     # 开源之后最现实的威胁不是"读代码"，而是有人改几行再重新打包，伪装成官方
-    # Agent 接进来 —— 界面上和正常机器一模一样，版本号也还是那个号。
+    # Agent 接进来，界面上和正常机器一模一样，版本号也还是那个号。
     # 这里让它自报代码指纹，跟基线比；对不上就记审计 + 打标，管理员能在日志里看到。
     try:
         _digest = str(data.get("self_digest") or "").strip()
@@ -1783,7 +1776,7 @@ def agent_heartbeat(request: Request, data: dict, db: Session = Depends(get_db))
         if _authorized and _digest and _hb_key2 is not None:
             now_naive = datetime.now(timezone.utc).replace(tzinfo=None)
             if not _hb_key2.self_digest:
-                # 首次：登记基线（不做任何判断 —— 没法证明第一台就是干净的）
+                # 首次：登记基线（不做任何判断，没法证明第一台就是干净的）
                 _hb_key2.self_digest = _digest
                 _hb_key2.self_digest_version = _ver
                 _hb_key2.self_digest_at = now_naive
@@ -1791,7 +1784,7 @@ def agent_heartbeat(request: Request, data: dict, db: Session = Depends(get_db))
                             f"（{data.get('self_digest_files', '?')} 个文件，模式 "
                             f"{data.get('self_digest_mode', '?')}）")
             elif _ver and _ver != (_hb_key2.self_digest_version or ""):
-                # 版本变了 —— 合法升级，顺手把基线挪到新版本上，避免每次升级都误报
+                # 版本变了，合法升级，顺手把基线挪到新版本上，避免每次升级都误报
                 _hb_key2.self_digest = _digest
                 _hb_key2.self_digest_version = _ver
                 _hb_key2.self_digest_at = now_naive
@@ -1799,7 +1792,7 @@ def agent_heartbeat(request: Request, data: dict, db: Session = Depends(get_db))
                 _hb_key2.tamper_detail = ""
                 logger.info(f"server_id={server.id} Agent 升级到 {_ver}，完整性基线已更新")
             elif _digest != _hb_key2.self_digest:
-                # 版本没变、指纹却变了 —— 有人在没走升级流程的情况下换了代码
+                # 版本没变、指纹却变了，有人在没走升级流程的情况下换了代码
                 _hb_key2.tamper_at = now_naive
                 _hb_key2.tamper_detail = (
                     f"版本 {_ver or '(未知)'} 的 Agent 代码指纹与基线不符"
@@ -1820,7 +1813,7 @@ def agent_heartbeat(request: Request, data: dict, db: Session = Depends(get_db))
                              "files": data.get("self_digest_files"),
                              "mode": data.get("self_digest_mode")},
                 )
-    except Exception as _e:  # noqa: BLE001  完整性自检绝不能影响存活上报
+    except Exception as _e:  # noqa: BLE001 完整性自检绝不能影响存活上报
         logger.warning(f"完整性比对失败 server_id={server.id}：{_e}")
 
     now = datetime.now(timezone.utc)
@@ -1828,25 +1821,25 @@ def agent_heartbeat(request: Request, data: dict, db: Session = Depends(get_db))
     server.last_seen = now
     db.commit()
 
-    # 1.1.38：心跳领证双通道 —— 1.1.51 存量主机客户端证书仍有效，
+    # 1.1.38：心跳领证双通道，1.1.51 存量主机客户端证书仍有效，
     # ensure_certificate 不再触发 enroll，api_csr 永不上送，Agent 9998 只能
     # 跑自签证书，服务端 CA 校验拒绝一切回调（推送升级 / 资源管理器 / 远程桌面）。
     # 心跳是唯一每 5 秒必到的通道，在这里补签即可，Agent 侧响应落盘后自动热切换。
     api_cert_out = {}
     _hb_key = db.query(AgentKey).filter(AgentKey.server_id == server.id).first()
-    # ⚠ 只有**已准入**的设备才发凭据：未准入的能心跳（只为显示在线），
-    #   但不该拿到 9998 的服务器证书、也不该领 update_key / 新 token。
+    # 只有**已准入**的设备才发凭据：未准入的能心跳（只为显示在线），
+    # 但不该拿到 9998 的服务器证书、也不该领 update_key / 新 token。
     if _hb_key is not None and _authorized:
         if str(data.get("api_csr") or "").strip():
             api_cert_out = _maybe_issue_api_cert(db, _hb_key, server, data)
         # 2026-09-23 开源加固 ④：存量 Agent 是在旧版本注册上来的，手里只有 token、
-        # 没有 update_key，而"推送升级"恰好是它们拿到新包的唯一途径 —— 不补发就永远
+        # 没有 update_key，而"推送升级"恰好是它们拿到新包的唯一途径，不补发就永远
         # 升不了级。只在 Agent 显式要一次时下发（它拿到后会落盘，之后不再请求）。
         if data.get("need_update_key"):
             from services.agent_auth import compute_update_key
             api_cert_out["update_key"] = compute_update_key(_hb_key.secret_key, server.id)
 
-        # 开源加固 ⑤：这台还在用**轮换前**的旧 token → 把新 token 交给它。
+        # 开源加固 ⑤：这台还在用**轮换前**的旧 token 把新 token 交给它。
         # 只在宽限期内发生一次：Agent 收下并落盘后，下一次心跳就带着新 token 来了。
         # 没有这一步，管理员一点轮换，所有跑在外的 Agent 就集体失联。
         from services.agent_auth import match_agent_token, compute_agent_token
@@ -1855,7 +1848,7 @@ def agent_heartbeat(request: Request, data: dict, db: Session = Depends(get_db))
             api_cert_out["token"] = compute_agent_token(_hb_key.secret_key, server.id)
             logger.info(f"server_id={server.id} 已领取轮换后的新 token")
     # `authorized=True`（公钥已登记）时 Agent 才会上报数据。未准入的机器心跳能通、
-    # 界面显示在线，但 /push 会被拒 —— Agent 靠这个字段提前知道"现在不该推"，
+    # 界面显示在线，但 /push 会被拒，Agent 靠这个字段提前知道"现在不该推"，
     # 免得每 60 秒在日志里刷一条无意义的"推送失败"、托盘图标还变红。
     return {"status": "ok", "ip_address": server.ip_address,
             "authorized": _authorized, **api_cert_out}
@@ -1884,7 +1877,7 @@ def agent_uninstall_report(request: Request, data: dict, db: Session = Depends(g
 
     为什么 `allow_pending=True`：场景 1 的主机尚未加入管理，库里只有
     `pending_pub_key`，没有 `pub_key`。不给它放行，最需要这条上报的那一类
-    主机反而报不上来。⚠ 放行的是"用暂存公钥验签"，不是免鉴权 —— 与心跳
+ 主机反而报不上来。 放行的是"用暂存公钥验签"，不是免鉴权 —— 与心跳
     同一道闸，没有私钥照样 401，不会因为多了这个接口就多出一条口子。
 
     为什么删配置要连设备身份一起清：私钥和 node_id 都存在 CONFIG_DIR 里
@@ -1908,12 +1901,12 @@ def agent_uninstall_report(request: Request, data: dict, db: Session = Depends(g
     if was_managed:
         server.status = "offline"
     else:
-        # 🚨 未加入管理的主机**不能**置 offline：
-        #   · `services/collector.py` 每轮都会把 join_time 为空且状态是
-        #     offline/online 的记录回滚成 registered（否则它会落进"受管状态"
-        #     集合，管理员既删不掉也看不懂），置了也是白置，还会每轮刷日志；
-        #   · 前端 `managedStatuses` 把 offline 算作受管 —— 界面会自己打架。
-        #     它本来就是 registered，靠 last_seen 为空判离线即可。
+        # 未加入管理的主机**不能**置 offline
+        # · `services/collector.py` 每轮都会把 join_time 为空且状态是
+        # offline/online 的记录回滚成 registered（否则它会落进"受管状态"
+        # 集合，管理员既删不掉也看不懂），置了也是白置，还会每轮刷日志；
+        # · 前端 `managedStatuses` 把 offline 算作受管，界面会自己打架。
+        # 它本来就是 registered，靠 last_seen 为空判离线即可。
         server.status = "registered"
 
     _k = db.query(AgentKey).filter(AgentKey.server_id == server.id).first()
@@ -1924,13 +1917,13 @@ def agent_uninstall_report(request: Request, data: dict, db: Session = Depends(g
         _k.key_fingerprint = ""
         _k.identity_state = "none"
         _k.auth_mode = "none"
-        # ⚠ 下面这些**刻意保留**：
-        #   · `secret_key` —— 9998 下行凭据与 update_key 都由它派生，重装后
-        #     服务端还要回调这台机器，换了等于自断通路；
-        #   · `pairing_code` —— 管理员重新准入时就是拿它跟 Agent 面板上的码
-        #     对，换掉会让"核对配对码"这一步失去意义；
-        #   · `self_digest` / `fingerprint_parts` —— 同一台物理机的基线与漂移
-        #     记录，跟 Agent 装没装无关。
+        # 下面这些**刻意保留**
+        # · `secret_key`，9998 下行凭据与 update_key 都由它派生，重装后
+        # 服务端还要回调这台机器，换了等于自断通路；
+        # · `pairing_code`，管理员重新准入时就是拿它跟 Agent 面板上的码
+        # 对，换掉会让"核对配对码"这一步失去意义；
+        # · `self_digest` / `fingerprint_parts`，同一台物理机的基线与漂移
+        # 记录，跟 Agent 装没装无关。
         # 移出管理：`join_time` 一空，状态回到 registered，主机列表里就不再是
         # 受管条目，「加入管理」按钮按前端新规则置灰。
         if was_managed:
@@ -1950,7 +1943,7 @@ def agent_uninstall_report(request: Request, data: dict, db: Session = Depends(g
             details={"server_name": server.name, "purge_config": purge,
                      "was_managed": was_managed, "auth_mode": auth_mode},
         )
-    except Exception as _e:  # noqa: BLE001  记日志失败不能影响卸载上报
+    except Exception as _e:  # noqa: BLE001 记日志失败不能影响卸载上报
         logger.warning(f"卸载上报写审计失败 server_id={server.id}：{_e}")
 
     logger.info(

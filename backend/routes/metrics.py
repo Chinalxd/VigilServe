@@ -32,8 +32,7 @@ def get_metric_history(
     db: Session = Depends(get_db),
 ):
     # 安全加固阶段 3：历史曲线以前零鉴权，匿名即可拖走任意主机的资源走势。
-    #
-    # 第二轮复查 R-1（2026-09-23）：只验登录**还不够** —— 任意低权限账号遍历
+    # 第二轮复查 R-1（2026-09-23）：只验登录**还不够**，任意低权限账号遍历
     # `server_id` 就能读全网主机的 CPU/内存/磁盘/流量走势（内网横向侦察的高价值素材）。
     # 漏网原因：P0-1 那批"补主机归属校验"的范围只写了 servers.py，而这条在 metrics.py。
     # 管理员恒通过（见 routes.auth.can_manage_server），所以对管理员行为完全不变。
@@ -106,7 +105,7 @@ def get_metric_history(
         ts = datetime.fromtimestamp(bucket_key + bucket_sec // 2, tz=timezone.utc)
         result.append({
             "timestamp": ts.isoformat(),
-            # 网络设备不提供 CPU / 内存时存的是 NULL，必须跳过再取平均 —— 否则
+            # 网络设备不提供 CPU / 内存时存的是 NULL，必须跳过再取平均，否则
             # 要么 sum(None) 直接抛 TypeError，要么把"没这个指标"平均成一条 0 线。
             "cpu_percent": _bucket_avg(b["cpu"], 1),
             "memory_percent": _bucket_avg(b["mem"], 1),

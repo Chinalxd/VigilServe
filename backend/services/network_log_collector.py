@@ -40,9 +40,9 @@ MONTHS = {
     "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
 }
 
-# 华为 / 华三（VRP）日志行。**logbuffer 和 trapbuffer 是两套格式**，必须都认：
-#     #Sep 21 2026 16:03:04+08:00 HUAWEI LINE/5/VTYUSERLOGIN:OID 1.3.6.1.4.1.2011.5.25.207.2.2 A user login. (…)
-#   ④ trapbuffer 在冒号后**插了一段 `OID x.x.x.x`**（这段要剥掉，否则正文全被 OID 糊住）。
+# 华为 / 华三（VRP）日志行。**logbuffer 和 trapbuffer 是两套格式**，必须都认
+# #Sep 21 2026 16:03:04+08:00 HUAWEI LINE/5/VTYUSERLOGIN:OID 1.3.6.1.4.1.2011.5.25.207.2.2 A user login. (…)
+# ④ trapbuffer 在冒号后**插了一段 `OID x.x.x.x`**（这段要剥掉，否则正文全被 OID 糊住）。
 VRP_LINE = re.compile(
     r"^#?\s*(?P<mon>[A-Za-z]{3})\s+(?P<day>\d{1,2})\s+(?P<year>\d{4})\s+"
     r"(?P<hm>\d{2}:\d{2}:\d{2})(?P<tz>[+-]\d{2}:?\d{2})?\s+"
@@ -54,7 +54,7 @@ VRP_LINE = re.compile(
     r"(?P<msg>.*)$"
 )
 
-# 级别码 → 归一化级别名（华为 0~7，越大越不严重）
+# 级别码 归一化级别名（华为 0~7，越大越不严重）
 LEVEL_NAMES = {
     0: "critical", 1: "critical", 2: "critical",
     3: "error",
@@ -71,8 +71,8 @@ MAX_PER_COLLECT = 1200
 # 每台设备保留多少条。设备日志量不大但会持续累积，不设上限迟早撑爆库。
 KEEP_PER_SERVER = 5000
 
-# 🚨 **key 必须是中文厂商名** —— `device_profile.py` 认出来的厂商是中文
-# 直接落到"暂不支持"分支 —— 真机上就是这个坑。
+# **key 必须是中文厂商名**，`device_profile.py` 认出来的厂商是中文
+# 直接落到"暂不支持"分支，真机上就是这个坑。
 VENDOR_CMDS = {
     "华为": [("logbuffer", "display logbuffer"),
              ("trapbuffer", "display trapbuffer")],
@@ -90,14 +90,14 @@ VENDOR_CMDS = {
     "cisco": [("logbuffer", "show logging")],
 }
 
-# ── NAS / 存储类设备：明确记成「不支持」，并把原因写清楚 ──────────────
-# 🚨 2026-09-21 踩到：`device_vendor` 对 NAS 存的是 **英文** `Synology`
-# （企业号 6574 → "群晖"，但这个字段被人工/其它路径改成了英文型号名），
-# 查表时 `"synology"` 有登记所以返回了 `[]` —— **行为是对的，但前端只拿到
+# NAS / 存储类设备：明确记成「不支持」，并把原因写清楚
+# 2026-09-21 踩到：`device_vendor` 对 NAS 存的是 **英文** `Synology`
+# （企业号 6574 "群晖"，但这个字段被人工/其它路径改成了英文型号名），
+# 查表时 `"synology"` 有登记所以返回了 `[]`，**行为是对的，但前端只拿到
 # 一句"暂不支持"，看不出是"设备本身没这类日志"还是"命令集还没写"**。
 # 真正的原因（读 Syslog 服务的设计就能确认）：群晖 DSM 的运行日志**不放在
 # 没有华为那种 `display logbuffer` 的内存环形缓冲。所以不是该写命令没写，
-# 是**这类设备根本没有可轮询的 CLI 日志源** —— 要采集只能走
+# 是**这类设备根本没有可轮询的 CLI 日志源**，要采集只能走
 # 需要动设备配置并在服务端起监听，不在本模块职责内。
 # 这里不返回空列表而是返回**带原因的结构**，让页面能如实说清"为什么不行"。
 UNSUPPORTED_VENDORS = {
@@ -139,7 +139,7 @@ PROMPT_RE = re.compile(r"[\r\n]\s*(?:\x1b\[[0-9;]*[A-Za-z])*[<\[][^\]>]{0,40}[>\
 def _fingerprint(device_time: str, module: str, mnemonic: str, msg: str) -> str:
     """去重键。
 
-    🚨 **不能用设备的日志序号 seq** —— 它是环形缓冲区的下标，设备重启或从
+ **不能用设备的日志序号 seq** —— 它是环形缓冲区的下标，设备重启或从
     缓冲区绕回时会归零，拿它去重会把新日志误判成"已经有了"而丢掉。
     """
     base = "|".join([device_time or "", module or "", mnemonic or "", (msg or "")[:400]])
@@ -150,7 +150,7 @@ def parse_vrp_line(line: str):
     """解析一行 VRP 日志（logbuffer 与 trapbuffer 两套格式都认）。
 
     不是日志行（表头 / 空行 / 命令回显）时返回 None。
-    🚨 别用 `if "%%" in line` 做前置过滤 —— trapbuffer 的行没有 `%%`，
+ 别用 `if "%%" in line` 做前置过滤 —— trapbuffer 的行没有 `%%`，
     那样会把整个 trapbuffer 全滤掉。
     """
     if not line or not line.strip():
@@ -260,7 +260,7 @@ def collect_device_logs(db, server, sources=None, keep=KEEP_PER_SERVER) -> dict:
 
     try:
         _drain(sess, 0.8)
-        # 🚨 必须关分页。不关的话 512 行的 logbuffer 会被 ---- More ---- 切成几十段，
+        # 必须关分页。不关的话 512 行的 logbuffer 会被 ---- More ---- 切成几十段，
         # 每段都要等，最后拿到的还是缺的。temporary = 只对本次会话生效。
         _run_cmd(sess, "screen-length 0 temporary", timeout=10)
         _drain(sess, 0.3)
@@ -372,7 +372,7 @@ def record_state(db, server, res: dict) -> None:
         "error": res.get("error", ""),
         "total": int(res.get("total") or 0),
         "inserted": int(res.get("inserted") or 0),
-        # 「不支持」和「支持但采集失败」是两种性质，前端要分开说 ——
+        # 「不支持」和「支持但采集失败」是两种性质，前端要分开说，
         # 前者点了按钮也没用（按钮该灰掉），后者是凭据/网络问题（要找原因修）。
         "unsupported": bool(res.get("unsupported")),
     }
@@ -402,7 +402,7 @@ def collect_all_device_logs(db) -> dict:
     for s in servers:
         plan = collect_plan(s)
         if not plan["supported"]:
-            # 🚨 不支持的设备**也要记一次状态**：早先这里只 `continue`，
+            # 不支持的设备**也要记一次状态**：早先这里只 `continue`，
             # 结果页面上「上次采集」永远停在手动点过的那一次，
             # 用户看不出"调度器其实一直在跳过它"。
             skipped_unsupported += 1

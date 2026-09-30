@@ -55,7 +55,7 @@ BOUNDS: dict[str, tuple[int, int]] = {
 _CACHE: dict = {"ts": 0.0, "policy": dict(DEFAULTS)}
 _CACHE_TTL = 10.0  # 秒：会话校验每次请求都要读，别每请求打一次库
 
-# 登录失败计数（进程内）。重启会清空——这是可接受的：持久化失败计数需要额外的
+# 登录失败计数（进程内）。重启会清空，这是可接受的：持久化失败计数需要额外的
 # 表与清理任务，而攻击者更在意"能不能撞库"，重启清空并不削弱锁定效果。
 _LOGIN_FAILS: dict[str, dict] = {}
 
@@ -96,7 +96,7 @@ def get_policy(fresh: bool = False) -> dict:
                     continue
         finally:
             db.close()
-    except Exception:  # noqa: BLE001  库还没建好/查询失败 -> 用默认值，不能影响登录
+    except Exception:  # noqa: BLE001 库还没建好/查询失败 -> 用默认值，不能影响登录
         pass
 
     _CACHE["ts"] = time.time()
@@ -160,7 +160,7 @@ def _ip_key(ip: str) -> str:
     return "ip:" + (ip or "").strip()
 
 
-# 2026-09-22 P1-7：登录失败的**第二个维度** —— 来源 IP。
+# 2026-09-22 P1-7：登录失败的**第二个维度**，来源 IP。
 # 只按用户名计数时，攻击者可以拿同一个 IP 去撞 N 个用户名（每个都还在阈值内），
 # 也就是"横向撞库"永远触发不了锁定。加上 IP 维度才能挡住。
 # IP 维度的阈值放宽 _IP_FACTOR 倍：内网常见多人共用出口 NAT（或都在同一个
@@ -170,7 +170,7 @@ _IP_FACTOR = 4
 def _key_remaining(key: str) -> int:
     """某个维度（用户名或 IP）还剩多少秒解锁；0 = 没被锁。
 
-    ⚠️ 只在**真的锁过**且锁定期已过时才清记录。早期版本把"没锁"也当成
+ 只在**真的锁过**且锁定期已过时才清记录。早期版本把"没锁"也当成
     "锁定期已过"顺手 pop 掉了，结果计数永远停在 1，锁定功能形同虚设。
     """
     info = _LOGIN_FAILS.get(key)

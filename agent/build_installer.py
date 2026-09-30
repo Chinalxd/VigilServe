@@ -150,7 +150,7 @@ def stage_ca_cert() -> None:
     dst_dir = ROOT / "ca"
     dst = dst_dir / "vigilserve-ca.crt"
     if not src.is_file():
-        # 服务端还没跑过 → 现场生成一次（这样第一个安装包也能带上 CA）
+        # 服务端还没跑过 现场生成一次（这样第一个安装包也能带上 CA）
         print(f"[build] CA not found at {src}; generating one via backend/services/tls.py")
         subprocess.run(
             [sys.executable, "-c",
@@ -179,7 +179,7 @@ def verify_ca_bundled() -> None:
 
 
 # 打包态下完整性自检至少要覆盖这么多个文件。
-# 现在的实测值是 14（`_internal` 顶层全部 .py）。注意 `sys.executable` **不算在内**：
+# 现在的实测值是 14（`_internal` 顶层全部 .py）。注意 `sys.executable` **不算在内**
 SELF_CHECK_MIN_FILES = 10
 
 
@@ -198,7 +198,7 @@ def verify_self_check_coverage() -> None:
     这里把打包结果摆在 `self_check` 面前，冒充冻结运行时（`sys.frozen` /
     `sys._MEIPASS` / `sys.executable`）跑一次 `_collect_files()`，断言覆盖足够。
 
-    ⚠ 注意收录范围是有意为之：只看 `_MEIPASS` **顶层**，不递归进 numpy / PIL /
+ 注意收录范围是有意为之：只看 `_MEIPASS` **顶层**，不递归进 numpy / PIL /
     cryptography 等第三方包目录，也不算 `.pyd` / `.dll` / `base_library.zip`
     （后者随 **PyInstaller 版本**变化而 Agent 版本号不变，算进去每次升级构建工具
     都会误报篡改）。所以这里的阈值也不能按"文件越多越好"来定。
@@ -281,7 +281,7 @@ def _pick_latest_installer(paths: list):
     文件名里本来就带版本号（`VigilServeAgent-Setup-1.1.54.exe`），直接按它排；
     版本号相同时才用 mtime 兜底。
 
-    ⚠ 与 installer/build_installer.py 里的同名函数保持一致：两边是同一套规则。
+ 与 installer/build_installer.py 里的同名函数保持一致：两边是同一套规则。
     """
     def _ver(p):
         m = re.search(r"(\d+)\.(\d+)\.(\d+)", p.name)
@@ -331,8 +331,8 @@ def main():
     run([str(ISCC), str(ISS)])
 
     # 3. Remove only the PyInstaller build cache; leave dist/ in place.
-    #    Deleting the full dist tree triggers bulk-delete guards and is not
-    #    necessary because the installer already consumed the files it needs.
+    # Deleting the full dist tree triggers bulk-delete guards and is not
+    # necessary because the installer already consumed the files it needs.
     if BUILD_DIR.exists():
         shutil.rmtree(BUILD_DIR, ignore_errors=True)
         print(f"[build] Removed PyInstaller build cache: {BUILD_DIR}")

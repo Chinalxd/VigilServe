@@ -3,15 +3,14 @@
  * 页面本体不是我们写的：服务端把设备的界面搬到 /api/servers/{id}/web/ 底下，
  * 这里只负责把这个地址嵌进来。
  *
- * 🚨 iframe 一定要 sandbox 且**不要** allow-same-origin：代理回来的页面和我们同源，
+ * iframe 一定要 sandbox 且**不要** allow-same-origin：代理回来的页面和我们同源，
  * 给了 allow-same-origin 它就能读 parent.localStorage，把登录令牌整个端走
  * （设备被入侵时这是现成的跳板）。
  *
  * 代价是沙箱里浏览器**不保存任何 Cookie**，所以两件事由服务端兜：
- *   * 帧内后续请求靠 URL 上的窄票据 `t=`（web-config 下发，30 分钟、绑定用户与设备）；
- *   * 设备自己的会话 Cookie 由后端保管箱记着，替它带上去。
- * 前端这边只管把票据拼进 iframe 的地址。
- */
+ * * 帧内后续请求靠 URL 上的窄票据 `t=`（web-config 下发，30 分钟、绑定用户与设备）；
+ * * 设备自己的会话 Cookie 由后端保管箱记着，替它带上去。
+ * 前端这边只管把票据拼进 iframe 的地址。 */
 import { useCallback, useEffect, useState } from 'react'
 import { fetchNetworkWebConfig } from '../services/api'
 import './NetworkWebAdmin.css'
@@ -60,7 +59,7 @@ export default function NetworkWebAdmin({ serverId }) {
   // 独立源形态才允许设备页面自己弹出「逃出沙箱」的窗口
   const sandbox = proxyBase ? SANDBOX_BASE + SANDBOX_ESCAPE : SANDBOX_BASE
 
-  // 🚨 「新窗口打开」不能写成 `window.open(frameSrc)` —— 那会把设备页面直接放到
+  // 「新窗口打开」不能写成 `window.open(frameSrc)` —— 那会把设备页面直接放到
   // **顶层窗口**里，外面没有任何 sandbox 约束；同源形态下它跟主站同 origin，可以
   // 改成先开一个空白窗口，再往里写一张**同样带 sandbox 的 iframe**：设备页面无论
   // 怎么跳转都还困在沙箱里，而新窗口本身是我们自己写的静态 HTML，不含任何凭据。
@@ -122,7 +121,7 @@ export default function NetworkWebAdmin({ serverId }) {
     // 里面的工具条和 iframe 各自都不再画边框 —— 原来是两个带边框的盒子中间夹 8px 缝，
     <div className="nwa">
       {/* 工具条只留设备地址 + 两个按钮：
-          「地址」这个前缀和后面的"页面由服务端代理…"说明都按需求去掉了 */}
+ 「地址」这个前缀和后面的"页面由服务端代理…"说明都按需求去掉了 */}
       <div className="nwa-bar">
         <b className="nwa-addr" title="新增设备时填的网络信息，自动带到这里">
           {cfg.protocol}://{cfg.host}:{cfg.port}

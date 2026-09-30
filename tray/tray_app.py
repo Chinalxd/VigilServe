@@ -805,7 +805,7 @@ def _backend_scheme(port: int) -> str:
     这里只用于拼浏览器地址，不涉及敏感数据，因此找不到 CA 时退化为
     “不校验证书只探握手”。
 
-    ⚠ 交付审查 P1-6 复核（2026-09-23）：这里的 CERT_NONE **不是"关闭了通道加密"**，
+ 交付审查 P1-6 复核（2026-09-23）：这里的 CERT_NONE **不是"关闭了通道加密"**，
     别照着"关闭了校验"的清单把它删掉。理由是上面那句 —— 本函数唯一职责是判断
     scheme；而且连接目标是 127.0.0.1 本机回环，对外部攻击者没有暴露面。
     有本地 CA 时它走的是 CERT_REQUIRED 真校验。
@@ -819,7 +819,7 @@ def _backend_scheme(port: int) -> str:
             ctx.load_verify_locations(cafile=ca)
         else:
             # 只在"没有本地 CA"这一个分支退化：本函数要区分 http/https 就必须完成握手，
-            # 严格校验会让"其实是 https"被误判成 http，结果地址拼错打不开。
+            # 严格校验会让"实际是 https"被误判成 http，结果地址拼错打不开。
             ctx.verify_mode = ssl.CERT_NONE
         with socket.create_connection(("127.0.0.1", int(port)), timeout=0.6) as raw:
             with ctx.wrap_socket(raw):
@@ -1539,13 +1539,12 @@ class ControlPanel:
         try:
             fn()
         except Exception as exc:
-            # 🚨 2026-09-23 修复：下面弹窗用的是 `root.after(0, ...)` —— 它是**延迟到
+            # 2026-09-23 修复：下面弹窗用的是 `root.after(0, ...)`，它是**延迟到
             # 主线程下一轮**才执行的，而 Python 3 在 `except` 块结束时会自动 `del exc`。
             # 原来写 `lambda: messagebox.showerror(..., str(exc))`，闭包捕获的是这个名字
-            # 本身，等到回调真正跑起来时 `exc` 已经被删掉了 → 弹窗的瞬间再抛
+            # 本身，等到回调真正跑起来时 `exc` 已经被删掉了 弹窗的瞬间再抛
             # `NameError: name 'exc' is not defined`，又被最里面那句裸 `except` 吞掉。
             # 用户看到的现象：点了「启动/停止」没反应，**连一个错误提示都没有**。
-            #
             # 所以先把文本取出来，再用默认参数（`lambda m=msg:`）在**定义时**绑定，
             # 与这个文件里其它几处 `lambda c=ctrl:` 的写法保持一致。
             msg = str(exc) or exc.__class__.__name__
@@ -1556,7 +1555,7 @@ class ControlPanel:
                         0, lambda m=msg: messagebox.showerror("操作失败", m, parent=self.root))
                 except Exception as _box_err:  # noqa: BLE001
                     # 弹窗本身也可能失败（窗口已销毁等）。以前这里静默吞掉，正是它把
-                    # 上面那个 NameError 藏了一年多——失败至少要在日志里留痕。
+                    # 上面那个 NameError 藏了一年多，失败至少要在日志里留痕。
                     logger.error(f"显示错误弹窗失败：{_box_err!r}")
 
     def _start(self, ctrl: ServiceController) -> None:

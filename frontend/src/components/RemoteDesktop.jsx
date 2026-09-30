@@ -30,11 +30,11 @@ if (Guacamole.Keyboard && typeof Guacamole.Keyboard.prototype.disconnect !== 'fu
   }
 }
 
-// IME 通道其实是现成的。但这两个事件**只有在页面里真存在一个拿到焦点的可编辑
+// IME 通道实际是现成的。但这两个事件**只有在页面里真存在一个拿到焦点的可编辑
 // 元素时才会触发**：没有输入框时浏览器找不到组字目标，会退化成把拼音字母当普通
 // keydown 往外发，于是远端收到的就是一串小写字母——这正是「切到中文却打不出
 // 官方客户端的做法就是额外挂一个隐藏 textarea（Guacamole.InputSink）承接组字。
-// ⚠️ 做成模块级单例：`InputSink` 构造时会在 document 上注册一个**无法撤销**的
+// 做成模块级单例：`InputSink` 构造时会在 document 上注册一个**无法撤销**的
 let _imeSink = null
 function getImeSink() {
   if (_imeSink) return _imeSink
@@ -60,13 +60,13 @@ function getImeSink() {
 }
 
 // 焦点在这个输入框上时，Ctrl+C / Ctrl+V / Ctrl+X 会被浏览器当成**对这个输入框的
-//   * 复制/剪切 -> 浏览器拿 textarea 的空选区去写剪贴板，会把刚从远端同步回来的
-//     内容覆盖掉（「远端复制 -> 本机粘贴」这条链路就断了）；
-//   * 复制/剪切：只拦默认行为，按键照常发到远端（远端内部复制粘贴不受影响）；
-//   * 粘贴：**自己接管** —— 把本机剪贴板文本经 guac `clipboard` 指令同步到远端
-// ⚠️ 顺序是关键，**不能直接放行原始 Ctrl+V**：keydown 会先到远端，远端立刻拿
+// 复制/剪切 -> 浏览器拿 textarea 的空选区去写剪贴板，会把刚从远端同步回来的
+// 内容覆盖掉（「远端复制 -> 本机粘贴」这条链路就断了）；
+// 复制/剪切：只拦默认行为，按键照常发到远端（远端内部复制粘贴不受影响）；
+// 粘贴：**自己接管** —— 把本机剪贴板文本经 guac `clipboard` 指令同步到远端
+// 顺序是关键，**不能直接放行原始 Ctrl+V**：keydown 会先到远端，远端立刻拿
 // **旧**剪贴板粘一次，我们之后同步过去的内容只能等下一次粘贴才生效。
-// ⚠️ 也不能对 keydown 调 preventDefault：那样浏览器连 `paste` 事件都不派发，
+// 也不能对 keydown 调 preventDefault：那样浏览器连 `paste` 事件都不派发，
 // 就拿不到本机剪贴板内容了。所以只用 stopPropagation 掐断传播，默认动作保留。
 let _clipSend = null
 let _pasteTimer = 0
@@ -155,7 +155,7 @@ function attachClipboardBridge(sinkEl) {
     (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey &&
     (e.key || '').toLowerCase() === 'v'
 
-  // ⚠️ 必须挂在 **window 的捕获阶段**。vendor 的 `Guacamole.Keyboard.listenTo()`
+  // 必须挂在 **window 的捕获阶段**。vendor 的 `Guacamole.Keyboard.listenTo()`
   const onKeyDown = (e) => {
     if (!_clipSend || !isPasteKey(e)) return
     // 焦点在**别的**输入框里（工具栏之类）说明用户想粘到本地输入框，别抢
@@ -167,7 +167,7 @@ function attachClipboardBridge(sinkEl) {
     e.stopPropagation()
     _pasteSwallow = true
 
-    // 🚨 焦点必须回到输入槽：点过画面/工具栏之后焦点可能已经跑到 canvas 或按钮上，
+    // 焦点必须回到输入槽：点过画面/工具栏之后焦点可能已经跑到 canvas 或按钮上，
     // 浏览器就不会把剪贴板内容派发成 paste 事件（现象就是"粘贴没反应"）。
     // 这里同步抢回焦点，粘贴的默认动作才会落到 sink 上。
     if (document.activeElement !== sinkEl) {
@@ -268,7 +268,7 @@ export default function RemoteDesktop({ serverId, serverName, onClose, standalon
 
   // 独立窗口：默认页签内嵌显示；点「全屏」弹出一个**独立的浏览器窗口**
   //（默认铺满屏幕，但可移动、可调整大小 —— 缩小或移开后能同时操作别的窗口）。
-  // ⚠️ 不再用原生 requestFullscreen：那会独占整块屏幕，别的窗口一个都点不到。
+  // 不再用原生 requestFullscreen：那会独占整块屏幕，别的窗口一个都点不到。
   const rootRef = useRef(null)
   const winRef = useRef(null)
   const [popped, setPopped] = useState(false)
@@ -325,7 +325,7 @@ export default function RemoteDesktop({ serverId, serverName, onClose, standalon
     document.title = `VigilServe 远程桌面 - ${serverName || '#' + serverId}`
   }, [standalone, serverName, serverId])
 
-  // 🚨 Esc 必须挂在 **window 的捕获阶段** 并 stopPropagation：Guacamole 的键盘监听
+  // Esc 必须挂在 **window 的捕获阶段** 并 stopPropagation：Guacamole 的键盘监听
   // 挂在 document 捕获阶段且比我们注册得早，挂 document 拦不住它 —— 菜单开着按 Esc
   useEffect(() => {
     if (!comboOpen) return
@@ -522,11 +522,9 @@ export default function RemoteDesktop({ serverId, serverName, onClose, standalon
     }
   }
 
-  /**
-   * 弹出独立窗口：/rdp/<id> 开成一个新窗口。
-   * 尺寸默认给到屏幕可用大小（观感等同全屏），但**不锁死** —— 用户能拖边框缩放、
-   * 能拖动窗口，缩下去或移开后就能同时操作别的窗口。
-   */
+  /* 弹出独立窗口：/rdp/<id> 开成一个新窗口。
+ * 尺寸默认给到屏幕可用大小（观感等同全屏），但**不锁死** —— 用户能拖边框缩放、
+ * 能拖动窗口，缩下去或移开后就能同时操作别的窗口。 */
   const openPopupWindow = () => {
     const w = winRef.current
     if (w && !w.closed) {
@@ -559,8 +557,8 @@ export default function RemoteDesktop({ serverId, serverName, onClose, standalon
     nw.focus()
 
     // 画面已经搬到独立窗口了，页签里这路就没人看 —— 主动断开，别让同一台主机
-    // ⚠️ closingRef 必须置 true：那是「主动断开」的标记，
-    //    不置的话 onstatechange 会把它当成意外掉线，2 秒后自动重连最多 3 次。
+    // closingRef 必须置 true：那是「主动断开」的标记，
+    // 不置的话 onstatechange 会把它当成意外掉线，2 秒后自动重连最多 3 次。
     // 关掉独立窗口后想回页签里看，再点一次「连接」即可。
     if (active) {
       closingRef.current = true
@@ -591,10 +589,10 @@ export default function RemoteDesktop({ serverId, serverName, onClose, standalon
       aria-label="远程桌面"
     >
       {/* 单行工具栏（2026-09-22 合并）：左边依次是品牌 / 主机名 / 状态指标，
-          右边是全部操作按钮 + 连接开关。原先拆成两行（上行状态、下行按钮），
-          状态被推到最右、按钮被挤到第二行；现在状态紧跟主机名（左移），
-          按钮组整体靠右，两行并成一行。
-          ⚠ 窄屏放不下时仍是 flex-wrap 换行，不出现横向滚动。 */}
+ 右边是全部操作按钮 + 连接开关。原先拆成两行（上行状态、下行按钮），
+ 状态被推到最右、按钮被挤到第二行；现在状态紧跟主机名（左移），
+ 按钮组整体靠右，两行并成一行。
+ 窄屏放不下时仍是 flex-wrap 换行，不出现横向滚动。 */}
       <header className="rdp-header">
         <span className="rdp-brand"><b>VigilServe</b> 远程桌面</span>
         <span className="rdp-target">{serverName || `#${serverId}`}</span>
@@ -631,7 +629,7 @@ export default function RemoteDesktop({ serverId, serverName, onClose, standalon
           >全屏</button>
         )}
         {/* 「快捷键」下拉菜单（2026-09-22）：5 个组合键收进来，不再各占一个按钮 ——
-            它们叠在一起要吃掉约 330px，是工具栏并成一行后最宽的一块。 */}
+ 它们叠在一起要截获约 330px，是工具栏并成一行后最宽的一块。 */}
         <span className="rdp-combo" ref={comboWrapRef}>
           <button
             className="rdp-btn"

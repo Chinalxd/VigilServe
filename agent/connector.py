@@ -10,21 +10,21 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 try:
     import tls_util
-except Exception:  # noqa: BLE001  （理论上不会发生，兜底成不校验证书）
+except Exception:  # noqa: BLE001 （理论上不会发生，兜底成不校验证书）
     tls_util = None
 
 try:
     import identity as _identity
-except Exception:  # noqa: BLE001  （老安装缺 identity.py —— 退回遗留 token 认证）
+except Exception:  # noqa: BLE001 （老安装缺 identity.py，退回遗留 token 认证）
     _identity = None
 
-# 自动探测 https 的最小间隔（秒）——服务端还是 http 时不必每轮心跳都探一次
+# 自动探测 https 的最小间隔（秒），服务端还是 http 时不必每轮心跳都探一次
 _HTTPS_PROBE_COOLDOWN = 300
 
 # 服务端是旧版本（没有 /api/agent/enroll）时置位，免得每个周期都白撞一次
 _ENROLL_UNSUPPORTED = False
 
-# 必须与服务端 `main.py` 里 agent 路由的 prefix 一致 —— 请求签名签的就是这个路径，
+# 必须与服务端 `main.py` 里 agent 路由的 prefix 一致，请求签名签的就是这个路径，
 # 差一个字符签名就验不过（服务端用 request.url.path，带 prefix）。
 _AGENT_API_PREFIX = "/api/agent"
 
@@ -102,7 +102,7 @@ class AgentConnector:
                 _identity.sign_headers("POST", f"{_AGENT_API_PREFIX}/{endpoint}", self.node_id)
             )
         except Exception as _e:  # noqa: BLE001
-            # 签名失败不能把整个上报搞挂 —— 但不带签名头服务端一定会拒，
+            # 签名失败不能把整个上报搞挂，但不带签名头服务端一定会拒，
             # 所以这里要留下痕迹，否则会变成"一直掉线却没有任何线索"。
             try:
                 import logging
@@ -121,12 +121,12 @@ class AgentConnector:
             return None
 
     def _post(self, endpoint: str, data: dict, timeout: float = 30) -> dict:
-        # `timeout` 只给「卸载上报」这类一次性调用用 —— 它跑在卸载流程里，
+        # `timeout` 只给「卸载上报」这类一次性调用用，它跑在卸载流程里，
         # 不能占着默认的 30 秒。心跳等常驻路径不传，行为与以前完全一致。
         result = self._post_once(endpoint, data, timeout)
-        # 🚨 兜底：服务端已切 HTTPS、而本地配置里还留着 http 时，http 请求会被对端
+        # 兜底：服务端已切 HTTPS、而本地配置里还留着 http 时，http 请求会被对端
         # 直接断开（RemoteDisconnected: Remote end closed connection without
-        # response）。这里立刻改用 https 重试一次，**成功才落盘** ——
+        # response）。这里立刻改用 https 重试一次，**成功才落盘**，
         # 比干等 maybe_upgrade_to_https 那个 5 分钟冷却的探测可靠得多。
         # 只对"连接层"错误重试：带 code 的是 HTTPError（401/404 等），重试无意义。
         if (result.get("error") and result.get("code") is None
@@ -134,13 +134,13 @@ class AgentConnector:
             _prev = self.server_url
             self.server_url = "https://" + self.server_url[len("http://"):]
             retry = self._post_once(endpoint, data, timeout)
-            # 🚨 回滚条件必须是"https 连都没连上"，**不能**是"https 也报错"。
+            # 回滚条件必须是"https 连都没连上"，**不能**是"https 也报错"。
             # 401/403/404 这类带 code 的响应恰恰证明 TLS 已通、协议是对的；
             # 若因为 token 失效、设备待审核就把协议回滚回 http，会陷入
-            # 「http 断开 → https 拿 401 → 回滚 http → 再断开」的死循环，
+            # 「http 断开 https 拿 401 回滚 http 再断开」的死循环，
             # 界面上就永远停在 "Remote end closed connection without response"。
             if retry.get("error") and retry.get("code") is None:
-                self.server_url = _prev      # https 也不通 → 退回，别把本地状态搞脏
+                self.server_url = _prev      # https 也不通 退回，别把本地状态搞脏
                 return result
             self._persist_scheme()
             return retry
@@ -254,7 +254,7 @@ class AgentConnector:
         err = resp.get("message") or resp.get("detail") or str(resp)
         return False, err[:200]
 
-    # ── 设备入户（客户端证书身份）────────────────────────────────────
+    # 设备入户（客户端证书身份）
     # 这台机器第一次报到：带上 node_id + CSR（用私钥签名），服务端把它放进
     # "待审核队列"；管理员在「注册管理」点「加入管理」并核对配对码之后，
     # 下一次入户请求就会拿回一张客户端证书。证书90天到期，剩余不足30天自动续。
@@ -280,20 +280,20 @@ class AgentConnector:
             payload["pub_key_pem"] = _identity.public_key_pem()
             try:
                 payload["csr"] = _identity.build_csr(self.node_id, info.get("hostname", ""))
-            except Exception:  # noqa: BLE001  老服务端兼容字段，失败不影响主流程
+            except Exception:  # noqa: BLE001 老服务端兼容字段，失败不影响主流程
                 pass
             payload["machine_fingerprint"] = _identity.fingerprint_hash(
                 _identity.machine_fingerprint())
             try:
                 payload["fingerprint_parts"] = _identity.fingerprint_parts()
-            except Exception:  # noqa: BLE001  老 identity 模块没有这个函数
+            except Exception:  # noqa: BLE001 老 identity 模块没有这个函数
                 pass
             # P1-1：需要（无证 / 快到期）才带上 9998 服务器证书的 CSR，
-            # 服务端签好会以 api_cert 回传 —— 见 apply_api_certificate。
+            # 服务端签好会以 api_cert 回传，见 apply_api_certificate。
             try:
                 if _identity.needs_api_cert():
                     payload["api_csr"] = _identity.build_api_csr(self.node_id)
-            except Exception:  # noqa: BLE001  申请失败不影响客户端证书流程
+            except Exception:  # noqa: BLE001 申请失败不影响客户端证书流程
                 pass
             if self.server_id and self.token:
                 payload["server_id"] = self.server_id
@@ -350,11 +350,11 @@ class AgentConnector:
             return True, "缺少身份模块，无法使用设备身份"
         need, why = _identity.needs_enroll()
         # 1.1.53：客户端证书有效但从未领过 9998 服务器证书（1.1.51 存量主机
-        # 已知问题）时也走一次 enroll，把 api_csr 送上去 —— 否则服务端对
+        # 已知问题）时也走一次 enroll，把 api_csr 送上去，否则服务端对
         # 9998 的 CA 校验会一直失败，推送升级等回调通道永久不可用。
         try:
             need = need or _identity.needs_api_cert()
-        except Exception:  # noqa: BLE001  老版本 identity 模块兜底
+        except Exception:  # noqa: BLE001 老版本 identity 模块兜底
             pass
         if not need:
             return True, ""
@@ -425,16 +425,16 @@ class AgentConnector:
             "api_port": api_port,
             "install_path": install_path,
             "mesh_node_id": mesh_node_id,
-            # 🚨 2026-09-23：这个字段以前**根本没发**，后果很严重 ——
-            #   服务端判断"Agent 是否被改造"时，靠版本号区分两种指纹变化：
-            #      版本变了 → 合法升级，顺手把完整性基线挪到新版本（不误报）
-            #      版本没变、指纹却变 → 记 agent_tamper_suspected
-            #   版本号一直是空字符串，于是第二条分支永远成立、第一条永远不生效：
-            #   只要重新打包（哪怕源码一行没改以外的任何改动），现网机器就
-            #   每 5 秒刷一条"疑似被改造"。实测 3 台主机各刷了 30+ 条。
-            #   版本号取 `api_server.AGENT_VERSION`（它是唯一真源，
-            #   `verify_version.py` 就是照它校验其余 10 处的），
-            #   延迟导入避免与 api_server 形成模块级循环。
+            # 2026-09-23：这个字段以前**根本没发**，后果很严重，
+            # 服务端判断"Agent 是否被改造"时，靠版本号区分两种指纹变化
+            # 版本变了 合法升级，顺手把完整性基线挪到新版本（不误报）
+            # 版本没变、指纹却变 记 agent_tamper_suspected
+            # 版本号一直是空字符串，于是第二条分支永远成立、第一条永远不生效
+            # 只要重新打包（哪怕源码一行没改以外的任何改动），现网机器就
+            # 每 5 秒刷一条"疑似被改造"。实测 3 台主机各刷了 30+ 条。
+            # 版本号取 `api_server.AGENT_VERSION`（它是唯一真源，
+            # `verify_version.py` 就是照它校验其余 10 处的），
+            # 延迟导入避免与 api_server 形成模块级循环。
             "agent_version": _agent_version(),
         }
         # S3 漂移分级：心跳是唯一每 5 秒都走的通道，换 IP / 换主板都得靠它发现。
@@ -444,7 +444,7 @@ class AgentConnector:
                 payload["fingerprint_parts"] = _identity.fingerprint_parts()
                 payload["machine_fingerprint"] = _identity.fingerprint_hash(
                     _identity.machine_fingerprint())
-        except Exception:  # noqa: BLE001  指纹采集失败不影响存活上报
+        except Exception:  # noqa: BLE001 指纹采集失败不影响存活上报
             pass
         # 证书仍有效、ensure_certificate 不触发）在这里补送 api_csr，服务端
         # 签好随心跳响应回传；落盘后 api_server 的 TLS watcher 10 秒内热切换。
@@ -453,7 +453,7 @@ class AgentConnector:
                 payload["api_csr"] = _identity.build_api_csr(self.node_id or "")
                 if self.node_id:
                     payload["node_id"] = self.node_id
-        except Exception:  # noqa: BLE001  领证失败不影响存活上报
+        except Exception:  # noqa: BLE001 领证失败不影响存活上报
             pass
         # 2026-09-23 开源加固 ⑥：上报本机 Agent 代码的完整性指纹（对标
         # MeshCentral 的 agentTampering）。进程内缓存，不是每 5 秒重算一遍。
@@ -464,10 +464,10 @@ class AgentConnector:
                 payload["self_digest"] = _d["digest"]
                 payload["self_digest_files"] = _d.get("files", 0)
                 payload["self_digest_mode"] = _d.get("mode", "")
-        except Exception:  # noqa: BLE001  算不出来不影响存活上报
+        except Exception:  # noqa: BLE001 算不出来不影响存活上报
             pass
         # 2026-09-23 开源加固 ④：本机还没有 update_key（老版本注册上来的存量 Agent）
-        # 时，**要一次**就够 —— 拿到后立刻落盘，之后每 5 秒一次的心跳不再重复传输，
+        # 时，**要一次**就够，拿到后立刻落盘，之后每 5 秒一次的心跳不再重复传输，
         # 免得把这把钥匙反复放到网络上。
         if not self.update_key:
             payload["need_update_key"] = True

@@ -107,10 +107,10 @@ VK_SHIFT = 0xA0
 
 _ASCII_LETTERS = frozenset("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-# 被控端开着中文输入法时，注入方式必须切换：
-#   * 输入法非英文（中文/全角/中文标点）-> **必须发真实虚拟键**，让远端输入法
-#     自己组字。Unicode 直注绕过了组字链路，结果就是「切到中文却只冒小写字母」。
-#   * 输入法关闭 / 英文模式            -> Unicode 直注字符本身，大小写只由观看端
+# 被控端开着中文输入法时，注入方式必须切换
+# * 输入法非英文（中文/全角/中文标点）-> **必须发真实虚拟键**，让远端输入法
+# 自己组字。Unicode 直注绕过了组字链路，结果就是「切到中文却只冒小写字母」。
+# * 输入法关闭 / 英文模式 -> Unicode 直注字符本身，大小写只由观看端
 # 所以每个字符注入前都要先问一次"现在是不是中文模式"。
 WM_IME_CONTROL = 0x0283
 IMC_GETOPENSTATUS = 0x0005
@@ -180,7 +180,7 @@ def ime_active() -> bool:
                                    IMC_GETCONVERSIONMODE, 0)
         return bool(int(mode or 0) & (IME_CMODE_NATIVE | IME_CMODE_FULLSHAPE |
                                       IME_CMODE_SYMBOL))
-    except Exception:  # noqa: BLE001  探测失败就按"没输入法"处理，保持旧行为
+    except Exception:  # noqa: BLE001 探测失败就按"没输入法"处理，保持旧行为
         return False
 
 
@@ -362,7 +362,7 @@ def _inject_char(injector: "Injector", msg: dict) -> None:
     if msg.get("cmd") or (vk and ime_non_english()):
         # 快捷键走 hub 给的结果（它对 Ctrl/Alt 场景已经判定过不要补 Shift）；
         # 其余（远端输入法在组字时敲的字母）用**本机的实时 CapsLock** 重算要不要补 Shift，
-        # 不依赖 hub 的镜像状态 —— Windows 大小写是 CapsLock ⊕ Shift，
+        # 不依赖 hub 的镜像状态，Windows 大小写是 CapsLock ⊕ Shift，
         # 镜像一旦过期就会「怎么切都是小写」。
         borrow = bool(msg.get("borrow", False))
         if ch in _ASCII_LETTERS and not msg.get("cmd"):
@@ -479,13 +479,12 @@ class WgcSource(Source):
         # 千万不要传 draw_border！
         # windows-capture 2.0.1 只要显式给了这个参数（哪怕 False），
         # 就会去调 GraphicsCaptureApi 的 SetIsBorderRequired；Win10 22H2（19045）
-        # 不支持该 API，start() 立刻抛：
-        #   "Toggling the capture border is not supported by the Graphics
-        #    Capture API on this platform."
+        # 不支持该 API，start() 立刻抛
+        # "Toggling the capture border is not supported by the Graphics
+        # Capture API on this platform."
         # 现象就是「已连上 hub + 永久黑屏 + 只有一行异常日志」。
         # 参数默认 None = 一个字节都不动，天然安全；描边只有抓单个窗口时才看得见，
         # 我们抓的是整块显示器，无任何影响。
-        #
         # cursor_capture 显式关掉：帧率只有 12~15fps，把被控机光标烤进帧里就等于
         # 给观看端叠了一个永远慢半拍的鬼影（2026-09-15 用户要求去除）。关掉后
         # 画面里只有观看端浏览器自己的指针，跟随是零延迟的。
@@ -699,8 +698,8 @@ class RemoteDesktopController:
                           log=self.log)
         injector = Injector()
 
-        # 🚨 wss 必须显式带上内置 CA：server_url 切 https 后这里会变成 wss://，
-        # 而 websockets 默认用系统信任库校验 —— 自签证书直接
+        # wss 必须显式带上内置 CA：server_url 切 https 后这里会变成 wss://，
+        # 而 websockets 默认用系统信任库校验，自签证书直接
         # `SSLCertVerificationError: CERTIFICATE_VERIFY_FAILED`，表现为
         # 「页签打开、点连接、FPS 永远 0」（连不上 hub，日志里也只有这么一行）。
         ws_kwargs: dict = {}
@@ -925,8 +924,8 @@ class RemoteDesktopController:
                 self.log(f"采集线程 {src.name} 未能在 3 秒内退出，已放弃等待（后台残留）")
 
 
-# 🚨 64 位 Python 下 ctypes 的**默认 restype 是 c_int**，HGLOBAL / 数据指针
-# 会被截断成 32 位。实测（2026-09-17 在本机）：
+# 64 位 Python 下 ctypes 的**默认 restype 是 c_int**，HGLOBAL / 数据指针
+# 会被截断成 32 位。实测（2026-09-17 在本机）
 # 后果是**静默失败**：写入时 memmove(NULL) 抛异常被 except 吞掉（远端剪贴板
 # 根本没变），读取时 GlobalLock 返回空 -> 永远返回 ""（"远端复制 -> 本机粘贴"
 # 因此从来没数据）。所以下面这些签名**必须显式声明**，别再省这几行。

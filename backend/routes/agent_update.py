@@ -33,7 +33,7 @@ router = APIRouter(prefix="/api/agent-update", tags=["agent-update"])
 
 
 def _client_ip(request: Request) -> str:
-    """⚠ 2026-09-23 动态审计 D-1：取值规则已统一到 `services/client_ip.py`
+    """ 2026-09-23 动态审计 D-1：取值规则已统一到 `services/client_ip.py`
     （默认不信任 X-Forwarded-For，只认直连 IP；确实走了反向代理时用
     `VIGILSERVE_TRUSTED_PROXIES` 显式声明代理地址）。这里保留同名薄封装，
     是为了不动本文件里散落的 `ip_address=_client_ip(request)`。"""
@@ -119,10 +119,10 @@ def _run_agent_update(task_id: int) -> None:
             return
 
         port = _agent_api_port(server)
-        # 🚨 version 必须同时放进 **URL query**：Agent 侧 `_handle_update` 用
+        # version 必须同时放进 **URL query**：Agent 侧 `_handle_update` 用
         # `qs.get("version")`（URL 参数）取值，而 requests 的 `data={"version":...}`
-        # 是 multipart 表单字段 —— 只发表单会让 Agent 拿到空版本，签名串变成
-        # ":<sha>" 与服务端的 "1.1.53:<sha>" 不符 → "签名不匹配（2026-09-22 现场）"。
+        # 是 multipart 表单字段，只发表单会让 Agent 拿到空版本，签名串变成
+        # ":<sha>" 与服务端的 "1.1.53:<sha>" 不符 "签名不匹配（2026-09-22 现场）"。
         agent_url = f"https://{server.ip_address}:{port}/update?version={task.target_version}"
         filename = os.path.basename(package_path)
         # 安全加固阶段 1：Agent 9998 需要 X-Auth-Token
@@ -130,16 +130,15 @@ def _run_agent_update(task_id: int) -> None:
         _hdrs = agent_headers(server)
         _ca = agent_ca_verify()
 
-        # P1-2（更新包 HMAC 验签）+ 2026-09-23 开源加固 ④：
+        # P1-2（更新包 HMAC 验签）+ 2026-09-23 开源加固 ④
         # 推送的安装包带完整性签名，Agent 侧 fail-closed 校验，防止被篡改/伪造的
         # 包在目标主机静默执行。
-        #   X-Pkg-Sha256    = 包内容的 hex sha256
-        #   X-Pkg-Timestamp = 签发时刻（Unix 秒），供 Agent 判断新鲜性
-        #   X-Pkg-Signature = hmac_sha256(update_key, "{version}:{sha256}:{timestamp}")
-        #
-        # 🚨 密钥**不再复用 token**：token 是 9998 的认证头，每次调用都在网络上跑，
-        #   抓一次包就能永久伪造更新包。现在用 `secret_key` 派生的独立 update_key。
-        #   （Agent 侧同步改造；用户 2026-09-23 拍板：不做双签过渡期。）
+        # X-Pkg-Sha256 = 包内容的 hex sha256
+        # X-Pkg-Timestamp = 签发时刻（Unix 秒），供 Agent 判断新鲜性
+        # X-Pkg-Signature = hmac_sha256(update_key, "{version}:{sha256}:{timestamp}")
+        # 密钥**不再复用 token**：token 是 9998 的认证头，每次调用都在网络上跑，
+        # 抓一次包就能永久伪造更新包。现在用 `secret_key` 派生的独立 update_key。
+        # （Agent 侧同步改造；用户 2026-09-23 拍板：不做双签过渡期。）
         from services.agent_auth import compute_update_key, sign_update_package
         _agent_key = db.query(AgentKey).filter(AgentKey.server_id == server.id).first()
         if not _agent_key or not _agent_key.secret_key:
@@ -183,7 +182,7 @@ def _run_agent_update(task_id: int) -> None:
                 return
             data = resp.json()
         except requests.exceptions.SSLError:
-            # 1.1.38：Agent 9998 跑的是自签证书（1.1.51 存量主机已知问题——
+            # 1.1.38：Agent 9998 跑的是自签证书（1.1.51 存量主机已知问题，
             # 客户端证书有效导致从未领取 CA 签发的 9998 证书）。推送通道本身
             # 已坏，无法用推送自愈：目标主机需手动安装一次最新安装包（1.1.53+），
             # 启动后首个心跳自动领证，推送随即恢复。
@@ -306,10 +305,10 @@ def list_managed_servers(authorization: str = Header(None), db: Session = Depend
         Server.protocol == "agent",
         Server.status.in_(("online", "monitored", "offline", "warning", "critical")),
     ).all()
-    # 🚨 第三轮审计 N-5（2026-09-23）：原来是 `if not user: return []` ——
-    #    数据确实没给（安全失败，这点没问题），但**状态码是 200**，前端 `res.ok`
-    #    为真，会话过期后会显示"没有可升级的主机"而不是跳登录页。
-    #    改成 `require_login` 直接 401，与同文件 `/packages` 的写法统一。
+    # 第三轮审计 N-5（2026-09-23）：原来是 `if not user: return []`，
+    # 数据确实没给（安全失败，这点没问题），但**状态码是 200**，前端 `res.ok`
+    # 为真，会话过期后会显示"没有可升级的主机"而不是跳登录页。
+    # 改成 `require_login` 直接 401，与同文件 `/packages` 的写法统一。
     user = require_login(authorization, db)
     allowed = set(allowed_server_ids(db, user, [s.id for s in servers]))
     servers = [s for s in servers if s.id in allowed]

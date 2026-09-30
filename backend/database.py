@@ -92,7 +92,7 @@ def _migrate():
         conn.execute(text("UPDATE servers SET device_kind='host' WHERE device_kind IS NULL OR device_kind=''"))
         conn.commit()
 
-        # 方案 B：网络设备的命令行（CLI）凭据 —— 「WEB终端」登录设备敲命令用
+        # 方案 B：网络设备的命令行（CLI）凭据，「WEB终端」登录设备敲命令用
         cli_cols = {
             "cli_protocol": "VARCHAR(10) DEFAULT 'ssh'",
             "cli_port": "INTEGER DEFAULT 22",
@@ -105,7 +105,7 @@ def _migrate():
                 conn.execute(text(f"ALTER TABLE servers ADD COLUMN {col} {ddl}"))
         conn.commit()
 
-        # 方案 B：网络设备的 WEB 管理入口 —— 「WEB管理」页签代理到设备自带的管理界面
+        # 方案 B：网络设备的 WEB 管理入口，「WEB管理」页签代理到设备自带的管理界面
         web_cols = {
             "web_protocol": "VARCHAR(5) DEFAULT 'https'",
             "web_port": "INTEGER DEFAULT 443",
@@ -159,9 +159,9 @@ def _migrate():
             "api_cert": "TEXT DEFAULT ''",
             "api_cert_not_after": "DATETIME",
             # 2026-09-23 开源加固 ⑤：静态 token 可轮换。
-            #   轮换时旧密钥挪到 secret_key_prev，在 secret_key_prev_until 之前
-            #   仍然被接受 —— 给已经跑在外的 Agent 一个"来拿新 token"的窗口；
-            #   窗口一过，泄露出去的旧 token 自动失效（不再是永久后门）。
+            # 轮换时旧密钥挪到 secret_key_prev，在 secret_key_prev_until 之前
+            # 仍然被接受，给已经跑在外的 Agent 一个"来拿新 token"的窗口；
+            # 窗口一过，泄露出去的旧 token 自动失效（不再是永久后门）。
             "secret_key_prev": "VARCHAR(64) DEFAULT ''",
             "secret_key_prev_until": "DATETIME",
             # 开源加固 ⑥：Agent 完整性自检（对标 MeshCentral agentTampering）
@@ -192,11 +192,11 @@ def _migrate():
                 conn.execute(text(f"ALTER TABLE monitored_services ADD COLUMN {col} {ddl}"))
         conn.commit()
 
-        # 单端口速率列（2026-09-21）：端口表原来只有累计字节，看着像"流量"其实是
+        # 单端口速率列（2026-09-21）：端口表原来只有累计字节，表现类似"流量"实际是
         # 开机以来的总量。速率要拿上一轮的累计值差分，基线存在 extra_config 里。
         ni_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(network_interfaces)")).fetchall()]
         new_ni_cols = {
-            # 🚨 用 REAL 且**不给 DEFAULT**：没有基线时必须是 NULL，不能是 0。
+            # 用 REAL 且**不给 DEFAULT**：没有基线时必须是 NULL，不能是 0。
             # 给 0 的话前端分不清"这口没流量"和"还没算出速率"，会摆一个假的 0 Mbps。
             "in_rate_mbps": "REAL",
             "out_rate_mbps": "REAL",

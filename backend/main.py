@@ -45,7 +45,7 @@ from services.audit_logger import log_operation
 from services.client_ip import get_client_ip
 from services import net_guard
 from routes.auth import get_current_user_full, has_perm, can_manage_server, seed_admin
-# 🚨 2026-09-23：`meshcentral` 路由已**整体下线**（用户拍板删除）。
+# 2026-09-23：`meshcentral` 路由已**整体下线**（用户拍板删除）。
 from routes import servers, metrics, dashboard, auth, config, agent, file_explorer, logs, agent_update, roles, host_groups, host_info, rdp as rdp_routes, tls as tls_routes, security, network_web, traps
 
 PRODUCTION = os.environ.get("PRODUCTION", "0") == "1"
@@ -228,7 +228,7 @@ def check_all_services():
             return
         _last_service_check = now
 
-        # 方案 B：网络设备（protocol=snmp）没有进程/服务可查 —— 它们的"服务"是
+        # 方案 B：网络设备（protocol=snmp）没有进程/服务可查，它们的"服务"是
         # 端口状态，由 SNMP 采集负责。这里拿 WinRM/SSH 去连交换机会白白超时。
         servers = db.query(Server).filter(
             Server.protocol != "agent", Server.protocol != "snmp"
@@ -262,8 +262,8 @@ async def lifespan(app: FastAPI):
     # 2026-09-24：默认管理员账号改为**启动时就建**。
     # 之前 seed_admin 只挂在 POST /api/auth/login 里（`routes/auth.py`），
     # 结果新装完 users 表是空的、backend/data 也是空的，必须先在登录页提交一次
-    # 才会建号 —— 而登录页又必须先有口令才能登，形成死循环；离线重置工具还会
-    # 提示"重启服务端会自动建 admin"，这句话当时其实是错的。现在启动即建号，
+    # 才会建号，而登录页又必须先有口令才能登，形成死循环；离线重置工具还会
+    # 提示"重启服务端会自动建 admin"，这句话当时实际是错的。现在启动即建号，
     # 初始随机口令随即落盘到 backend/data/initial_admin_password.txt。
     try:
         _db = SessionLocal()
@@ -271,7 +271,7 @@ async def lifespan(app: FastAPI):
             seed_admin(_db)
         finally:
             _db.close()
-    except Exception as exc:  # noqa: BLE001  建号失败不能拖垮整个启动
+    except Exception as exc:  # noqa: BLE001 建号失败不能拖垮整个启动
         logger.exception(f"[auth] 启动时初始化默认管理员账号失败：{exc}")
 
     scheduler = BackgroundScheduler()
@@ -299,7 +299,7 @@ async def lifespan(app: FastAPI):
     try:
         from services import host_info_async
         host_info_async.start()
-    except Exception as e:  # noqa: BLE001  巡检线程起不来也不能拖垮启动
+    except Exception as e:  # noqa: BLE001 巡检线程起不来也不能拖垮启动
         logger.warning(f"[host_info_async] 启动失败（按需采集退化为每次实时拉取）：{e}")
 
     async def push_loop():
@@ -378,17 +378,17 @@ app.add_middleware(
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # 「WEB管理」反向代理的跨源预检：必须**最后**挂（最外层）才拦得住上面的 CORSMiddleware。
-# 沙箱 iframe 的源是 null，不在 _origins 白名单里，预检会被回 400 → 设备页 XHR 全挂。
+# 沙箱 iframe 的源是 null，不在 _origins 白名单里，预检会被回 400 设备页 XHR 全挂。
 network_web.install_preflight(app)
 
-# ── 全局安全响应头（交付审查补漏）────────────────────────────────────
+# 全局安全响应头（交付审查补漏）
 # 刻意**不加** Content-Security-Policy：WEB 管理的代理链路靠往设备页面里注入内联
 # 会把整条链路打死。要上 CSP 得先把那段脚本改成外链文件，属于独立改造项。
 _SECURITY_HEADERS = [
     (b"x-content-type-options", b"nosniff"),
     (b"x-frame-options", b"SAMEORIGIN"),
     (b"referrer-policy", b"strict-origin-when-cross-origin"),
-    # 关掉浏览器里早已废弃的 XSS auditor —— 留着它反而会被用来制造误报/信息泄露
+    # 关掉浏览器里早已废弃的 XSS auditor，留着它反而会被用来制造误报/信息泄露
     (b"x-xss-protection", b"0"),
     # 本系统用不到这些设备能力，明确关掉，免得被嵌进来的第三方页面顺手申请
     (b"permissions-policy", b"geolocation=(), payment=(), usb=(), midi=()"),
@@ -428,7 +428,7 @@ class SecurityHeadersMiddleware:
 app.add_middleware(SecurityHeadersMiddleware)
 
 # 来源白名单（2026-09-23 动态审计 D-2）：**挂得最晚 = 最外层**，先于 CORS、
-# 先于安全头中间件生效 —— 不在 VIGILSERVE_ALLOWED_CIDRS 里的来源连跨源预检
+# 先于安全头中间件生效，不在 VIGILSERVE_ALLOWED_CIDRS 里的来源连跨源预检
 # 都过不去。没配该环境变量时完全不介入（零开销），现有部署行为不变。
 # 否则等于把白名单交给客户端自己填。
 app.add_middleware(net_guard.make_source_guard_middleware())
@@ -449,7 +449,7 @@ app.include_router(host_info.router)
 app.include_router(rdp_routes.router)
 app.include_router(tls_routes.router)
 app.include_router(security.router)
-# 方案 B：网络设备「WEB管理」页签 —— 服务端反向代理到设备自带的 Web 管理界面
+# 方案 B：网络设备「WEB管理」页签，服务端反向代理到设备自带的 Web 管理界面
 app.include_router(network_web.router)
 app.include_router(traps.router)
 
@@ -467,7 +467,7 @@ def get_server_version(authorization: Optional[str] = Header(None),
     require_login(authorization, db)
     return {"version": app.version}
 
-from services import tls as _tls_mod  # noqa: E402  （__main__ 启动时用来准备证书）
+from services import tls as _tls_mod  # noqa: E402 （__main__ 启动时用来准备证书）
 
 
 
@@ -560,7 +560,7 @@ async def _proxy_terminal_to_agent(ws, server_id: int, server: "Server"):
     except Exception:  # noqa: BLE001
         _agent_hdrs = {}
 
-    # P1-1：反向通道 TLS —— wss + 本地 CA 校验 Agent 服务器证书
+    # P1-1：反向通道 TLS，wss + 本地 CA 校验 Agent 服务器证书
     try:
         from services.agent_auth import agent_ssl_context
         _agent_ssl = agent_ssl_context()
@@ -652,7 +652,7 @@ async def terminal_endpoint(ws: WebSocket, server_id: int):
     # 先鉴权再 accept：未授权的连接不给任何回显（安全加固阶段 3）
 
     # 2026-09-23 动态审计 D-1：原来无条件采信 X-Forwarded-For（客户端可伪造），
-    # 规则统一到 services/client_ip.py —— 默认只认直连 IP。
+    # 规则统一到 services/client_ip.py，默认只认直连 IP。
     client_ip = get_client_ip(ws)
 
     db = next(get_db())
@@ -873,7 +873,7 @@ async def terminal_endpoint(ws: WebSocket, server_id: int):
         logger.warning(f"[Terminal {server_id}] disconnect audit log failed: {e}")
 
 
-# 与 `/ws/terminal/{id}` 的区别：主机那条路是「服务端 → Agent 9998 → 本机 PTY」，
+# 与 `/ws/terminal/{id}` 的区别：主机那条路是「服务端 Agent 9998 本机 PTY」，
 # 网络设备装不上 Agent，所以这里由**服务端直接 SSH / Telnet 到设备**。
 
 
@@ -932,7 +932,7 @@ async def network_terminal_endpoint(ws: WebSocket, server_id: int):
             await ws.close(code=4003)
             return
         # 关键：session 要长期持有这台 Server 的字段（口令），必须自己开一个会话，
-        # 用完再关 —— 上面那个 _db 马上要关闭。
+        # 用完再关，上面那个 _db 马上要关闭。
         sdb = next(get_db())
         try:
             target = sdb.query(Server).filter(Server.id == server_id).first()
@@ -1157,12 +1157,12 @@ async def serve_spa(path: str, request: Request):
     if fixed is not None:
         return fixed
     if path.startswith("api/") or path.startswith("ws/"):
-        # 🚨 第三轮审计 N-4（2026-09-23）：这里原来是 `return {"detail": "Not Found"}`
-        #    —— FastAPI 对**返回的 dict 一律给 200**，于是"接口不存在"被包成了一次
-        #    "成功的空响应"。后果：① 前端 `res.ok` 判不出来，接口改名/路径写错会被
-        #    静默吞掉；② 基于状态码的 WAF、日志告警、漏扫一律失效；③ 第三轮审计的
-        #    第一版验收脚本就是被它骗过，把一批"路径写错"报成了"匿名可读"。
-        #    现在显式回 404，语义与 HTTP 一致。
+        # 第三轮审计 N-4（2026-09-23）：这里原来是 `return {"detail": "Not Found"}`
+        #，FastAPI 对**返回的 dict 一律给 200**，于是"接口不存在"被包成了一次
+        # "成功的空响应"。后果：① 前端 `res.ok` 判不出来，接口改名/路径写错会被
+        # 静默吞掉；② 基于状态码的 WAF、日志告警、漏扫一律失效；③ 第三轮审计的
+        # 第一版验收脚本就是被它骗过，把一批"路径写错"报成了"匿名可读"。
+        # 现在显式回 404，语义与 HTTP 一致。
         return JSONResponse(status_code=404, content={"detail": "Not Found"})
     file_path = dist_path / path
     if file_path.exists() and file_path.is_file():
@@ -1185,7 +1185,7 @@ logger.info(f"[Server] Serving frontend from {dist_path}")
 def _no_proxy_headers_kwargs() -> dict:
     """启动 uvicorn 时关掉它自带的 `ProxyHeadersMiddleware`（2026-09-23 动态审计 D-1）。
 
-    ⚠ 这一条是 D-1 修复**能否真正生效的关键**：uvicorn 默认会让 ASGI scope 里的
+ 这一条是 D-1 修复**能否真正生效的关键**：uvicorn 默认会让 ASGI scope 里的
     `client` 不再是你以为的那个 socket 对端。它的 `ProxyHeadersMiddleware` 默认
     `trusted_hosts="127.0.0.1"`（或取环境变量 `FORWARDED_ALLOW_IPS`），只要直连方
     落在这个集合里、且请求带了 `X-Forwarded-For`，它就把
@@ -1228,10 +1228,10 @@ if __name__ == "__main__":
                 logger.info(f"[TLS] HTTPS 已启用，SAN={info.get('sans')}，"
                             f"证书到期 {info.get('not_after')}")
             except Exception as e:  # noqa: BLE001
-                # 🚨 以前这里直接降级成 HTTP 继续跑：生产环境只要证书准备出一次
+                # 以前这里直接降级成 HTTP 继续跑：生产环境只要证书准备出一次
                 # 异常，服务就**悄悄变成明文**，而浏览器和 Agent 完全不知情
                 # （Agent 是照 https 去连的，现象只是"连不上"，很难联想到这里）。
-                # 改成 fail closed —— 起不来比悄悄明文好排障。
+                # 改成 fail closed，起不来比悄悄明文好排障。
                 # 确实要临时放行的场合显式给 VIGILSERVE_TLS_INSECURE_FALLBACK=1。
                 if os.environ.get("VIGILSERVE_TLS_INSECURE_FALLBACK") == "1":
                     logger.error(f"[TLS] 证书准备失败，按 VIGILSERVE_TLS_INSECURE_FALLBACK=1 "
@@ -1245,7 +1245,6 @@ if __name__ == "__main__":
                          "登录凭据与采集数据都在链路上裸奔，仅限排障使用")
 
         # 必须全进程唯一一份，双实例会导致触发链（tunnel 注册的 viewer 对 config 不可见）断裂。
-        #
         # 2026-09-23 动态审计 D-2：监听地址改为可配（VIGILSERVE_BIND_HOST），
         # 不配仍默认 0.0.0.0（现有部署行为不变）。只想本机访问就设 127.0.0.1。
         _host = net_guard.bind_host()

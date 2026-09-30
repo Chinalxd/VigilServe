@@ -14,7 +14,7 @@
   2. 能校验成"确定安全形状"的（端口、PID）一律强制转型，绝不靠转义兜底；
   3. 校验失败的字段直接丢弃该条监控项，而不是"尽力转义后照用"。
 
-⚠️ 注意：`agent._run_winrm()` 走的是 `powershell -EncodedCommand`，所以**不存在**
+ 注意：`agent._run_winrm()` 走的是 `powershell -EncodedCommand`，所以**不存在**
 cmd 层的 `&`/`|` 注入，但 PowerShell 自己的字符串/表达式注入依然存在，必须转义。
 """
 
@@ -49,7 +49,7 @@ def safe_image(value: str) -> str:
     v = (value or "").strip()
     if not v:
         return ""
-    # 控制字符（换行/回车/制表符）可能截断命令，直接拒绝而不是"删掉继续用"——
+    # 控制字符（换行/回车/制表符）可能截断命令，直接拒绝而不是"删掉继续用"，
     # 悄悄改写用户输入会掩盖攻击行为，宁可让这一条监控项不生效。
     if any(ch < " " or ch == "\x7f" for ch in v):
         return ""

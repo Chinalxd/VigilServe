@@ -24,7 +24,7 @@ class HeadlessAgent:
             build_server_url(self.cfg),
             self.cfg.get("server_id", 0),
             self.cfg.get("token", ""),
-            update_key=self.cfg.get("update_key", ""),   # 开源加固 ④
+            update_key=self.cfg.get("update_key", ""),   
         )
         self.running = False
         self.status = "未连接"
@@ -78,7 +78,7 @@ class HeadlessAgent:
                 interval = self.cfg.get("interval_seconds", 60)
                 server_cfg = None
                 trigger_now = False
-                # ⚠ 未加入管理时跳过：`/config` 也要过签名准入，未准入会被 401。
+                # 未加入管理时跳过：`/config` 也要过签名准入，未准入会被 401。
                 if self._authorized and self.connector.server_id and self.connector.token:
                     try:
                         server_cfg = self.connector.fetch_config()
@@ -140,7 +140,7 @@ class HeadlessAgent:
                             or self.cfg.get("update_key") != self.connector.update_key):
                         self.cfg["server_id"] = self.connector.server_id
                         self.cfg["token"] = self.connector.token
-                        self.cfg["update_key"] = self.connector.update_key   # 加固 ④
+                        self.cfg["update_key"] = self.connector.update_key   
                         save_config(self.cfg)
 
                     if not self.connector.server_id or not self.cfg.get("token"):
@@ -180,13 +180,13 @@ class HeadlessAgent:
                             _changed = True
                         if _changed:
                             save_config(self.cfg)
-                        # 🚨 判据必须是 `not _hb or "error" in _hb`，不能只写 `not _hb`：
+                        # 判据必须是 `not _hb or "error" in _hb`，不能只写 `not _hb`
                         # `connector.heartbeat()` 失败时返回的是**非空** dict
                         # （`{"error": True, "code": 401, ...}`），只判空的话这个分支
-                        # 永远进不去 —— 无托盘模式下心跳失败既不清注册也不自愈，
+                        # 永远进不去，无托盘模式下心跳失败既不清注册也不自愈，
                         # 界面上看不出异常、服务端却一直显示离线。（agent.py 一直是对的）
                         if not _hb or "error" in _hb:
-                            # 🚨 把服务端给的拒绝原因原样露出来（理由同 agent.py）：
+                            # 把服务端给的拒绝原因原样露出来（理由同 agent.py）
                             # 401 的 detail 里已经写了具体原因，不显示就只能靠猜。
                             _why = ""
                             if isinstance(_hb, dict):
@@ -208,8 +208,8 @@ class HeadlessAgent:
                         # 服务端还没登记本机公钥（= 未加入管理）：心跳通说明网络是通
                         # 的、服务端也已显示在线，但推送会被拒。跳过上报，别在日志里
                         # 每 60 秒刷一条"推送失败"。
-                        # 🚨 这里**不能** `continue`：未准入是个会持续很久的正常状态，
-                        #    而 `continue` 会跳过本循环底部的自适应休眠 → 满载空转。
+                        # 这里**不能** `continue`：未准入是个会持续很久的正常状态，
+                        # 而 `continue` 会跳过本循环底部的自适应休眠 满载空转。
                         _authz = _hb.get("authorized")
                         _authz = True if _authz is None else bool(_authz)
                         if _authz != self._authorized:
@@ -252,8 +252,8 @@ class HeadlessAgent:
                 if not self.running:
                     break
                 time.sleep(1)
-                # ⚠ 未加入管理时跳过：`/config` 也要过签名准入，未准入会被 401，
-                #   每 5 秒一次纯属白刷请求。
+                # 未加入管理时跳过：`/config` 也要过签名准入，未准入会被 401，
+                # 每 5 秒一次纯属白刷请求。
                 if _ % 5 == 0 and self._authorized and self.connector.server_id and self.cfg.get("token"):
                     try:
                         sc = self.connector.fetch_config()

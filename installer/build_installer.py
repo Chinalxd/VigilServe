@@ -116,12 +116,12 @@ SENSITIVE_SUFFIXES = (".log", ".db", ".db-shm", ".db-wal", ".pyc", ".tmp")
 SENSITIVE_BASENAMES = {
     "thumbs.db", "desktop.ini", ".ds_store",
     "initial_admin_password.txt",
-    "ca.key",                      # 本地 CA 私钥 —— 绝不能离开服务器
-    "server.key",                  # 服务器证书私钥 —— 同上
+    "ca.key",                      # 本地 CA 私钥，绝不能离开服务器
+    "server.key",                  # 服务器证书私钥，同上
     "secret.key",
     # 第三轮审计 N-1（2026-09-23）：MeshCentral Login Token 的 **80 字节 AES 主密钥**。
     # 它原先只在开发机上生成过一次，随后被 stage_source_tree() 整目录拷进
-    # installer/source/backend/ —— 每个拿到安装包的部署都共用同一把密钥。
+    # installer/source/backend/，每个拿到安装包的部署都共用同一把密钥。
     # 排除之后由 `meshcentral_client.ensure_default_keyfile()` 在**目标机器上首次
     # 生成**，与上面 ca.key / server.key 的处理口径完全一致。
     "meshcentral-key.txt",
@@ -198,13 +198,13 @@ def stage_source_tree():
     safe_rmtree(SOURCE_DIR)
     SOURCE_DIR.mkdir(parents=True, exist_ok=True)
 
-    # 🚨 2026-09-23 第三轮审计 N-1：`SENSITIVE_BASENAMES` 里的文件**必须**出现在这里。
-    #    历史上靠 `clean_tree()` 在 stage 之后扫掉，但 phase 1 早已把它摘掉
-    #    （源码树不能扫），而这份 IGNORE 只带了 FORBIDDEN_BASENAMES —— 结果
-    #    `initial_admin_password.txt` 靠重复写一遍侥幸还在，
-    #    `ca.key` / `server.key` / `secret.key` / `meshcentral-key.txt` **全都拦不住**，
-    #    会原样打进安装包（meshcentral-key.txt 已在 installer/source/ 里实测存在）。
-    #    现在把两份名单合并，一套口径覆盖全部敏感文件。
+    # 2026-09-23 第三轮审计 N-1：`SENSITIVE_BASENAMES` 里的文件**必须**出现在这里。
+    # 历史上靠 `clean_tree()` 在 stage 之后扫掉，但 phase 1 早已把它摘掉
+    # （源码树不能扫），而这份 IGNORE 只带了 FORBIDDEN_BASENAMES，结果
+    # `initial_admin_password.txt` 靠重复写一遍侥幸还在，
+    # `ca.key` / `server.key` / `secret.key` / `meshcentral-key.txt` **全都拦不住**，
+    # 会原样打进安装包（meshcentral-key.txt 已在 installer/source/ 里实测存在）。
+    # 现在把两份名单合并，一套口径覆盖全部敏感文件。
     IGNORE = shutil.ignore_patterns(
         *FORBIDDEN_BASENAMES,
         *SENSITIVE_BASENAMES,
@@ -218,7 +218,6 @@ def stage_source_tree():
     else:
         step("  WARN: frontend/dist missing - run `npm run build` first")
 
-    # tray: only the EXE
     tray_dst = SOURCE_DIR / "tray"
     tray_dst.mkdir(parents=True, exist_ok=True)
     shutil.copy2(ROOT / "tray" / "dist" / "VigilServeTray.exe", tray_dst / "VigilServeTray.exe")
@@ -260,10 +259,10 @@ def _ensure_crlf(path: Path) -> None:
     text = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n").decode("utf-8")
     new = text.replace("\n", "\r\n").encode("utf-8")
     if new != data:
-        # 🚨 `.bat` 刚 copytree 出来就会被 Defender 抓去扫描，扫的瞬间独占句柄，
-        #    写入抛 PermissionError: [Errno 13] —— 2026-09-30 实测卡在
-        #    reset_admin_password.bat，重跑一次又自己好了（典型的瞬时锁）。
-        #    这里退避重试几次；真锁死（只读属性等）才把异常抛出去。
+        # `.bat` 刚 copytree 出来就会被 Defender 抓去扫描，扫的瞬间独占句柄，
+        # 写入抛 PermissionError: [Errno 13]，2026-09-30 实测卡在
+        # reset_admin_password.bat，重跑一次又自己好了（典型的瞬时锁）。
+        # 这里退避重试几次；真锁死（只读属性等）才把异常抛出去。
         for attempt in range(5):
             try:
                 path.write_bytes(new)
@@ -289,7 +288,7 @@ def _dir_size_mb(p: Path) -> float:
 def _verify_runtime_requirements(py: Path) -> None:
     """Gate the staged runtime against the CURRENT backend/requirements.txt.
 
-    🚨 为什么必须有这道闸门（2026-09-30 现场故障）：
+ 为什么必须有这道闸门（2026-09-30 现场故障）：
     `portable_runtime/` 是 `build_python_runtime.py` **手工跑一次**产出的，
     之后 `stage_python_runtime()` 只是把它原样复制进安装包 —— 谁也不检查它
     是否还满足当前的 `backend/requirements.txt`。
@@ -308,9 +307,9 @@ def _verify_runtime_requirements(py: Path) -> None:
         sys.path.pop(0)
 
     reqs = bpr.parse_requirements(bpr.REQUIREMENTS)
-    # 🚨 `probe_requirements()` 返回的是**全部条目**（每项带一个 `ok` 布尔），
-    #    不是"未满足的那些"。不过滤就会把 18 项全列成"不合格"——哪怕版本完全
-    #    对得上，闸门也会把打包拦下来（2026-09-30 实测踩到）。
+    # `probe_requirements()` 返回的是**全部条目**（每项带一个 `ok` 布尔），
+    # 不是"未满足的那些"。不过滤就会把 18 项全列成"不合格"，哪怕版本完全
+    # 对得上，闸门也会把打包拦下来（2026-09-30 实测踩到）。
     unmet = [m for m in bpr.probe_requirements(py, reqs) if not m.get("ok")]
     if unmet:
         lines = "\n".join(
@@ -350,7 +349,7 @@ def stage_python_runtime() -> None:
         step("        the installer will then REQUIRE a host-installed Python")
         step("        build the runtime with: python installer\\build_python_runtime.py")
         return
-    # 🚨 先验后拷：验的是**将要装进去的那份**，避免"拷完才发现缺包"。
+    # 先验后拷：验的是**将要装进去的那份**，避免"拷完才发现缺包"。
     _verify_runtime_requirements(PORTABLE_RUNTIME_DIR / "python.exe")
     shutil.copytree(PORTABLE_RUNTIME_DIR, dst,
                     ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
@@ -386,7 +385,7 @@ def check_required_artifacts(allow_stale: bool) -> None:
 def check_tray_exe_fresh(allow_stale: bool) -> None:
     """托盘 exe 内嵌的版本必须与 tray_app.py 的 TRAY_VERSION 一致。
 
-    🚨 2026-09-30 现场：1.1.63 / 1.1.64 只改了 `tray_app.py` 里的版本常量，
+ 2026-09-30 现场：1.1.63 / 1.1.64 只改了 `tray_app.py` 里的版本常量，
     **没有重新打包托盘** —— 托盘 exe 在 `REQUIRED_ARTIFACTS` 里只校验"在不在"，
     构建脚本并不重建它（它得单独跑 PyInstaller）。结果是：安装包是新的、
     后端代码是新的，**托盘界面上却还写着 1.1.62**，而这条链路上没有任何告警。
@@ -518,7 +517,7 @@ def _pick_latest_installer(paths: list):
     只要被复制、备份还原、杀毒软件扫过，mtime 就变成现在，于是它会盖过真正的最新
     版被发布出去 —— 版本号和里面的代码对不上，装完还看不出来。
 
-    ⚠ 与 agent/build_installer.py 里的同名函数保持一致：两边是同一套规则。
+ 与 agent/build_installer.py 里的同名函数保持一致：两边是同一套规则。
     """
     def _ver(p):
         m = re.search(r"(\d+)\.(\d+)\.(\d+)", p.name)
@@ -563,7 +562,7 @@ def main(argv: list[str] | None = None) -> int:
         print("usage: python build_installer.py [--allow-stale]", file=sys.stderr)
         return 1
 
-    # NOTE: 绝不能对 ROOT(源码树) 执行 clean_tree()——源码树里的 backend/monitor.db
+    # NOTE: 绝不能对 ROOT(源码树) 执行 clean_tree()，源码树里的 backend/monitor.db
     # 是正在运行的生产库，删掉会导致数据丢失且 secret.key 丢失后库内密文永久无法解密。
     # 敏感文件的排除已由 stage_source_tree() 全覆盖：staging 目录整体 safe_rmtree 重建，
     # copytree 的 ignore=IGNORE 已排除 *.db / *.log / data/ / certs/ 等敏感内容。

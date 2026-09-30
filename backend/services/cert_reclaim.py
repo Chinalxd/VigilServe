@@ -57,7 +57,7 @@ def reclaim_lost_certificates(db, days: int | None = None) -> dict:
         .join(Server, Server.id == AgentKey.server_id)
         # 1.1.51 方案 A：判据从"有没有证书"改成"有没有登记公钥"。
         # 不改的话这条定时任务对新入户的机器**完全不生效**（它们没有 client_cert），
-        # 失联主机再也不会被自动吊销 —— 是个会静默失效的坑。
+        # 失联主机再也不会被自动吊销，是个会静默失效的坑。
         .filter(AgentKey.pub_key.isnot(None), AgentKey.pub_key != "")
         .all()
     )

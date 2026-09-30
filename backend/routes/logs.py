@@ -56,7 +56,7 @@ CLEAR_MAX_LIMIT = 100000
 
 
 def _client_ip(request: Request) -> str:
-    """⚠ 2026-09-23 动态审计 D-1：取值规则已统一到 `services/client_ip.py`
+    """ 2026-09-23 动态审计 D-1：取值规则已统一到 `services/client_ip.py`
     （默认不信任 X-Forwarded-For，只认直连 IP；确实走了反向代理时用
     `VIGILSERVE_TRUSTED_PROXIES` 显式声明代理地址）。这里保留同名薄封装，
     是为了不动本文件里散落的 `ip_address=_client_ip(request)`。"""
@@ -157,7 +157,7 @@ def _alert_base_query(db: Session, start: Optional[str], end: Optional[str],
 def _serialize_alert(row, server_name: str = ""):
     """把一行告警序列化成 dict。
 
-    🚨 别用 ``isinstance(row, tuple)`` 判断"这是不是 (Alert, server_name) 这种
+ 别用 ``isinstance(row, tuple)`` 判断"这是不是 (Alert, server_name) 这种
     join 查询行"：SQLAlchemy 2.x 的 ``Row`` **不是** ``tuple`` 的子类，判断会静默
     变成 False，于是整行被当成 Alert 使用 → ``row.id`` 抛
     ``AttributeError: id``（BaseRow._key_not_found）→ /api/logs/alerts 直接 500，

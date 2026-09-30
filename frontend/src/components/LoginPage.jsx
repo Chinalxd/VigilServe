@@ -69,10 +69,10 @@ export default function LoginPage() {
           )}
         </div>
         <div className="login-hint">
-          {/* 🚨 2026-09-23 开源加固 ②：这里原来直接印「默认管理员账号：admin / admin123」。
-              源码一旦公开，这就是一把现成的后台钥匙。初始口令已改为服务端首次启动时
-              随机生成，只写进服务端 backend/data/initial_admin_password.txt，
-              页面上不再给出任何提示（真忘了只能找管理员在用户管理里重置）。 */}
+          {/* 2026-09-23 开源加固 ②：这里原来直接印「默认管理员账号：admin / admin123」。
+ 源码一旦公开，这就是一把现成的后台钥匙。初始口令已改为服务端首次启动时
+ 随机生成，只写进服务端 backend/data/initial_admin_password.txt，
+ 页面上不再给出任何提示（真忘了只能找管理员在用户管理里重置）。 */}
           忘记密码请联系系统管理员重置
         </div>
       </form>

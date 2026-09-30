@@ -9,7 +9,7 @@ DEFAULTS = {
     "server_url": "",
     "server_host": "",      # server host only, e.g. 192.0.2.10
     "server_port": 8001,
-    "server_scheme": "http",  # http | https —— 服务端启用 HTTPS 后由 Agent 自动切换
+    "server_scheme": "http",  # http | https，服务端启用 HTTPS 后由 Agent 自动切换
     "verify_tls": True,     # 是否用内置 CA 校验证书（只有排障才关）
     "ca_file": "",
     "server_id": 0,

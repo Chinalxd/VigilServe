@@ -234,7 +234,7 @@ class GuacViewer:
             borrow = need_shift and not self.shift_held
 
             # 新通道：把"字符 + VK"一起交给 Agent，由它在**注入那一刻**决定怎么打。
-            # `cmd=True`（按住 Ctrl/Alt/Win）时必须走 VK —— 那是快捷键不是字符，
+            # `cmd=True`（按住 Ctrl/Alt/Win）时必须走 VK，那是快捷键不是字符，
             # 用 Unicode 直注会失去按键语义（Ctrl+C 会变成真的输入一个 c）。
             # 其余情况 Agent 一律 Unicode 直注字符本身：这样大小写只取决于
             # 观看端给出的最终字符，不再依赖被控端的 CapsLock 状态、

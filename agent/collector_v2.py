@@ -51,7 +51,7 @@ def _cpu_model_from_registry() -> str:
         ) as key:
             value, _ = winreg.QueryValueEx(key, "ProcessorNameString")
         return " ".join(str(value or "").split())
-    except Exception:  # noqa: BLE001  拿不到就交给下一级来源
+    except Exception:  # noqa: BLE001 拿不到就交给下一级来源
         return ""
 
 
@@ -307,7 +307,7 @@ def _pid_ports() -> dict[int, list[int]]:
     return mapping
 
 
-#   core_system       -> OS-critical processes; view-only, never terminate.
+# core_system -> OS-critical processes; view-only, never terminate.
 
 CORE_SYSTEM_PROCS = {
     "System", "Registry", "Idle", "System Idle Process", "MemCompression",

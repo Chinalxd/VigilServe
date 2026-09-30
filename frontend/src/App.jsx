@@ -138,7 +138,7 @@ function AppContent() {
     <>
       <Routes>
         {/* 独立窗口：/rdp/<主机id>，由页签内嵌的远程桌面「全屏」按钮 window.open 出来。
-            刻意放在带 Layout 的 "/" 之前，它不带侧边栏 / 顶栏。 */}
+ 刻意放在带 Layout 的 "/" 之前，它不带侧边栏 / 顶栏。 */}
         <Route path="/rdp/:serverId" element={<RemoteDesktopStandalone />} />
         <Route
           path="/"

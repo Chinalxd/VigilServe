@@ -110,7 +110,7 @@ def migrate_new_permissions(db: Session) -> int:
             if not missing:
                 continue
             wanted = rbac.normalize(raw)
-            # 只读型：旧页签全部可查看 → 新页签同样只给查看
+            # 只读型：旧页签全部可查看 新页签同样只给查看
             old_host = [p for p in host if p in host]
             see_all = bool(old_host) and all(
                 bool((host.get(p) or {}).get("view")) for p in old_host
@@ -182,11 +182,11 @@ def get_manifest(authorization: Optional[str] = Header(None), db: Session = Depe
 @router.get("/")
 def list_roles(request: Request, db: Session = Depends(get_db)):
     """角色列表。需要「系统设置 - 角色管理」操作权限（系统管理员恒通过）。"""
-    # 🚨 第三轮审计 N-5（2026-09-23）：原来写的是
-    #    `get_current_user_full(...) or {}` —— 未登录时把**空 dict** 交给权限判定，
-    #    于是匿名请求得到的是 **403 无权限**，而不是 401 未登录。
-    #    数据当然没泄露（`has_perm` 对空 dict 恒 False），但语义错了：前端与
-    #    日志都分不清"没权限"和"会话已失效"。改成先 `require_login` 再判权限。
+    # 第三轮审计 N-5（2026-09-23）：原来写的是
+    # `get_current_user_full(...) or {}`，未登录时把**空 dict** 交给权限判定，
+    # 于是匿名请求得到的是 **403 无权限**，而不是 401 未登录。
+    # 数据当然没泄露（`has_perm` 对空 dict 恒 False），但语义错了：前端与
+    # 日志都分不清"没权限"和"会话已失效"。改成先 `require_login` 再判权限。
     user = require_login(request.headers.get("authorization"), db)
     require_perm(
         db, user,

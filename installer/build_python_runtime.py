@@ -93,7 +93,7 @@ SMOKE_MODULES = (
     "winpty",
     "psutil",
     "requests",
-    # 光 import "pysnmp" 是空包（顶层不导出任何东西）—— 必须冒烟真正的子模块。
+    # 光 import "pysnmp" 是空包（顶层不导出任何东西），必须冒烟真正的子模块。
     "pysnmp.hlapi.v3arch.asyncio",
     "pyasn1",
 )
@@ -142,7 +142,6 @@ def find_base(explicit: str | None = None) -> Path:
         ]
         # may be half-removed. They must not win the pick: plain name sorting
         # would choose "3.13.12.old.17552" over "3.13.12" because the longer
-        # string compares greater.
         fresh = [c for c in cands if ".old" not in c.name.lower()]
         pool = fresh or cands
         if pool:

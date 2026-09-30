@@ -13,7 +13,7 @@
 
 3. **事件驱动（Trap / Webhook）—— 实时**：见 `routes/traps.py`。
 
-🚨 两个容易踩的坑：
+ 两个容易踩的坑：
    · 采集跑在工作线程里，**必须自己开 DB session**（请求线程的 session 不是
      线程安全的，而且请求早就返回了，session 可能已关闭）。
    · 同一个 (server_id, kind) 已经有任务在跑就**直接复用那个 task_id**，
@@ -56,10 +56,10 @@ _inflight: dict[tuple[int, str], str] = {}
 
 _pool = ThreadPoolExecutor(max_workers=4, thread_name_prefix="hostinfo")
 
-# 访问 Agent 是内网直连，必须绕开系统代理（HTTP_PROXY 会把请求劫走 → 502）
+# 访问 Agent 是内网直连，必须绕开系统代理（HTTP_PROXY 会把请求劫走 502）
 _SESSION = _requests.Session()
 _SESSION.trust_env = False
-# P1-1：Agent 9998 全链路 TLS —— 用服务端本地 CA 校验 Agent 的服务器证书
+# P1-1：Agent 9998 全链路 TLS，用服务端本地 CA 校验 Agent 的服务器证书
 try:
     from services.agent_auth import agent_ca_verify as _agent_ca_verify
     _SESSION.verify = _agent_ca_verify()
@@ -188,7 +188,7 @@ def _run_task(task_id: str, server_id: int, kind: str) -> None:
             t["started_at"] = datetime.now(timezone.utc).isoformat()
     try:
         ok, data, err = _collect_from_agent(server_id, kind)
-    except Exception as e:  # noqa: BLE001  兜住，别让工作线程把任务永久卡在 running
+    except Exception as e:  # noqa: BLE001 兜住，别让工作线程把任务永久卡在 running
         logger.exception("主机信息异步采集异常 server=%s kind=%s", server_id, kind)
         ok, data, err = False, None, f"{type(e).__name__}: {e}"
 
@@ -281,7 +281,7 @@ def _sweep_loop() -> None:
         try:
             _sweep_once()
             _gc_tasks()
-        except Exception:  # noqa: BLE001  巡检线程绝不能死
+        except Exception:  # noqa: BLE001 巡检线程绝不能死
             logger.exception("主机信息缓存巡检异常")
         time.sleep(_REFRESH_TICK_SEC)
 

@@ -1,40 +1,36 @@
 import { authHeaders } from './auth'
 import { mockHostInfo, mockApplications, mockUpdates, mockEventLogs, mockStartup } from './hostInfoMock'
 
-/**
- * 主机信息 / 应用管理 / 事件日志 数据层。
+/* 主机信息 / 应用管理 / 事件日志 数据层。
  *
  * USE_MOCK = false —— 后端（routes/host_info.py）+ Agent（host_info.py）已落地，
  * 走真实接口。需要离线演示时把下面的开关改回 true 即可切回 Mock。
  * 端点约定：
- *   GET  /api/servers/{id}/system-info      -> mockHostInfo() 的结构
- *   GET  /api/servers/{id}/applications     -> { items: [...] }  （含 scope/uninstallable/uninstall_cmd）
- *   GET  /api/servers/{id}/applications/updates -> { items: [...] }
- *   POST /api/servers/{id}/applications/uninstall  body: { ids: [...] } -> { ok, results: [...] }
- *   GET  /api/servers/{id}/event-logs?level=&limit= -> { items: [...] }  系统事件日志
- *   GET  /api/servers/{id}/startup                 -> { items: [...] }  系统启动项（含 id/enabled）
- *   POST /api/servers/{id}/startup/{item_id}/toggle  body: { enabled: bool } -> { ok, enabled }
- */
+ * GET /api/servers/{id}/system-info -> mockHostInfo() 的结构
+ * GET /api/servers/{id}/applications -> { items: [...] } （含 scope/uninstallable/uninstall_cmd）
+ * GET /api/servers/{id}/applications/updates -> { items: [...] }
+ * POST /api/servers/{id}/applications/uninstall body: { ids: [...] } -> { ok, results: [...] }
+ * GET /api/servers/{id}/event-logs?level=&limit= -> { items: [...] } 系统事件日志
+ * GET /api/servers/{id}/startup -> { items: [...] } 系统启动项（含 id/enabled）
+ * POST /api/servers/{id}/startup/{item_id}/toggle body: { enabled: bool } -> { ok, enabled } */
 export const USE_MOCK = false
 
 const API = '/api'
 
-/**
- * 「系统应用」判定：只有**操作系统自带 / 运行时 / 驱动 / 补丁**才算系统应用。
+/* 「系统应用」判定：只有**操作系统自带 / 运行时 / 驱动 / 补丁**才算系统应用。
  *
  * 之前只按注册表位置（HKLM → system）划分，导致 360压缩、Adobe Acrobat、RustDesk、
  * ToDesk、Node.js、WPS、酷狗音乐、多可档案这些第三方软件被错分到系统应用。
  * 规则（命中任一即系统应用）：
- *   1. Agent 已给出 is_system 时直接采信（Agent 能读到 SystemComponent 等标志）
- *   2. 补丁类：KB + 数字、Update for / 安全更新 / 累积更新 / Hotfix / Service Pack
- *   3. 微软运行时与系统组件：VC++ 可再发行组件、.NET、Windows Desktop Runtime、
- *      ASP.NET、Edge / Edge Update / WebView2、Update Health Tools、Windows 开头且
- *      属于系统组件（安装助手、电脑健康状况检查、SDK、Defender 等）
- *   4. 安装位置在系统目录（C:\Windows\...）
- *   5. 驱动/系统工具：名称含 Driver 且安装在 system32\spool\drivers 或 DriverStore
+ * 1. Agent 已给出 is_system 时直接采信（Agent 能读到 SystemComponent 等标志）
+ * 2. 补丁类：KB + 数字、Update for / 安全更新 / 累积更新 / Hotfix / Service Pack
+ * 3. 微软运行时与系统组件：VC++ 可再发行组件、.NET、Windows Desktop Runtime、
+ * ASP.NET、Edge / Edge Update / WebView2、Update Health Tools、Windows 开头且
+ * 属于系统组件（安装助手、电脑健康状况检查、SDK、Defender 等）
+ * 4. 安装位置在系统目录（C:\Windows\...）
+ * 5. 驱动/系统工具：名称含 Driver 且安装在 system32\spool\drivers 或 DriverStore
  *
- * 注意：Microsoft Office / Adobe / 各类第三方软件一律算**用户应用**。
- */
+ * 注意：Microsoft Office / Adobe / 各类第三方软件一律算**用户应用**。 */
 const SYS_PATTERNS = [
   /^kb\d+/i,
   /\b(hotfix|service pack)\b/i,

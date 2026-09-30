@@ -52,9 +52,9 @@ function isOnlineByHeartbeat(s) {
   const last = parseServerTime(s.last_seen)
   if (!last) return false
   const period = Number(s.collect_period_sec) || 60
-  // 🚨 这里以前是 `new Date(s.last_seen)` —— 服务端时间是 naive UTC，被当成本地
-  //   时间解析会凭空多出 8 小时差值，于是**所有主机恒被判为离线**，
-  //   「离线时长」列一直显示成一个 8 小时前的时刻。必须走 parseServerTime。
+  // 这里以前是 `new Date(s.last_seen)` —— 服务端时间是 naive UTC，被当成本地
+  // 时间解析会凭空多出 8 小时差值，于是**所有主机恒被判为离线**，
+  // 「离线时长」列一直显示成一个 8 小时前的时刻。必须走 parseServerTime。
   const diffMs = Date.now() - last.getTime()
   return diffMs < period * 2.5 * 1000
 }
@@ -288,7 +288,7 @@ function HostsTab({ onServersChanged, onEditServer }) {
     }
   }
 
-  // 🚨 这是个**信任动作，不是取证动作**：点下去等于宣布"这台机器现在跑的代码是官方的"。
+  // 这是个**信任动作，不是取证动作**：点下去等于宣布"这台机器现在跑的代码是官方的"。
   // 真怀疑被改造时千万别点 —— 那会把唯一的痕迹擦掉。所以确认框里保留这句警示。
   const handleResetBaseline = async (server) => {
     const ok = window.confirm(
@@ -381,7 +381,7 @@ function HostsTab({ onServersChanged, onEditServer }) {
                 title="批量移出管理"
               >批量移出{checked.size > 0 ? ` (${checked.size})` : ''}</button>
               {/* 2026-09-22：删除主机 —— 只对「已移出管理 + 离线」的主机生效，
-                  点了会逐台校验并说明不能删的原因。 */}
+ 点了会逐台校验并说明不能删的原因。 */}
               {canRemove && (
                 <button
                   className="reg-btn-remove"
@@ -513,7 +513,7 @@ function HostsTab({ onServersChanged, onEditServer }) {
                           >重登记基线</button>
                         )}
                         {/* 1.1.51 方案 A：身份是「登记的公钥」，不再是证书。
-                            issued / approved 是旧状态名，一并认，避免存量数据显示不出按钮。 */}
+ issued / approved 是旧状态名，一并认，避免存量数据显示不出按钮。 */}
                         {canApprove && ['authorized', 'issued', 'approved'].includes(s.identity_state) && (
                           <button
                             className="reg-btn-revoke"

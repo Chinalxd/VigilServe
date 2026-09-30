@@ -19,7 +19,7 @@
   * 只改一行，改完回读并用 verify_password 反验，确保真能登录。
   * 往 operation_logs 补一条审计，如实写明是线下脚本改的，不假冒前台操作。
 
-⚠ 改完**必须重启 VigilServe 服务端**：
+ 改完**必须重启 VigilServe 服务端**：
     TOKENS 是进程内存字典（routes/auth.py），改库不会清掉旧会话令牌，
     旧会话在过期前照样能用；登录失败锁定计数也在内存里，重启顺带解锁。
 """
@@ -61,7 +61,7 @@ _echo_warned = False
 def prompt_password(prompt):
     """读口令：真控制台下隐藏回显；被管道/重定向时退化成普通 input。
 
-    ⚠ Windows 的 `getpass` 在 stdin 不是 TTY 时会去打开控制台输入设备 `CONIN$`，
+ Windows 的 `getpass` 在 stdin 不是 TTY 时会去打开控制台输入设备 `CONIN$`，
     在管道 / 重定向 / 无人值守场景下会把进程直接搞死（实测：SIGTERM，无任何输出）。
     所以这里必须先判 isatty。退化时输入会明文显示，因此要**明确告知用户** ——
     双击 .bat 运行是正常 TTY，走的仍是隐藏输入那条路。
@@ -156,8 +156,8 @@ def main():
     if not users:
         con.close()
         # 2026-09-24 更正：以前这里写的是"重启一次服务端会自动建 admin 账号"，
-        # 但当时 seed_admin 只挂在登录接口里，重启根本不会建号 —— 这句话把人
-        # 带进死循环（没口令 → 登不进去 → 不登录就不建号 → 还是没口令）。
+        # 但当时 seed_admin 只挂在登录接口里，重启根本不会建号，这句话把人
+        # 带进死循环（没口令 登不进去 不登录就不建号 还是没口令）。
         # 1.1.44 起改为启动时建号，下面的指引才成立。
         die("users 表是空的：服务端还没有建过 admin 账号。\n"
             "  ① 先启动一次 VigilServe 服务端（1.1.44 起启动时自动建 admin，\n"

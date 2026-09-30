@@ -16,13 +16,13 @@ keysym 取值（已核对官方 guacamole-common-js 1.5.0 `keycodeKeysyms` / `ke
   3. 当前键盘布局上没有的字符 -> `SendInput` + `KEYEVENTF_UNICODE` 直注字符
   4. 控制字符 0xFF01-0xFF1A -> Ctrl + 字母（成对按下/抬起，不会留下粘滞修饰键）
 
-⚠️ 大小写坑（2026-09-11 实测）：Guacamole 发的是**最终字符**的 keysym——按 Shift+V
+ 大小写坑（2026-09-11 实测）：Guacamole 发的是**最终字符**的 keysym——按 Shift+V
 浏览器 `event.key === "V"`，前端直接发 `0x56`，**不会额外发 Shift 按下**。
 早期版本无条件丢弃 `VkKeyScanW` 的修饰位，于是 `V` -> `VK_V` -> 无 Shift 注入 -> 打出
 小写 `v`，整串 "VigilServe" 变成 "vigilserve"。现在把 Shift 需求位带出去，由调用方
 （hub）结合"Shift 当前是否已被按住"决定是否补按。
 
-⚠️ CapsLock 坑（2026-09-15 实测）：按下 CapsLock 后打字母仍然是**小写**。
+ CapsLock 坑（2026-09-15 实测）：按下 CapsLock 后打字母仍然是**小写**。
 原因同上——字母的最终大小写 = **CapsLock ⊕ Shift**（Windows 上两者是"异或"关系）：
   * 远端 CapsLock **关**：补 Shift 才出大写（上面那条修复的路径）；
   * 远端 CapsLock **开**：再补 Shift 反而变成**小写**。

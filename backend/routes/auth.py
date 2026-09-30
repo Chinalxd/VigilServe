@@ -9,7 +9,7 @@ from database import get_db
 from models import User
 from services.audit_logger import log_operation
 from services.client_ip import get_client_ip
-# 🚨 2026-09-23：MeshCentral 集成整体下线（用户拍板删除），原先这里导入的
+# 2026-09-23：MeshCentral 集成整体下线（用户拍板删除），原先这里导入的
 import secrets
 import time
 from datetime import datetime, timezone
@@ -29,10 +29,10 @@ REVOKED_TTL = 300
 
 DEFAULT_ADMIN_USERNAME = "admin"
 
-# 🚨🚨 2026-09-23 开源加固 ②：**这里曾经是 `DEFAULT_ADMIN_PASSWORD = "admin123"`**，
-#   而且前端登录页还把「默认管理员账号：admin / admin123」直接印在页面上
-#   现成的后台钥匙 —— 部署实例只要没改过口令就能直接进。
-#   ⚠ 别再把任何固定口令加回来，也别在前端/文档里印初始口令。
+# 2026-09-23 开源加固 ②：**这里曾经是 `DEFAULT_ADMIN_PASSWORD = "admin123"`**，
+# 而且前端登录页还把「默认管理员账号：admin / admin123」直接印在页面上
+# 现成的后台钥匙，部署实例只要没改过口令就能直接进。
+# 别再把任何固定口令加回来，也别在前端/文档里印初始口令。
 PW_RESET_REQUIRED_MSG = "首次登录必须先修改密码"
 
 
@@ -56,7 +56,7 @@ def _check_password_policy(password: str) -> tuple[bool, str]:
 
 
 def _client_ip(request: Request) -> str:
-    """⚠ 2026-09-23 动态审计 D-1：取来源 IP 的规则已统一到 `services/client_ip.py`。
+    """ 2026-09-23 动态审计 D-1：取来源 IP 的规则已统一到 `services/client_ip.py`。
 
     原来这里（以及另外 5 个路由模块各写的一份**逐字相同**的副本）无条件采信
     `X-Forwarded-For`。而本项目服务端直接监听 0.0.0.0:8001、前面没有反向代理，
@@ -98,7 +98,7 @@ def _rehash_if_needed(user: "User", plain: str, db: Session) -> None:
         user.password = hash_pw(plain)
         db.commit()
         logger.info(f"[auth] 用户 {user.username} 的口令哈希已从 {old} 升级为加盐慢哈希")
-    except Exception as exc:  # noqa: BLE001  升级失败不影响本次登录
+    except Exception as exc:  # noqa: BLE001 升级失败不影响本次登录
         logger.warning(f"[auth] 口令哈希升级失败（用户 {getattr(user, 'username', '')}）：{exc}")
         db.rollback()
 
@@ -129,14 +129,14 @@ def _revoke_user_tokens(user_id: int, reason: str = "replaced") -> int:
     for t in list(REVOKED.keys()):
         if now - REVOKED[t]["at"] > REVOKED_TTL:
             REVOKED.pop(t, None)
-    # 会话都作废了，该账号已经发出去的「WEB管理」代理票据也必须一起失效 ——
+    # 会话都作废了，该账号已经发出去的「WEB管理」代理票据也必须一起失效，
     # 否则退出登录后，票据在 URL 里还能再用满 30 分钟（票据是窄凭据，但设备后台
     # 照样能操作）。详见 services/web_proxy_ticket.py 顶部的「会话吊销」说明。
     # 这里覆盖到：登录挤掉旧会话、改密码、改角色、停用/启用、删除账号。
     try:
         from services import web_proxy_ticket
         web_proxy_ticket.bump_epoch(user_id)
-    except Exception as exc:  # noqa: BLE001  吊销失败不能让登录/改密本身失败
+    except Exception as exc:  # noqa: BLE001 吊销失败不能让登录/改密本身失败
         logger.warning(f"[auth] 吊销 WEB 代理票据失败（用户 {user_id}）：{exc}")
     return killed
 
@@ -282,7 +282,7 @@ def get_current_user_full(
 ) -> dict:
     """Return current user dict enriched with username/full_name from the database.
 
-    🚨 2026-09-23 开源加固 ②：`enforce_password_reset=True`（默认）时，账号只要
+ 2026-09-23 开源加固 ②：`enforce_password_reset=True`（默认）时，账号只要
     带着 `must_reset_password=1`，**除改密/登出外一律 403**。
 
     为什么加在这里而不是散到各路由：`require_login` / `require_admin_full` /
@@ -309,7 +309,7 @@ def get_current_user_full(
             username = db_user.username or ""
             full_name = db_user.full_name or ""
             must_reset = int(db_user.must_reset_password or 0)
-    except Exception as exc:  # noqa: BLE001  查不到用户名不该让鉴权失败，但要留痕
+    except Exception as exc:  # noqa: BLE001 查不到用户名不该让鉴权失败，但要留痕
         logger.warning(f"[auth] 补全用户信息失败（user_id={user.get('user_id')}）：{exc}")
     if must_reset and enforce_password_reset:
         raise HTTPException(status_code=403, detail=PW_RESET_REQUIRED_MSG)
@@ -459,15 +459,15 @@ def seed_admin(db: Session):
         # Restrict file permissions on POSIX systems so only the owner can read it
         try:
             os.chmod(pw_path, 0o600)
-        except Exception as exc:  # noqa: BLE001  Windows 上 chmod 无效属正常
+        except Exception as exc:  # noqa: BLE001 Windows 上 chmod 无效属正常
             logger.debug(f"[auth] 设置初始口令文件权限失败（可忽略）：{exc}")
     except Exception as exc:  # noqa: BLE001
         logger.error(f"[auth] 写初始管理员口令文件失败：{exc}")
 
     logger.info("[auth] Initial administrator account created.")
-    # ⚠ 明文口令**只写进上面那个文件**，不再打到 stdout —— 服务端的 stdout 通常被
-    #   重定向进 backend.log，再被日志收集一并带走，等于又多了一份明文口令副本。
-    #   要拿初始口令就去读那个文件，读完改完它会自己删掉。
+    # 明文口令**只写进上面那个文件**，不再打到 stdout，服务端的 stdout 通常被
+    # 重定向进 backend.log，再被日志收集一并带走，等于又多了一份明文口令副本。
+    # 要拿初始口令就去读那个文件，读完改完它会自己删掉。
     logger.info(f"[auth] 初始管理员账号已创建：用户名 {DEFAULT_ADMIN_USERNAME}，"
                 f"初始口令见 {pw_path}，首次登录后请立即修改")
 
@@ -481,12 +481,12 @@ def login(data: LoginData, request: Request, db: Session = Depends(get_db)):
     ip = _client_ip(request)
 
     # ① 登录失败锁定：先查锁定窗口，再验口令。锁定期间即使口令正确也拒绝，
-    #    否则"边撞库边重试"永远不会触发锁定。
+    # 否则"边撞库边重试"永远不会触发锁定。
     try:
         from services import security_policy
     except Exception:  # noqa: BLE001
         security_policy = None  # type: ignore
-    # 注意：这里**故意不区分"账号不存在"**——无论 user 是否为 None 都照常走
+    # 注意：这里**故意不区分"账号不存在"**，无论 user 是否为 None 都照常走
     # 下面的口令校验流程，返回一模一样的 401。否则"账号不存在"和"口令错"
     # 两种响应不同，就成了免费的用户名枚举器。
     if security_policy is not None:
@@ -499,7 +499,7 @@ def login(data: LoginData, request: Request, db: Session = Depends(get_db)):
                 message=f"用户 {data.username}（来源 {ip}）登录失败：连续失败次数过多，已锁定（剩余约 {minutes} 分钟）",
             )
             # 2026-09-22 P1-7：锁定的响应与"口令错误"**完全一致**（同 401 同文案）。
-            # 原实现返回 429 + "连续登录失败次数过多"，据此可枚举用户名：
+            # 原实现返回 429 + "连续登录失败次数过多"，据此可枚举用户名
             # 存在的账号被撞够了才 429，不存在的永远 401。锁定信息只在审计日志里留。
             raise HTTPException(status_code=401, detail="用户名或密码错误")
 
@@ -507,7 +507,7 @@ def login(data: LoginData, request: Request, db: Session = Depends(get_db)):
         if security_policy is not None:
             # 用户名维度：只对**存在**的账号计数（不存在的用户名不建 key，
             # 否则用任意字符串当用户名就能撑爆内存表）；
-            # IP 维度：总是计数 —— 挡"同一 IP 撞一堆用户名"的横向撞库。
+            # IP 维度：总是计数，挡"同一 IP 撞一堆用户名"的横向撞库。
             security_policy.register_failure(data.username if user is not None else None, ip)
         log_operation(
             db,
@@ -559,7 +559,7 @@ def login(data: LoginData, request: Request, db: Session = Depends(get_db)):
     try:
         user.last_login_at = datetime.now(timezone.utc)
         db.commit()
-    except Exception as exc:  # noqa: BLE001  记时间失败不影响登录
+    except Exception as exc:  # noqa: BLE001 记时间失败不影响登录
         logger.warning(f"[auth] 记录登录时间失败（用户 {user.username}）：{exc}")
         db.rollback()
 
@@ -633,10 +633,10 @@ class ChangePasswordIn(BaseModel):
     new_password: str = Field(..., description="新口令")
 
 
-# ⚠ 2026-09-23 开源加固 ②：这个接口是「首登强制改密」能成立的**前提**。
-#   之前系统里根本没有自助改密入口，用户只能求管理员在「用户管理」里代改；
-#   而 seed 出来的 admin 就是唯一的管理员 —— 一旦服务端强制改密，新装用户会被
-#   彻底锁死。所以强制与自助入口必须同一批上线。
+# 2026-09-23 开源加固 ②：这个接口是「首登强制改密」能成立的**前提**。
+# 之前系统里根本没有自助改密入口，用户只能求管理员在「用户管理」里代改；
+# 而 seed 出来的 admin 就是唯一的管理员，一旦服务端强制改密，新装用户会被
+# 彻底锁死。所以强制与自助入口必须同一批上线。
 @router.post("/change-password")
 def change_password(
     data: ChangePasswordIn,
@@ -644,7 +644,7 @@ def change_password(
     authorization: Optional[str] = Header(None),
     db: Session = Depends(get_db),
 ):
-    # 豁免强制改密检查 —— 本接口就是用来解除那个状态的
+    # 豁免强制改密检查，本接口就是用来解除那个状态的
     user = get_current_user_full(authorization, db, enforce_password_reset=False)
     if not user or not user.get("user_id"):
         raise HTTPException(
@@ -743,7 +743,7 @@ def get_session(authorization: Optional[str] = Header(None), db: Session = Depen
     }
 
 
-# ── User CRUD (admin only) ──
+# User CRUD (admin only)
 @router.get("/users")
 def list_users(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
     require_admin(authorization)
@@ -825,7 +825,7 @@ def update_user(user_id: int, data: UserUpdate, request: Request, authorization:
         raise HTTPException(status_code=404, detail="用户不存在")
     changes = {}
     # 2026-09-24：登录名改为可改（含系统默认用户）。以前一刀切拒绝，导致
-    # 部署方拿到内置的 `admin` 只能一直用下去 —— 而这个登录名是公开在源码里的，
+    # 部署方拿到内置的 `admin` 只能一直用下去，而这个登录名是公开在源码里的，
     # 不改就等于给爆破者省掉一半工作量。允许改，但要做唯一性校验。
     if data.username is not None:
         new_username = (data.username or "").strip()
@@ -856,7 +856,7 @@ def update_user(user_id: int, data: UserUpdate, request: Request, authorization:
                 if os.path.exists(pw_path):
                     os.remove(pw_path)
             except Exception as exc:  # noqa: BLE001
-                # ⚠ 删不掉要留痕：这个文件里是明文初始口令，留着就是个后门
+                # 删不掉要留痕：这个文件里是明文初始口令，留着就是个后门
                 logger.error(f"[auth] 改密后删除初始口令文件失败，请手工删除 {pw_path}：{exc}")
     if (data.role_id is not None or data.role is not None):
         from models import Role
@@ -865,7 +865,7 @@ def update_user(user_id: int, data: UserUpdate, request: Request, authorization:
             new_role = db.query(Role).filter(Role.code == data.role).first()
         if new_role is not None and new_role.id != user.role_id:
             # 2026-09-24：系统默认用户的管理员角色**服务端强制锁死**。
-            # 以前只在前端把下拉框置灰，接口本身不拦 —— 改个请求就能把内置
+            # 以前只在前端把下拉框置灰，接口本身不拦，改个请求就能把内置
             # admin 降权，一旦成功就再也进不去后台（没人有管理员权限了）。
             if _is_builtin_admin(user):
                 raise HTTPException(
@@ -888,10 +888,10 @@ def update_user(user_id: int, data: UserUpdate, request: Request, authorization:
         changes["status"] = {"old": user.status, "new": data.status}
         old_status = user.status
         user.status = data.status
-    # 2026-09-22 P1-5：口令 / 状态 / 角色**任一**变更 → 旧会话立刻失效。
+    # 2026-09-22 P1-5：口令 / 状态 / 角色**任一**变更 旧会话立刻失效。
     # 修复前只有 create_token（单会话）会踢线，改密、禁用、改角色都不踢，
     # 旧 token 最长还能用 24 小时（security_policy.session_max_hours），
-    # 而 token 里存的是**旧角色** —— 等于"降权/禁用"要等一天才真正生效。
+    # 而 token 里存的是**旧角色**，等于"降权/禁用"要等一天才真正生效。
     # reason 沿用 "replaced"：前端只在 reason==='replaced' 时显示被顶下线提示，
     # 换别的值用户会静默掉线、不知道发生了什么。
     if any(k in changes for k in ("password", "status", "role")):

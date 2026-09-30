@@ -9,7 +9,7 @@
     GET  /api/servers/{id}/traps      某台主机的实时事件
     POST /api/traps/{id}/ack          确认 / 消除
 
-🚨 鉴权复用 `routes/agent.py::_authenticate()`：Agent 上行请求本来就带签名
+ 鉴权复用 `routes/agent.py::_authenticate()`：Agent 上行请求本来就带签名
 （客户端证书）或遗留 HMAC，没必要再发明一套口令。拿到了 Server 就用它，
 拿不到一律 401 —— **绝不接受请求体里自称的 server_id**，否则任何人都能
 往别人的主机上灌事件。
@@ -64,7 +64,7 @@ def _parse_occurred(raw: Optional[str]) -> Optional[datetime]:
         return None
     try:
         d = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
-    except Exception:  # noqa: BLE001  时间解析失败不影响事件入库
+    except Exception:  # noqa: BLE001 时间解析失败不影响事件入库
         return None
     if d.tzinfo is None:
         d = d.replace(tzinfo=timezone.utc)
@@ -77,7 +77,7 @@ def _norm_level(v: Optional[str]) -> str:
 
 
 def _client_ip(request: Request) -> str:
-    """⚠ 2026-09-23 动态审计 D-1：取值规则已统一到 `services/client_ip.py`
+    """ 2026-09-23 动态审计 D-1：取值规则已统一到 `services/client_ip.py`
     （默认不信任 X-Forwarded-For，只认直连 IP；确实走了反向代理时用
     `VIGILSERVE_TRUSTED_PROXIES` 显式声明代理地址）。"""
     return get_client_ip(request)
@@ -154,7 +154,7 @@ def ingest_traps(
                 target_id=str(server.id),
                 details={"event_type": e.event_type, "level": e.level, "trap_id": e.id},
             )
-        except Exception:  # noqa: BLE001  审计写失败不能让上报失败
+        except Exception:  # noqa: BLE001 审计写失败不能让上报失败
             db.rollback()
 
     return {"ok": True, "received": len(saved), "ids": [e.id for e in saved]}

@@ -13,7 +13,7 @@ MeshCentral 的做法是让 Agent 自己算一遍二进制的哈希报上去，�
     源码模式（开发机直接跑 .py）:
         agent/*.py                          全部源码文件
 
-🚨 两个**刻意排除**的对象，都是踩过之后才排除的：
+ 两个**刻意排除**的对象，都是踩过之后才排除的：
 
 1. **`sys.executable`（主启动器）不算**。PyInstaller 产出的 exe **不是字节可复现的**
    （内嵌构建期数据）—— 实测同一份源码连打两次，14 个 .py 逐字节一致，只有 exe 变了，
@@ -24,18 +24,18 @@ MeshCentral 的做法是让 Agent 自己算一遍二进制的哈希报上去，�
    Agent 的业务逻辑全在下面这些 `.py` 里，改它既难又没用。
 2. **`.pyd` / `.dll` / `base_library.zip` 不算** —— 见下面那段。
 
-🚨 为什么必须包含 `_MEIPASS` 下的 **.py**：本项目的 spec 把 `api_server.py` /
+ 为什么必须包含 `_MEIPASS` 下的 **.py**：本项目的 spec 把 `api_server.py` /
    `connector.py` / `self_check.py` 等**以源码形式**投放在 `_internal/` 顶层
    （`VigilServeAgent.spec` 的 `datas`），它们并没有被编译进 PYZ。
    第一版只哈希 exe + .pyz，实测 `_internal` 里 `.pyz` 有 **0 个**、最终只算到
    1 个文件 —— 于是有人直接改 `api_server.py` 再重启 Agent，指纹纹丝不动，
    完整性自检完全失效。这才有了下面这条规则。
 
-⚠ 刻意**不**包含 `_internal` 下的 .pyd / .dll 和 `base_library.zip`：
+ 刻意**不**包含 `_internal` 下的 .pyd / .dll 和 `base_library.zip`：
    前者是 tkinter / PIL / 密码库等第三方二进制，几百 MB，全算一遍既慢又无意义
    （改它们也改不出一个"听话的 Agent"）；后者随 **PyInstaller 版本**变化，
    而 Agent 版本号不变 —— 把它算进去，每次升级构建工具都会误报"被改造"。
-   ⚠ 同理：`_MEIPASS` 只取**顶层**，不要递归进 numpy / PIL / cryptography 这些
+ 同理：`_MEIPASS` 只取**顶层**，不要递归进 numpy / PIL / cryptography 这些
    第三方包目录（同样的理由）。
 
 只在**进程启动时算一次**并缓存 —— 心跳 5 秒一次，每 5 秒扫一遍几 MB 的文件
@@ -59,16 +59,16 @@ def _hash_file(path: str) -> bytes | None:
             for chunk in iter(lambda: f.read(1024 * 256), b""):
                 h.update(chunk)
         return h.digest()
-    except Exception:  # noqa: BLE001  读不到的文件（被占用/被删）跳过即可
+    except Exception:  # noqa: BLE001 读不到的文件（被占用/被删）跳过即可
         return None
 
 
 def _collect_files() -> tuple[list[str], str]:
     """返回 (待哈希文件列表, 运行模式)。"""
     if getattr(sys, "frozen", False):
-        # 🚨 刻意**不**把 sys.executable 算进指纹 —— 见模块顶部说明：PyInstaller
-        #   产出的启动器不是字节可复现的，把它算进去会导致"同一份源码重打一次包，
-        #   指纹就变"，于是管理员重装同版本 Agent 会被误判成"疑似被改造"。
+        # 刻意**不**把 sys.executable 算进指纹，见模块顶部说明：PyInstaller
+        # 产出的启动器不是字节可复现的，把它算进去会导致"同一份源码重打一次包，
+        # 指纹就变"，于是管理员重装同版本 Agent 会被误判成"疑似被改造"。
         files = []
         meipass = getattr(sys, "_MEIPASS", "") or ""
         if meipass and os.path.isdir(meipass):

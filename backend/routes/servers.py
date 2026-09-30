@@ -92,7 +92,7 @@ class ServerUpdate(BaseModel):
     password: Optional[str] = None
     description: Optional[str] = None
     extra_config: Optional[dict] = None
-    # ── S5：SNMPv3（网络设备）——两个口令跟主机口令一个规矩：掩码 = 不修改 ──
+    # S5：SNMPv3（网络设备），两个口令跟主机口令一个规矩：掩码 = 不修改
     snmp_enabled: Optional[int] = None
     snmp_version: Optional[str] = None
     snmp_port: Optional[int] = None
@@ -103,12 +103,12 @@ class ServerUpdate(BaseModel):
     snmp_auth_password: Optional[str] = None
     snmp_priv_password: Optional[str] = None
     snmp_context: Optional[str] = None
-    # ── 方案 B：网络设备资产信息（自动识别后可人工纠错）+ 单台采集周期 ──
+    # 方案 B：网络设备资产信息（自动识别后可人工纠错）+ 单台采集周期
     device_vendor: Optional[str] = None
     device_model: Optional[str] = None
     device_category: Optional[str] = None
     collect_interval_sec: Optional[int] = None
-    # ── 方案 B：网络设备命令行凭据（WEB终端登录设备用）——口令同样「掩码 = 不修改」
+    # 方案 B：网络设备命令行凭据（WEB终端登录设备用），口令同样「掩码 = 不修改」
     cli_protocol: Optional[str] = None
     cli_port: Optional[int] = None
     cli_username: Optional[str] = None
@@ -167,12 +167,11 @@ def list_servers(
                 # 指纹由 Agent 端私钥决定，**复制配置目录也带不走**，适合怀疑被顶替时核对。
                 _pending_fps[row.server_id] = row.key_fingerprint or ""
                 # 登记过公钥之后配对码已经没有意义了，不再往下吐。
-                # 例外：被吊销的主机要重新准入 —— 它的公钥虽然还留着（用于审计，
+                # 例外：被吊销的主机要重新准入，它的公钥虽然还留着（用于审计，
                 # 且吊销是靠服务端拒绝名单生效），但配对码必须重新可见，
                 # 否则管理员没法核对"重来的这台"是不是同一台机器。
-                #
-                # ⚠ 2026-09-28：判据原来是 `not row.client_cert`。方案 A（1.1.51）
-                # 之后 `client_cert` 再无写入点，前半段恒真 —— 列表接口于是对**所有**
+                # 2026-09-28：判据原来是 `not row.client_cert`。方案 A（1.1.51）
+                # 之后 `client_cert` 再无写入点，前半段恒真，列表接口于是对**所有**
                 # 主机都吐配对码（已准入的本不该吐）。改用 `pub_key`。
                 _pending_keys[row.server_id] = (
                     row.pairing_code
@@ -279,7 +278,7 @@ def list_servers(
                 "timestamp": latest_metric.timestamp.isoformat() if latest_metric else None,
             },
             "unacknowledged_alerts": alert_count,
-            # S0：主机名与已有记录撞车（不同来源 IP）——注册管理页要据此显示警告。
+            # S0：主机名与已有记录撞车（不同来源 IP），注册管理页要据此显示警告。
             "name_conflict": bool(extra.get("name_conflict_with")),
             # S1：设备身份。配对码只在还没发证时给前端，证发完立即抹掉（见 routes/agent
             # 的 enroll 返回体），避免它在网络上长期漂着被人拿来骗审核。
@@ -346,7 +345,7 @@ def get_server_detail(
             "join_time": _ts(s.join_time),
             "online_time": _ts(s.online_time),
             "offline_time": _ts(s.offline_time),
-            # S5：SNMPv3 配置（网络设备）。两个口令跟主机口令一个规矩 —— 一律只给
+            # S5：SNMPv3 配置（网络设备）。两个口令跟主机口令一个规矩，一律只给
             # 掩码；`has_*` 让前端知道"这台已经存过口令了"，页面就不逼着管理员重输。
             "snmp": {
                 "enabled": bool(s.snmp_enabled),
@@ -473,7 +472,7 @@ def create_server(data: ServerCreate, authorization: Optional[str] = Header(None
     user = _require_user(authorization, db)
     # 第二轮复查 R-4：以前只有"已登录"，任何账号都能往资产表里塞一台主机
     # （任意 IP + 用户名 + 口令）。新增主机属于主机管理的写操作，挂
-    # `sys/register/edit`（页面名「编辑主机」）—— 这是 sys/register 页现有的写权限点，
+    # `sys/register/edit`（页面名「编辑主机」），这是 sys/register 页现有的写权限点，
     # 不新造权限点，免得老角色的权限配置出现未知项。管理员恒通过（has_perm）。
     require_perm(db, user, "sys", "register", "edit", detail="无权限新增主机")
     now = datetime.now(timezone.utc)
@@ -519,7 +518,7 @@ def create_server(data: ServerCreate, authorization: Optional[str] = Header(None
     return {"id": s.id, "name": s.name, "message": "Server created"}
 
 
-# 🚨 必须注册在 `PUT /{server_id}` **之前**：FastAPI 按注册顺序匹配，放在后面的话
+# 必须注册在 `PUT /{server_id}` **之前**：FastAPI 按注册顺序匹配，放在后面的话
 # （第二轮复查 R-12）。移动它不会改变其它路由的匹配结果。
 @router.put("/reorder")
 def reorder_servers(data: dict, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
@@ -528,9 +527,9 @@ def reorder_servers(data: dict, authorization: Optional[str] = Header(None), db:
     Sidebar layout changes are restricted to administrators so low-privilege
     viewers cannot silently re-order the management view.
     """
-    # 以前这里查的是 `sys/servers/edit` —— 权限点注册表里**根本没有**这一项
+    # 以前这里查的是 `sys/servers/edit`，权限点注册表里**根本没有**这一项
     # （sys 下只有 dashboard/register/host_groups/agent_update/network_devices/
-    # logs/settings），对非管理员恒为 False。效果碰巧等于"仅管理员"，但意图是错的：
+    # logs/settings），对非管理员恒为 False。效果碰巧等于"仅管理员"，但意图是错的
     # 真要给某个角色开放这个操作时会永远配不上。改成显式管理员校验。
     user = require_admin_full(authorization, db)
     servers = db.query(Server).all()
@@ -553,7 +552,7 @@ def update_server(server_id: int, data: ServerUpdate, authorization: Optional[st
     changed = {}
 
     # 口令特殊处理：空串或掩码占位符 = 不修改（前端编辑时回显的就是掩码，且不再
-    # 回发明文，所以"没动过"和"清空"从前端已经分不出来了 —— 一律按"不修改"处理，
+    # 回发明文，所以"没动过"和"清空"从前端已经分不出来了，一律按"不修改"处理，
     # 避免误把已保存的凭据抹掉）。真要改就存成 Fernet 密文，审计只记"改过"。
     if "password" in update_data:
         new_pw = (update_data.pop("password") or "").strip()
@@ -561,7 +560,7 @@ def update_server(server_id: int, data: ServerUpdate, authorization: Optional[st
             s.password = encrypt_secret(new_pw)
             changed["password"] = {"old": PASSWORD_MASK, "new": PASSWORD_MASK}
 
-    # S5：SNMPv3 的两个口令同样只进不出 —— 掩码 = 不修改，改了就存 Fernet 密文。
+    # S5：SNMPv3 的两个口令同样只进不出，掩码 = 不修改，改了就存 Fernet 密文。
     # 审计里也只记"改过"，绝不把明文写进日志（日志页面任何管理员都看得到）。
     for _field in ("snmp_auth_password", "snmp_priv_password",
                    "cli_password", "cli_enable_password", "web_password"):
@@ -581,11 +580,11 @@ def update_server(server_id: int, data: ServerUpdate, authorization: Optional[st
         changed["extra_config"] = {"old": s.extra_config, "new": update_data["extra_config"]}
         s.extra_config = update_data["extra_config"]
 
-    # 2026-09-21：SNMPv3 凭据完整性校验 —— 背景见 snmp_collector.py 顶部「采集熔断」。
-    # authPriv（既鉴权又加密）却没填加密口令 → 采集时必定解密失败；而华为/华三这类设备
+    # 2026-09-21：SNMPv3 凭据完整性校验，背景见 snmp_collector.py 顶部「采集熔断」。
+    # authPriv（既鉴权又加密）却没填加密口令 采集时必定解密失败；而华为/华三这类设备
     # 会把每次失败记一次"登录失败"并临时锁定源 IP，本机的 IP 就被反复锁（真机实证
     # 被锁了 34 轮）。所以在**保存这一层**直接拦下，不让残缺凭据进库。
-    # 🚨 必须放在 db.commit() 之前：抛异常时前面的 setattr 只改了内存对象，不会落库。
+    # 必须放在 db.commit() 之前：抛异常时前面的 setattr 只改了内存对象，不会落库。
     if int(s.snmp_enabled or 0) == 1:
         _level = str(s.snmp_security_level or "authPriv").lower()
         if not (s.snmp_username or "").strip():
@@ -631,18 +630,18 @@ def update_server(server_id: int, data: ServerUpdate, authorization: Optional[st
 @router.delete("/{server_id}")
 def delete_server(server_id: int, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
     user = _require_user_for_server(authorization, db, server_id)
-    # 2026-09-22：删除主机收紧为两道闸门（对齐注册管理页 canRemove）——
+    # 2026-09-22：删除主机收紧为两道闸门（对齐注册管理页 canRemove），
     # ① 权限：与「移出管理」同一颗权限点（sys.register.edit.delete）
     if not has_perm(db, user, "sys", "register", "edit", "delete"):
         raise HTTPException(status_code=403, detail="无权限删除主机")
     s = db.query(Server).filter(Server.id == server_id).first()
     if not s:
         raise HTTPException(status_code=404, detail="Server not found")
-    # ② 受管中的主机必须先移出管理 —— 在管数据（监控历史 / 服务 / 告警）
+    # ② 受管中的主机必须先移出管理，在管数据（监控历史 / 服务 / 告警）
     # 全挂在记录上，误删不可逆。先移出（退回待审核）确认不要了再删。
-    # 🚨 判据用 join_time（加入管理时写入、移出时清空，enroll 也用它），
-    #    不用 status 集合：未加入管理的主机历史上可能被采集调度误标成
-    #    offline，那样会落进「受管状态」里，管理员就删不掉了（2026-09-22 修）。
+    # 判据用 join_time（加入管理时写入、移出时清空，enroll 也用它），
+    # 不用 status 集合：未加入管理的主机历史上可能被采集调度误标成
+    # offline，那样会落进「受管状态」里，管理员就删不掉了（2026-09-22 修）。
     if s.join_time is not None:
         raise HTTPException(
             status_code=400,
@@ -661,7 +660,7 @@ def delete_server(server_id: int, authorization: Optional[str] = Header(None), d
             )
     except HTTPException:
         raise
-    except Exception as e:  # noqa: BLE001  判定失败不拦删除
+    except Exception as e:  # noqa: BLE001 判定失败不拦删除
         logger.warning(f"在线判定失败，跳过心跳检查 server_id={server_id}：{e}")
     name = s.name
     ip = s.ip_address
@@ -676,7 +675,7 @@ def delete_server(server_id: int, authorization: Optional[str] = Header(None), d
     except Exception:  # noqa: BLE001
         pass
     # 同理，这台主机的**设备身份**（node_id / 证书 / 配对码）也必须一起删掉，
-    # 否则库里会留下一批指向不存在主机的孤儿身份行 —— 它们带着 client_cert，
+    # 否则库里会留下一批指向不存在主机的孤儿身份行，它们带着 client_cert，
     # 既不出现在任何列表里，又占着 node_id 的唯一性，将来同名设备入户时容易
     # 撞出莫名其妙的问题（S4 冒烟里实测到：删主机后 agent_keys 仍残留 2 行）。
     removed_identity = ""
@@ -884,19 +883,17 @@ def _apply_status_change(db, server, new_status: str) -> str:
     now = datetime.now(timezone.utc)
     if new_status == "monitored":
         server.join_time = now
-        # 🚨 2026-09-23：`online_time` **刻意一个字都不动**。
-        #
-        #    `join_time` = 管理员把它纳入管理的时刻（人工动作）；
-        #    `online_time` = 主机**真正上线**的时刻（机器事实）。
-        #    两者是独立语义：加入管理并没有让主机上线，所以这里不能写；
-        #    移出管理也没有让主机下线，所以下面那条分支也不能清。
-        #
-        #    `online_time` 的唯一写入方是采集侧：
-        #      - Agent 主机：`routes/agent.py::_record_agent_online`，收到心跳时写；
-        #        「掉线 → 再上线」会经过 offline 状态，那时才会刷新它。
-        #      - 网络设备：`services/snmp_collector.py` 采集成功且状态从
-        #        offline/unknown 翻回来时写；新建/重连走各自的设备接口。
-        #    也就是说：**移出与加入管理都不该改动上线时间**（用户明确要求）。
+        # 2026-09-23：`online_time` **刻意一个字都不动**。
+        # `join_time` = 管理员把它纳入管理的时刻（人工动作）；
+        # `online_time` = 主机**真正上线**的时刻（机器事实）。
+        # 两者是独立语义：加入管理并没有让主机上线，所以这里不能写；
+        # 移出管理也没有让主机下线，所以下面那条分支也不能清。
+        # `online_time` 的唯一写入方是采集侧
+        # - Agent 主机：`routes/agent.py::_record_agent_online`，收到心跳时写；
+        # 「掉线 再上线」会经过 offline 状态，那时才会刷新它。
+        # - 网络设备：`services/snmp_collector.py` 采集成功且状态从
+        # offline/unknown 翻回来时写；新建/重连走各自的设备接口。
+        # 也就是说：**移出与加入管理都不该改动上线时间**（用户明确要求）。
         server.offline_time = None
         # S2：重新加入管理 = 重新准入。被吊销过的主机在这里洗掉吊销标记，
         # 否则 enroll 会永远以「该设备已被吊销，不允许签发」拒绝它（routes/agent.py）。
@@ -913,9 +910,9 @@ def _apply_status_change(db, server, new_status: str) -> str:
             logger.warning(f"重新准入时清除吊销标记失败 server_id={server.id}: {e}")
     elif new_status == "registered":
         server.join_time = None
-        # 🚨 `online_time` **刻意保留**（2026-09-23 用户要求）：移出管理只是
-        #    管理员不再把它纳入管理，主机并没有下线，把上线时间抹掉等于
-        #    丢掉这段事实。它的生命周期只跟随"真正上线/掉线"，与管理动作无关。
+        # `online_time` **刻意保留**（2026-09-23 用户要求）：移出管理只是
+        # 管理员不再把它纳入管理，主机并没有下线，把上线时间抹掉等于
+        # 丢掉这段事实。它的生命周期只跟随"真正上线/掉线"，与管理动作无关。
         server.offline_time = None
     db.commit()
     if server.status == "monitored":
@@ -960,7 +957,7 @@ def bulk_update_server_status(
         if not server:
             skipped += 1
             continue
-        # 已经是目标状态的不用再动 —— 否则「加入管理」会把 join_time 又刷一遍，
+        # 已经是目标状态的不用再动，否则「加入管理」会把 join_time 又刷一遍，
         # 审计里也会多出一堆无意义的变更记录。
         if server.status == new_status:
             skipped += 1
@@ -1207,7 +1204,7 @@ def list_network_interfaces(
                 "out_octets": r.out_octets or 0,
                 "in_errors": r.in_errors or 0,
                 "out_errors": r.out_errors or 0,
-                # 单端口速率：没有基线时库里是 NULL，**别用 `or 0` 压成 0** ——
+                # 单端口速率：没有基线时库里是 NULL，**别用 `or 0` 压成 0**，
                 # 前端要靠 null 区分"这口真没流量"和"还没算出速率"（2026-09-21）。
                 "in_rate_mbps": r.in_rate_mbps,
                 "out_rate_mbps": r.out_rate_mbps,
@@ -1235,12 +1232,12 @@ def list_network_device_logs(
       · 告警（Alert）—— 采集失败、端口 DOWN、指标越线
       · 审计（OperationLog）—— 新增 / 连接 / 断开 / 改凭据 / 编辑资产 / 命令行登录
 
-    ⚠ 「设备主动推 syslog（UDP 514）/ SNMP Trap（UDP 162）」仍然没做 —— 那是路线
+ 「设备主动推 syslog（UDP 514）/ SNMP Trap（UDP 162）」仍然没做 —— 那是路线
     B / C，需要动设备配置并且在服务端起监听，和这里的"服务端主动去拉"是两回事。
     """
     from models import Alert, DeviceLogEntry, OperationLog
     from services.device_status import device_kind_of
-    # 设备日志的级别码 → 级别名（EMERG / ERROR / WARN …），前端 hover 时显示
+    # 设备日志的级别码 级别名（EMERG / ERROR / WARN …），前端 hover 时显示
     from services.network_log_collector import LEVEL_CODE_NAMES
 
     user = _require_user_for_server(authorization, db, server_id)
@@ -1269,7 +1266,7 @@ def list_network_device_logs(
         items.append({
             "source": "device",
             "id": d.id,
-            # 🚨 展示时间以**设备自己的时间**为准（occurred_at），不是入库时间：
+            # 展示时间以**设备自己的时间**为准（occurred_at），不是入库时间
             # 设备常常没配 NTP，和服务端时钟差得很远，用入库时间会看不出事情的先后。
             "timestamp": _ts(d.occurred_at) or _ts(d.collected_at),
             "device_time": d.device_time or "",
@@ -1304,12 +1301,10 @@ def list_network_device_logs(
         })
 
     # 审计：只认 target = 这台设备。
-    #
-    # 🚨 不能按 IP 兜底捞：SQLite 会复用被删行的 rowid，同一台设备删掉再建会拿到
+    # 不能按 IP 兜底捞：SQLite 会复用被删行的 rowid，同一台设备删掉再建会拿到
     # 同一个 id，历史审计里那些"同一个 id 的上一任"就会串进新设备的日志里（实测
-    # 出现过"删除主机 XXX"和当前在线设备并排显示）。所以：
-    #   ① 只按 id 匹配；
-    #   ② 再加一道 created_at 时间下限 —— id 复用时上一任的记录必然早于本任创建时间。
+    # 出现过"删除主机 XXX"和当前在线设备并排显示）。所以
+    # ② 再加一道 created_at 时间下限，id 复用时上一任的记录必然早于本任创建时间。
     # 新增设备弹窗那一步还没有 id（`network_device_*` 记在 IP 上），本来也不属于
     # 任何一台已存在的设备，不进这里是对的。
     floor = s.created_at
@@ -1348,7 +1343,7 @@ def list_network_device_logs(
         "error": snmp_info.get("error", ""),
         "consecutive_failures": snmp_info.get("consecutive_failures", 0),
         "interface_count": snmp_info.get("interface_count", 0),
-        # 2026-09-21：采集器可能因连续认证失败进入熔断 —— 前端要把它摆出来
+        # 2026-09-21：采集器可能因连续认证失败进入熔断，前端要把它摆出来
         "paused": _snmp_is_paused(snmp_info),
         "paused_until": snmp_info.get("paused_until") or "",
     }
@@ -1358,7 +1353,7 @@ def list_network_device_logs(
     dev_state = (extra.get("device_logs") or {}) if isinstance(extra, dict) else {}
     _plan = _dl_plan(s)
     # 「不支持」= 这类设备本身没有可轮询的 CLI 日志源（NAS 的日志是文件），
-    # 和「支持但这次拉失败了」是两回事 —— 前端要分开说，不能都报"失败"。
+    # 和「支持但这次拉失败了」是两回事，前端要分开说，不能都报"失败"。
     _unsupported = bool(dev_state.get("unsupported")) or not _plan["supported"]
     device_log_state = {
         "last_attempt_at": dev_state.get("last_attempt_at", ""),
@@ -1367,7 +1362,7 @@ def list_network_device_logs(
         "total": int(dev_state.get("total", 0)),
         "inserted": int(dev_state.get("inserted", 0)),
         # supported 保留旧语义（=这台设备能采内部日志），但判断依据改成
-        # 「厂商有没有命令集」而不是「有没有填 CLU 凭据」—— 早先写成
+        # 「厂商有没有命令集」而不是「有没有填 CLU 凭据」，早先写成
         # `bool(s.cli_username)`，于是"命令集没适配"和"凭据没填"混成一个原因。
         "supported": bool(_plan["supported"]),
         "unsupported": _unsupported,
@@ -1589,7 +1584,7 @@ def collect_snmp_now(
     return {
         "ok": bool(res.get("ok")),
         "error": res.get("error", ""),
-        # 要不要提示"IP 不通 / 端口被挡"那一类网络原因 —— 设备已经明确回了错时
+        # 要不要提示"IP 不通 / 端口被挡"那一类网络原因，设备已经明确回了错时
         # 再提示网络原因会把人带偏。见 services/snmp_collector.py 的 error_kind()。
         "error_kind": res.get("kind", ""),
         "sys_descr": res.get("sys_descr", ""),
@@ -1616,7 +1611,7 @@ def resume_snmp_collect(
     熔断是采集器自己踩的刹车（连续认证失败后停采，免得一直把本机 IP 锁死）。
     管理员改好设备侧 / 本侧的 SNMPv3 凭据后点这里恢复，下一轮调度就会重新发包。
 
-    🚨 **只清熔断，不自动采一次** —— 手动恢复往往是在改凭据的途中，立刻采多半又是一发
+ **只清熔断，不自动采一次** —— 手动恢复往往是在改凭据的途中，立刻采多半又是一发
     失败。等下一个调度周期（5 分钟）自然重试，反而更安全。
     """
     user = _require_user_for_server(authorization, db, server_id)
@@ -1631,7 +1626,7 @@ def resume_snmp_collect(
     was_paused = bool(snmp_info.get("paused_until"))
     snmp_info["paused_until"] = None
     snmp_info["pause_reason"] = ""
-    # 🚨 **不清零 pause_count**：它是"这台被熔断过几次"的记录，决定下次熔断罚多久。
+    # **不清零 pause_count**：它是"这台被熔断过几次"的记录，决定下次熔断罚多久。
     # 只有真正采通才会归零（见 snmp_collector.collect_and_store 的成功分支）。
     snmp_info["consecutive_failures"] = 0
     extra["snmp"] = snmp_info
@@ -1653,8 +1648,8 @@ def resume_snmp_collect(
 
 
 # ══ 方案 B：网络设备（交换机 / 路由器 / 防火墙）══════════════════════════
-# 装不上 Agent 的设备走这一套：录入时填 IP + SNMPv3 凭据 → 试连（顺带识别
-# 厂商 / 型号 / 类别）→ 存档。设备仍然落在 servers 表里，靠 device_kind 区分，
+# 装不上 Agent 的设备走这一套：录入时填 IP + SNMPv3 凭据 试连（顺带识别
+# 厂商 / 型号 / 类别） 存档。设备仍然落在 servers 表里，靠 device_kind 区分，
 # 仪表盘 / 告警 / 分组 / 审计全部复用主机那套，不新建平行体系。
 
 
@@ -1699,8 +1694,8 @@ def probe_network_device(
     ip = str((data or {}).get("ip_address") or "").strip()
     if not ip:
         raise HTTPException(status_code=400, detail="请填写设备 IP")
-    # 第二轮复查 R-5（SSRF）：拿到地址先过守卫再连 —— 以前只校验调用者有没有
-    # 权限点，不校验目标，等于把服务端当成扫内网的跳板（典型目标：
+    # 第二轮复查 R-5（SSRF）：拿到地址先过守卫再连，以前只校验调用者有没有
+    # 权限点，不校验目标，等于把服务端当成扫内网的跳板（典型目标
     # 169.254.169.254 云元数据）。详见 services/target_guard.py。
     _ok, _why = target_guard.check(ip)
     if not _ok:
@@ -1711,7 +1706,7 @@ def probe_network_device(
     )
     info = profile.profile_from_snmp(res)
 
-    # 编辑已有设备时前端会带上 server_id —— 这样这条记录能挂到该设备的「事件日志」上。
+    # 编辑已有设备时前端会带上 server_id，这样这条记录能挂到该设备的「事件日志」上。
     # 不带 server_id（新增弹窗）时只能按 IP 记：那时设备还没入库，没有 id 可用。
     _sid = str((data or {}).get("server_id") or "").strip()
     _t_type, _t_id = ("server", _sid) if _sid.isdigit() else ("ip", ip)
@@ -2045,7 +2040,7 @@ def rotate_agent_token(
         Agent 靠心跳把新 token 领走（心跳响应里带 `token`）；
       - 宽限期一过，旧 token 彻底作废。
 
-    ⚠ 方案 A 下这把 token **只用于服务端回调本机 9998**（下行）；设备上行认证
+ 方案 A 下这把 token **只用于服务端回调本机 9998**（下行）；设备上行认证
       走的是私钥签名，不受轮换影响。轮换换的是那把下行钥匙。
     """
     user = _require_user_for_server(authorization, db, server_id)
@@ -2080,8 +2075,8 @@ def rotate_agent_token(
                  "prev_valid_until": str(key.secret_key_prev_until or ""),
                  "grace_seconds": ROTATE_GRACE_SECONDS},
     )
-    # ⚠ 新 token **不回给浏览器**：它是一台主机的长期凭据，落进浏览器缓存 /
-    #   HTTP 日志等于又制造一份副本。真正需要它的是那台 Agent，由它自己用心跳来领。
+    # 新 token **不回给浏览器**：它是一台主机的长期凭据，落进浏览器缓存 /
+    # HTTP 日志等于又制造一份副本。真正需要它的是那台 Agent，由它自己用心跳来领。
     return {"status": "rotated",
             "prev_valid_until": key.secret_key_prev_until.isoformat()
             if key.secret_key_prev_until else "",
@@ -2106,7 +2101,7 @@ def reset_agent_baseline(
     这个接口就是给管理员一个"承认现在这份代码是官方的"的开关：
     清掉基线和篡改标记，下一次心跳会走"首次登记"分支，把**当前**指纹记为新基线。
 
-    ⚠ 它是个**信任动作**，不是取证动作：调用前请确认这批 Agent 确实是你自己发的包。
+ 它是个**信任动作**，不是取证动作：调用前请确认这批 Agent 确实是你自己发的包。
     真怀疑某台机器被改造时，别点它 —— 点了等于替攻击者把痕迹擦掉。
     """
     user = _require_user_for_server(authorization, db, server_id)
@@ -2185,7 +2180,7 @@ def power_control(
     url = f"https://{server.ip_address}:{port}/power"
 
     # 2026-09-23 动态审计 D-1：原来这里无条件采信 X-Forwarded-For（客户端可伪造），
-    # 规则统一到 services/client_ip.py —— 默认只认直连 IP。
+    # 规则统一到 services/client_ip.py，默认只认直连 IP。
     client_ip = get_client_ip(request)
 
     try:

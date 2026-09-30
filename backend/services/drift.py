@@ -119,7 +119,7 @@ def apply_drift(db, server, agent_key, cur_parts: dict, cur_ip: str = "",
                 prev_ip: Optional[str] = None) -> Optional[dict]:
     """把 `classify()` 的结果落到库里。返回分级结果（L0 也返回，调用方可忽略）。
 
-    ⚠ `prev_ip` 要传**更新前**的 IP：心跳里 L1 的 IP 更新发生在调用本函数之前，
+ `prev_ip` 要传**更新前**的 IP：心跳里 L1 的 IP 更新发生在调用本函数之前，
     等这里再读 `server.ip_address` 就已经是新值了，比不出变化。
 
     本函数负责：更新计算机名（L1）、更新分项指纹（L0/L1/L2）、写审计与告警（L1/L2/L3）。

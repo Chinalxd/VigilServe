@@ -1,12 +1,11 @@
 /* 方案 B：设备管理 →「网络设备」页签
  *
  * 网络设备（交换机 / 路由器 / 防火墙 / 存储）装不上 Agent，接入方式跟主机完全不同：
- *   主机 = 装 Agent → 上报注册 → 管理员审批
- *   设备 = 管理员填 IP + SNMPv3 凭据 → 服务端试连 → 通了才入库
+ * 主机 = 装 Agent → 上报注册 → 管理员审批
+ * 设备 = 管理员填 IP + SNMPv3 凭据 → 服务端试连 → 通了才入库
  *
  * 所以这里是独立的一套列表 + 新增弹窗，但仍然落在 servers 表里（device_kind=network），
- * 仪表盘 / 告警 / 分组 / 审计全部复用主机那套，不另起炉灶。
- */
+ * 仪表盘 / 告警 / 分组 / 审计全部复用主机那套，不另起炉灶。 */
 import { useCallback, useEffect, useState } from 'react'
 import { parseServerTime } from '../utils/format'
 import {
@@ -51,8 +50,8 @@ function normPrivProto(v) {
   return s === 'AES' ? 'AES128' : (s || 'AES128')
 }
 
-/** UDP 端口的即时提示：只做提醒，不拦保存 —— 有些环境确实改过端口。
- *  返回 '' 表示没问题（标准 161）。 */
+/* UDP 端口的即时提示：只做提醒，不拦保存 —— 有些环境确实改过端口。
+ * 返回 '' 表示没问题（标准 161）。 */
 function snmpPortHint(port) {
   const n = Number(port)
   if (!n || n < 1 || n > 65535) return '需在 1 ~ 65535 之间'
@@ -257,8 +256,8 @@ function AddDeviceModal({ visible, onClose, onCreated }) {
   }
 
   return (
-    // 🚨 点遮罩不关窗：表单里填的是一堆凭据，误点一下把十分钟敲的东西丢了比
-    //    多点一次「取消/×」代价大得多。关闭只走右上 × 和底部按钮。
+    // 点遮罩不关窗：表单里填的是一堆凭据，误点一下把十分钟敲的东西丢了比
+    // 多点一次「取消/×」代价大得多。关闭只走右上 × 和底部按钮。
     <div className="nd-modal-mask">
       <div className="nd-modal">
         <header className="nd-modal-head">
@@ -289,8 +288,8 @@ function AddDeviceModal({ visible, onClose, onCreated }) {
             </label>
 
             {/* 备注（2026-09-22 补上）：以前「新增设备」压根没有备注输入框
-                （form 和提交里一直有 description 字段，但 UI 缺这一行），
-                建好之后想写备注只能再去编辑。现在与「编辑设备」一致 —— 多行文本。 */}
+ （form 和提交里一直有 description 字段，但 UI 缺这一行），
+ 建好之后想写备注只能再去编辑。现在与「编辑设备」一致 —— 多行文本。 */}
             <label className="nd-field nd-field-wide">
               <span className="nd-label">备注</span>
               <textarea
@@ -346,8 +345,8 @@ function AddDeviceModal({ visible, onClose, onCreated }) {
                   disabled={!needAuth}
                   onChange={(e) => setField('snmp_auth_password', e.target.value)}
                 />
-                {/* 🚨 两个口令框都包在 `<label>` 里 —— 点按钮会连带触发 label 的默认行为
-                    （把焦点转给输入框）。这里 preventDefault 掐掉，让"点眼睛"只做显隐。 */}
+                {/* 两个口令框都包在 `<label>` 里 —— 点按钮会连带触发 label 的默认行为
+ （把焦点转给输入框）。这里 preventDefault 掐掉，让"点眼睛"只做显隐。 */}
                 <button
                   type="button"
                   className="nd-pwd-toggle"
@@ -464,12 +463,12 @@ function AddDeviceModal({ visible, onClose, onCreated }) {
               ) : (
                 <div className="nd-probe-title">
                   连接失败：<span className="nd-mono">{result.error || '未知错误'}</span>
-                  {/* 🚨 这段"常见原因"**只在设备根本没响应时才成立**。设备已经明确
-                      回了错（用户名不存在 / 鉴权失败 / 设备回了 errorStatus…）时
-                      还挂着它，等于把人往网络方向带 —— 2026-09-30 现场就是这么被
-                      带偏的（真正的原因在设备回的状态码里，却去查了防火墙）。
-                      归属由后端的 error_kind 判定，界面不猜文案：
-                      见 services/snmp_collector.py 的 error_kind()。 */}
+                  {/* 这段"常见原因"**只在设备根本没响应时才成立**。设备已经明确
+ 回了错（用户名不存在 / 鉴权失败 / 设备回了 errorStatus…）时
+ 还挂着它，等于把人往网络方向带 —— 2026-09-30 现场就是这么被
+ 带偏的（真正的原因在设备回的状态码里，却去查了防火墙）。
+ 归属由后端的 error_kind 判定，界面不猜文案：
+ 见 services/snmp_collector.py 的 error_kind()。 */}
                   {result.error_kind === 'no-response' && (
                     <div className="nd-probe-hint">
                       常见原因：IP 不通 / UDP 161 被防火墙或设备 ACL 挡了 / 设备没开 SNMP /
@@ -687,7 +686,7 @@ export function EditDeviceModal({ device, onClose, onSaved }) {
   }
 
   return (
-    // 🚨 同上：编辑弹窗字段更多，点遮罩更不能关
+    // 同上：编辑弹窗字段更多，点遮罩更不能关
     <div className="nd-modal-mask">
       <div className="nd-modal nd-modal-wide">
         <header className="nd-modal-head">
@@ -709,7 +708,7 @@ export function EditDeviceModal({ device, onClose, onSaved }) {
                 onChange={(e) => setField('name', e.target.value)} />
             </label>
             {/* 备注改成多行文本（2026-09-22）：设备备注常常要写几行
-                （安装位置 / 上行口 / 联系人 / 开通时间），单行输入框装不下也看不全 */}
+ （安装位置 / 上行口 / 联系人 / 开通时间），单行输入框装不下也看不全 */}
             <label className="nd-field nd-field-wide">
               <span className="nd-label">备注</span>
               <textarea
@@ -944,8 +943,8 @@ export function EditDeviceModal({ device, onClose, onSaved }) {
             </label>
           </div>
           {/* 2026-09-22：这里原本还有一段 WEB 自动填充的长说明（勾选后出现），
-              用户要求删掉 —— 开关下面只剩「打开「WEB管理」时自动填写账号口令」这一句，
-              行为没变，仍是只填不提交。 */}
+ 用户要求删掉 —— 开关下面只剩「打开「WEB管理」时自动填写账号口令」这一句，
+ 行为没变，仍是只填不提交。 */}
         </div>
 
         <footer className="nd-modal-foot">

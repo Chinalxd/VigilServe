@@ -193,13 +193,13 @@ def collect_all_servers():
         servers = db.query(Server).all()
         now = datetime.now(timezone.utc)
 
-        # 以前这里硬编码 180 秒，跟前端的 5 分钟不一致 —— 同一台机器两处显示打架；
+        # 以前这里硬编码 180 秒，跟前端的 5 分钟不一致，同一台机器两处显示打架；
         # 网络设备 5 分钟才采一次，用 3 分钟阈值判它等于永远离线。
         from services.device_status import load_config as _load_cfg, is_online as _is_online
         cfg = _load_cfg(db)
 
         for server in servers:
-            # ── 网络设备：由 SNMP 调度单独采（5 分钟一轮），这里只判离线 ──
+            # 网络设备：由 SNMP 调度单独采（5 分钟一轮），这里只判离线
             if (server.device_kind or "host") == "network":
                 if server.snmp_enabled and not _is_online(server, cfg, now):
                     if server.status != "offline":
@@ -209,9 +209,9 @@ def collect_all_servers():
 
             if server.protocol == "agent":
                 # 2026-09-22：只有**已加入管理**（join_time 非空）的主机才做
-                # monitored ↔ offline 迁移。未加入管理的主机（待审核 / 已移出）
-                # 必须保持 ``registered`` 语义 —— 历史上这里把心跳过期的
-                # registered 也改成 offline，于是它落进「受管状态」集合：
+                # monitored offline 迁移。未加入管理的主机（待审核 / 已移出）
+                # 必须保持 ``registered`` 语义，历史上这里把心跳过期的
+                # registered 也改成 offline，于是它落进「受管状态」集合
                 # 前端工具栏判它"在管"、后端删除闸门拒删，管理员既删不掉
                 # 也看不懂（列表里明明显示的是未加入管理）。
                 # 顺手把已经被改成 offline/online 的未管理主机改回来。
@@ -222,7 +222,7 @@ def collect_all_servers():
                               f"server_id={server.id} {server.name}")
                     continue
                 # 有心跳就看是否超期；从没心跳过且状态是"在管"的，直接算离线。
-                # ``registered`` 也参与判定 —— 断线再连上才能正确刷新 online_time。
+                # ``registered`` 也参与判定，断线再连上才能正确刷新 online_time。
                 if server.last_seen:
                     went_offline = not _is_online(server, cfg, now)
                 else:

@@ -74,7 +74,7 @@ async def _bare_web_hint():
 
 def create_app() -> FastAPI:
     """建独立源的代理 app：只有 /web/{ticket}/… 与 /healthz 两条路。"""
-    # 🔑 本进程内允许"从票据里取 server_id"（主进程不开，行为不变）
+    # 本进程内允许"从票据里取 server_id"（主进程不开，行为不变）
     network_web.PROXY_ID_FROM_TICKET = True
     prefix = (os.environ.get("VIGILSERVE_WEBPROXY_PREFIX") or DEFAULT_PREFIX).strip() or DEFAULT_PREFIX
     if not prefix.startswith("/"):
@@ -93,7 +93,7 @@ def create_app() -> FastAPI:
     app.add_middleware(GZipMiddleware, minimum_size=500)
 
     # 只对代理路径放行跨源预检（设备页在我们的独立源里仍是沙箱 iframe，
-    # 源还是 null，XHR 照样要预检）——见 network_web.WebProxyCorsMiddleware 的说明
+    # 源还是 null，XHR 照样要预检），见 network_web.WebProxyCorsMiddleware 的说明
     network_web.install_preflight(app)
 
     # 来源白名单（2026-09-23 动态审计 D-2）：放在最后 = 最外层，比上面的
@@ -120,8 +120,7 @@ def create_app() -> FastAPI:
             media_type="text/plain; charset=utf-8",
         )
 
-    # ⚠️ 兜底路由必须**最后**注册 —— `/{path:path}` 连根路径都能匹配，放前面会把
-    # 上面几条全吃掉。
+    # 兜底路由必须**最后**注册，`/{path:path}` 连根路径都能匹配，放前面会把
     # 设备 JS 用 `location.hostname` 硬拼绝对地址时（华为登录成功后跳首页就是这么干的），
     # 路径里的 `/web/<ticket>/` 会被丢掉。前端拦不住（Chrome 的 location.href 是
     # 不可伪造属性，原型补丁静默失效），只能在这里按 Referer 把票据捞回来再重定向。
@@ -136,8 +135,8 @@ def create_app() -> FastAPI:
         fixed = network_web.recover_redirect(request, path)
         if fixed is not None:
             return fixed
-        # 拿不到 Referer 时（沙箱 iframe 是不透明源，Chrome 不发）退到客户端自救：
-        # 给一页会自己从 window.name 把票据补回来的 HTML —— 但只给**导航**，
+        # 拿不到 Referer 时（沙箱 iframe 是不透明源，Chrome 不发）退到客户端自救
+        # 给一页会自己从 window.name 把票据补回来的 HTML，但只给**导航**，
         # XHR 拿到 HTML 会让设备 JS 解析失败，那种还是老实 401。
         if network_web.is_navigation(request):
             return network_web.lost_ticket_page()
@@ -180,6 +179,6 @@ if __name__ == "__main__":
                 f"{(os.environ.get('VIGILSERVE_WEBPROXY_PREFIX') or DEFAULT_PREFIX)}{{ticket}}/…")
     # proxy_headers=False：关掉 uvicorn 自带的 ProxyHeadersMiddleware。否则它会按
     # X-Forwarded-For 改写 ASGI scope 里的 client，而我们的审计/限速/白名单读的正是
-    # 那个值 —— 等于把来源 IP 交给客户端自己填。XFF 的解释权统一归
+    # 那个值，等于把来源 IP 交给客户端自己填。XFF 的解释权统一归
     # services/client_ip.py（见 backend/main.py 的 _no_proxy_headers_kwargs 说明）。
     uvicorn.run(app, host=_host, port=_port, **_tls_kwargs(), proxy_headers=False)

@@ -35,9 +35,9 @@ function stateTag(v) {
   return undefined
 }
 
-/** 键值列表：rows = [[键, 值] | [键, 值, 'ok'|'bad'], ...]（已由调用方按关键字过滤）
- *  第三项给定时，值渲染成带底色的状态标签；只给两项时保持原来的纯文本。
- *  注意：搜索仍按第二项的字符串匹配，所以状态值要保持可读的纯文本。 */
+/* 键值列表：rows = [[键, 值] | [键, 值, 'ok'|'bad'], ...]（已由调用方按关键字过滤）
+ * 第三项给定时，值渲染成带底色的状态标签；只给两项时保持原来的纯文本。
+ * 注意：搜索仍按第二项的字符串匹配，所以状态值要保持可读的纯文本。 */
 function Rows({ rows, empty = '无匹配项' }) {
   if (!rows || rows.length === 0) return <div className="hi-empty-box">{empty}</div>
   return (
@@ -186,8 +186,8 @@ export default function HostInfo({ serverId, serverName }) {
   const df = sec.defender || {}
 
   /* ── 搜索 ────────────────────────────────────────────────
-   * 分组标题命中关键字 → 该分组整组原样展示；
-   * 否则组内键值行 / 表格行逐条过滤，整组无命中则隐藏整组。 */
+ * 分组标题命中关键字 → 该分组整组原样展示；
+ * 否则组内键值行 / 表格行逐条过滤，整组无命中则隐藏整组。 */
   const tHit = (t) => !!kw && String(t).toLowerCase().includes(kw)
   const kvRows = (rows, all) => (all ? rows : rows.filter(([k, v]) => hit(k, v)))
   const listRows = (arr, keys, all) => (arr || []).filter((r) => (all ? true : hit(...keys.map((k) => r[k]))))

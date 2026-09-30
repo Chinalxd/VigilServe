@@ -117,7 +117,7 @@ export default function EventLogs({ serverId }) {
   const pageRows = rows.slice((safePage - 1) * pageSize, safePage * pageSize)
 
   // 列宽（2026-09-21 修）：表格改成 `table-layout: fixed` —— 见 EventLogs.css 的说明。
-  // 左侧五列给死宽度并禁止换行；描述列吃掉剩下的宽度，长串（SQL Server 那些
+  // 左侧五列给死宽度并禁止换行；描述列截获剩下的宽度，长串（SQL Server 那些
   const columns = [
     { key: 'time', title: '时间', width: '160px', cls: 'el-nowrap' },
     { key: 'category', title: '日志', width: '80px', cls: 'el-nowrap' },

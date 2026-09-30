@@ -355,14 +355,14 @@ async def rdp_apply_settings(server_id: int, body: dict = Body(default={}),
     user = _current_user(authorization)
     if not user:
         return {"error": "unauthenticated"}
-    # 第二轮复查 R-8：两处改掉 ——
-    #   ① 以前返回 **200 + {"error": ...}**，语义是错的（权限不足就该是 403）。
-    #      保留 error 字段，前端读 body 的写法不受影响；只看 res.ok 的地方反而更准。
-    #   ② 以前判定挂在 `rdp_hub.REQUIRE_ADMIN` 这个"谁能连远程桌面"的开关上 ——
-    #      谁把它置 False，任何登录用户就都能改采集参数了。改参数与"允许谁连接"
-    #      是两件事，这里独立判定，不再看那个开关。
-    #   （权限点注册表里 host/rdp 只有 connect，没有"改参数"这一项，故仍按管理员判定；
-    #    真的要开放给某个角色时，应先去 services/rbac.py 补一个 op。）
+    # 第二轮复查 R-8：两处改掉，
+    # ① 以前返回 **200 + {"error": ...}**，语义是错的（权限不足就该是 403）。
+    # 保留 error 字段，前端读 body 的写法不受影响；只看 res.ok 的地方反而更准。
+    # ② 以前判定挂在 `rdp_hub.REQUIRE_ADMIN` 这个"谁能连远程桌面"的开关上，
+    # 谁把它置 False，任何登录用户就都能改采集参数了。改参数与"允许谁连接"
+    # 是两件事，这里独立判定，不再看那个开关。
+    # （权限点注册表里 host/rdp 只有 connect，没有"改参数"这一项，故仍按管理员判定；
+    # 真的要开放给某个角色时，应先去 services/rbac.py 补一个 op。）
     if not (bool(user.get("is_admin")) or user.get("role") == "admin"):
         return JSONResponse(
             status_code=403,

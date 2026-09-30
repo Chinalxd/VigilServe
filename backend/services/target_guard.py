@@ -50,7 +50,7 @@ _ALWAYS_BLOCKED: tuple = (
     (ipaddress.ip_network("ff00::/8"), "组播地址"),
 )
 
-#: 环境变量名。留空 = 只做①的硬拒绝，不做网段白名单。
+# 环境变量名。留空 = 只做①的硬拒绝，不做网段白名单。
 CIDR_ENV = "VIGILSERVE_TARGET_ALLOWED_CIDRS"
 
 
@@ -67,7 +67,7 @@ def _allowed_cidrs() -> list | None:
         try:
             nets.append(ipaddress.ip_network(part, strict=False))
         except ValueError:
-            # 配错了不要静默放行，也不要连不上就崩 —— 记下来交给调用方处理。
+            # 配错了不要静默放行，也不要连不上就崩，记下来交给调用方处理。
             # 这里只能返回 None（不限制），但调用方会把这条一并写进日志。
             return None
     return nets or None
@@ -84,7 +84,7 @@ def _resolve(target: str) -> list:
         pass
     try:
         infos = socket.getaddrinfo(target, None)
-    except Exception:  # noqa: BLE001  解析失败一律当"不能连"
+    except Exception:  # noqa: BLE001 解析失败一律当"不能连"
         return []
     out = []
     for info in infos:

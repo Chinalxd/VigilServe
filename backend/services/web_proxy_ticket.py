@@ -65,7 +65,7 @@ def _load_epochs() -> dict:
         try:
             raw = json.loads(_EPOCH_PATH.read_text(encoding="utf-8"))
             _epoch_cache["data"] = {int(k): int(v) for k, v in raw.items()}
-        except Exception:  # noqa: BLE001  文件损坏/为空 → 当作全部未吊销
+        except Exception:  # noqa: BLE001 文件损坏/为空 当作全部未吊销
             _epoch_cache["data"] = {}
         _epoch_cache["mtime"] = st.st_mtime
     return _epoch_cache["data"]

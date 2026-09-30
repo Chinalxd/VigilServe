@@ -187,10 +187,8 @@ export default function Sidebar({ servers, loading, onConnect }) {
     return e.clientY < mid ? 'before' : 'after'
   }
 
-  /**
-   * 移动主机：先从原分组摘掉，再插到目标分组的指定位置。
-   * targetGroupId 为 null 表示拖回「未分组」。
-   */
+  /* 移动主机：先从原分组摘掉，再插到目标分组的指定位置。
+ * targetGroupId 为 null 表示拖回「未分组」。 */
   const moveServer = async (serverId, targetGroupId, targetServerId, position) => {
     if (serverId === targetServerId) return
     const next = groups.map((g) => ({ ...g, server_ids: [...(g.server_ids || [])] }))
@@ -328,7 +326,7 @@ export default function Sidebar({ servers, loading, onConnect }) {
           className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
         >
           {/* 图标 2026-09-22 起是内置 SVG：主机按操作系统官方 logo、网络设备按设备类型，
-              形状不同但同一套画风（详见 AppIcon.jsx）。原来是 emoji。 */}
+ 形状不同但同一套画风（详见 AppIcon.jsx）。原来是 emoji。 */}
           <span className="nav-icon"><Icon kind={deviceIconKind(s)} /></span>
           <div className="nav-server-info">
             <span className="nav-server-name">{s.name}</span>

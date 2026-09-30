@@ -42,8 +42,8 @@ _PIN_PATH = Path(__file__).resolve().parent.parent / "data" / "device_tls_pins.j
 _lock = threading.Lock()
 _cache: dict = {"mtime": -1.0, "data": {}}
 
-#   strict—— 与 tofu 相同，但**没有**已存指纹时直接拒绝（需先手工录入，适合强管控）
-#   off   —— 退回原来的完全不校验（排障用）
+# strict，与 tofu 相同，但**没有**已存指纹时直接拒绝（需先手工录入，适合强管控）
+# off，退回原来的完全不校验（排障用）
 VALID_MODES = ("tofu", "strict", "off")
 
 
@@ -61,7 +61,7 @@ def _load() -> dict:
         try:
             raw = json.loads(_PIN_PATH.read_text(encoding="utf-8"))
             _cache["data"] = raw if isinstance(raw, dict) else {}
-        except Exception:  # noqa: BLE001  文件损坏 → 当作全部未钉
+        except Exception:  # noqa: BLE001 文件损坏 当作全部未钉
             _cache["data"] = {}
         _cache["mtime"] = st.st_mtime
     return _cache["data"]
@@ -132,7 +132,7 @@ def fingerprint_of_der(der: bytes) -> str:
     return hashlib.sha256(der).hexdigest()
 
 
-# ── 转发前校验 ──────────────────────────────────────────────────
+# 转发前校验
 # 每个设备 HEAD 一次 TLS 握手太重（设备页面一屏几十个子资源），所以校验结果在进程内
 # 缓存 _PIN_TTL 秒：这段时间内的后续请求沿用刚才那条已验证过的 TLS 连接结论。
 # 窗口很短，够覆盖一次页面加载，又不会让校验证书长期失察。

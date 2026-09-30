@@ -119,12 +119,11 @@ PAGES: Dict[str, list] = {
             ],
         },
         {
-            # 第二轮复查 R-13：以前「资源管理」只有一个空的 ops 列表 —— 非管理员要么
+            # 第二轮复查 R-13：以前「资源管理」只有一个空的 ops 列表，非管理员要么
             # 全不能碰（P0-2 之后读类被抬到管理员，等于半残），要么只能一把全给。
             # 现在按**具体操作**细分，管理员不受影响（has_perm 对 is_admin 恒真）。
-            #
             # 「可见」由页面级的 view 承担（能不能列目录/看到这个页签），
-            # 下面 7 项是具体操作。注意 `read` 标了 needs_edit=False ——
+            # 下面 7 项是具体操作。注意 `read` 标了 needs_edit=False，
             # 只读角色不该被迫勾上"编辑"才能下载文件，详见 `can()`。
             "code": "resources",
             "name": "资源管理",
@@ -160,7 +159,7 @@ PAGES: Dict[str, list] = {
             "ops": [],
         },
         {
-            # S5：网络设备（交换机 / 路由器 / 防火墙）——SNMPv3 采集 + SSH 主机密钥钉扎
+            # S5：网络设备（交换机 / 路由器 / 防火墙），SNMPv3 采集 + SSH 主机密钥钉扎
             "code": "network",
             "name": "网络",
             "ops": [
@@ -300,7 +299,7 @@ def can(perms: Any, scope: str, page: str, action: str, op: Optional[str] = None
         if op not in entry["ops"]:
             return False
         # 操作项默认受页面「编辑」总开关约束（既有语义，不能改）。
-        # 但像「查看/下载文件」这种**只读**操作，要求勾了 edit 才给就很别扭 ——
+        # 但像「查看/下载文件」这种**只读**操作，要求勾了 edit 才给就很别扭，
         # 只读角色会被迫拿到编辑总开关。op 定义里标 `needs_edit: False` 即可豁免。
         odef = _op_def(scope, page, op) or {}
         if odef.get("needs_edit", True) and not entry["edit"]:

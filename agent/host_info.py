@@ -315,7 +315,7 @@ def _collect_machine_os() -> tuple[dict, dict]:
     return machine, os_info
 
 
-# ── 2. 系统安全软件状态 ──────────────────────────────────────────────
+# 2. 系统安全软件状态
 _PS_SECURITY = r"""
 $r = @{}
 try {
@@ -641,7 +641,7 @@ def _collect_updates_base() -> dict:
         d["last_install"] = recent[0].get("installed_on")
     return {
         # 主机信息页只展示「系统更新是否开启」，所以这里必须给出明确的是/否，
-        # 而不是把 AUOptions 档位文本直接丢给前端（多数机器读不到 AUOptions → 空白）
+        # 而不是把 AUOptions 档位文本直接丢给前端（多数机器读不到 AUOptions 空白）
         "auto_update": _auto_update_state(d),
         "auto_update_detail": _AU_TEXT.get(_i(d.get("au_options"))),
         "auto_update_source": _s(d.get("au_source")),
@@ -1604,7 +1604,7 @@ def list_system_updates() -> list:
 
 
 # 只把卸载程序拉起来是不够的：Agent 跑在服务/后台会话里，没人去点卸载向导的「下一步」，
-# 应用永远不会真的被卸载。这里按卸载器类型补静默参数 → 等待进程退出 → 复查注册表确认条目消失；
+# 应用永远不会真的被卸载。这里按卸载器类型补静默参数 等待进程退出 复查注册表确认条目消失；
 # 认不出类型的卸载器**不猜参数**，回退到原命令（拉起界面）并把原因回报给前端。
 _UNINSTALL_WAIT = 180
 _UNINSTALL_BUDGET = 600
@@ -1667,7 +1667,7 @@ def _silent_uninstall_cmd(uninstall: str, quiet: str) -> str:
             return _with_args(exe, args, "/VERYSILENT", "/NORESTART",
                               "/SUPPRESSMSGBOXES", "/SP-")
 
-        #    必须带 _?=<安装目录>，否则 NSIS 会把自己复制到临时目录后立刻返回，等不到结束。
+        # 必须带 _?=<安装目录>，否则 NSIS 会把自己复制到临时目录后立刻返回，等不到结束。
         if base in ("au_.exe", "un_a.exe") or "uninstall" in base or re.match(r"^uninst", base):
             extra = ["/S"]
             inst_dir = os.path.dirname(exe.rstrip("\\/"))
@@ -1694,9 +1694,9 @@ def _app_id_set() -> set:
         return set()
 
 
-# 🚨 卸载命令来自注册表里的 UninstallString —— HKCU\\…\\Uninstall 是**普通用户可写**
-# 就替它执行了第二条。所以这里**绝不能给 shell=True**：
-# 当命令行，不经过 cmd.exe —— `& | > < ^` 这些不再被当成操作符，只是普通参数。
+# 卸载命令来自注册表里的 UninstallString，HKCU\\…\\Uninstall 是**普通用户可写**
+# 就替它执行了第二条。所以这里**绝不能给 shell=True**
+# 当命令行，不经过 cmd.exe，`& | > < ^` 这些不再被当成操作符，只是普通参数。
 # 兼容性几乎无损（引号解析规则一致），代价只是不再展开 %VAR%、不支持 cmd 内置
 _UNINSTALL_SHELL = False
 
@@ -1928,10 +1928,10 @@ def set_startup_enabled(item_id: str, enabled: bool) -> dict:
 
 _LEVEL_CN = {1: "严重", 2: "错误", 3: "警告", 4: "信息", 5: "详细"}
 _LEVEL_FILTER = {"严重": 1, "错误": 2, "警告": 3, "信息": 4}
-# 中文日志名 → 英文原名（旧数据没有 log 字段时的回推）
+# 中文日志名 英文原名（旧数据没有 log 字段时的回推）
 _LOG_CN_TO_EN = {"系统": "System", "应用程序": "Application", "安全": "Security", "安装": "Setup"}
 
-# 注意：不要用 param(...) —— 调用方会在脚本最前面插入输出编码设置，
+# 注意：不要用 param(...)，调用方会在脚本最前面插入输出编码设置，
 # param 块必须位于脚本首行，否则整段脚本解析失败（事件日志恒返回 0 条）。
 _PS_EVENTS = r"""
 $out = @()

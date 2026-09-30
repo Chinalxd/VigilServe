@@ -35,10 +35,10 @@ DEFAULTS = {
     "memory_threshold_critical": {"value": "95", "desc": "内存严重告警阈值（%）"},
     "disk_threshold_warning": {"value": "85", "desc": "磁盘告警阈值（%）"},
     "disk_threshold_critical": {"value": "95", "desc": "磁盘严重告警阈值（%）"},
-    # 🚨 2026-09-23：MeshCentral 集成整体下线，以下三个键已移除 ——
-    #   meshcentral_url / meshcentral_keyfile / meshcentral_cli_path
-    #   库里若还留着旧行不影响运行（只是不再被读取），不清库是为了避免动用户的配置数据。
-    # ── 设备身份（安全演进 S4）───────────────────────────────────────
+    # 2026-09-23：MeshCentral 集成整体下线，以下三个键已移除，
+    # meshcentral_url / meshcentral_keyfile / meshcentral_cli_path
+    # 库里若还留着旧行不影响运行（只是不再被读取），不清库是为了避免动用户的配置数据。
+    # 设备身份（安全演进 S4）
     # 默认 0：新设备入户必须管理员核对配对码后点「加入管理」。
     # 置 1 = 放开人工准入（批量部署场景），代价是**任何能连上服务端的机器都能拿到证书**，
     # 只在受控内网里临时开，用完记得关回去。

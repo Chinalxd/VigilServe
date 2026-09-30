@@ -64,7 +64,7 @@ const SECURITY_FIELDS = [
   ] },
 ]
 
-// 🚨 数字项「空值」不能当 0 处理（2026-09-23 现场）。
+// 数字项「空值」不能当 0 处理（2026-09-23 现场）。
 // 这些安全策略项里 `0` 普遍意味着**关闭该项保护**（锁定时长 / 空闲登出 / 会话时长 /
 // 用户清空输入框想重输、顺手点了保存，就会把该项**静默改成 0**。
 // 界面上看不出任何异常（P1-7 刻意让"已锁定"与"口令错误"返回同样的提示）。
@@ -416,9 +416,9 @@ export default function Settings({ isAdmin = false }) {
                         </label>
                       ) : (
                         <span className="sec-input">
-                          {/* 🚨 别写 Number(e.target.value)：Number('') === 0，
-                              清空输入框想重输时会被静默存成 0 = 关闭该保护。
-                              空值保留空值，由上面的 blankSecurityFields 拦住保存。 */}
+                          {/* 别写 Number(e.target.value)：Number('') === 0，
+ 清空输入框想重输时会被静默存成 0 = 关闭该保护。
+ 空值保留空值，由上面的 blankSecurityFields 拦住保存。 */}
                           <input className={`form-input sec-num${isBlankNum(secPolicy[it.key]) ? ' sec-num-blank' : ''}`}
                             type="number" min={it.min} max={it.max}
                             value={secPolicy[it.key] ?? ''}
@@ -442,10 +442,10 @@ export default function Settings({ isAdmin = false }) {
           )}
 
           {/* 服务端证书：CA 指纹是 Agent 首次「信任服务端证书」时**人工核对**的依据。
-              为什么要放在这里：每台服务端都在首次启动时自签一把本地 CA，Agent 安装包
-              里预置的那把只对"打包那台机器"有效，换台机器部署就必然校验失败。所以
-              Agent 侧改成从服务端取 CA 并让操作员核对指纹 —— 而核对的前提是这里
-              能看见同一串指纹，否则那个确认框就是走过场。 */}
+ 为什么要放在这里：每台服务端都在首次启动时自签一把本地 CA，Agent 安装包
+ 里预置的那把只对"打包那台机器"有效，换台机器部署就必然校验失败。所以
+ Agent 侧改成从服务端取 CA 并让操作员核对指纹 —— 而核对的前提是这里
+ 能看见同一串指纹，否则那个确认框就是走过场。 */}
           <div className="settings-section-header" style={{ marginTop: 18 }}>
             <h3>服务端证书</h3>
           </div>
@@ -521,7 +521,7 @@ export default function Settings({ isAdmin = false }) {
                   <td className="col-ops actions">
                     <button className="btn-sm btn-primary" onClick={() => openEdit(u)}>编辑</button>
                     {/* 判据用 id===1（与后端 delete/update 的默认管理员判据一致）：
-                        登录名可改之后，用名字判断会在改名后漏掉保护。 */}
+ 登录名可改之后，用名字判断会在改名后漏掉保护。 */}
                     {u.id !== 1 && (
                       <button className="btn-sm btn-danger" onClick={() => openDeleteConfirm(u)}>删除</button>
                     )}
@@ -633,8 +633,8 @@ export default function Settings({ isAdmin = false }) {
                   <div className="settings-form-group">
                     <label className="settings-form-label">角色 <span className="required">*</span></label>
                     {/* 系统默认用户（id===1，与后端 delete/update 的判据一致）的管理员
-                        角色不可改。判据必须用"被编辑的那条记录的 id"，不能用 editForm.username
-                        —— 登录名现在可改，边改边判断会让锁失效。 */}
+ 角色不可改。判据必须用"被编辑的那条记录的 id"，不能用 editForm.username
+ —— 登录名现在可改，边改边判断会让锁失效。 */}
                     <select className="form-input" value={editForm.role} disabled={editingUser === 1}
                       onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}>
                       {roles.map((r) => (

@@ -63,7 +63,7 @@ def password_rules(authorization: Optional[str] = Header(None),
                    db: Session = Depends(get_db)):
     """口令组成规则（一句话 + 结构化字段），给"密码输入框下方的规则提示"用。
 
-    🚨 这里刻意 `enforce_password_reset=False`：首登被强制改密的账号带着
+ 这里刻意 `enforce_password_reset=False`：首登被强制改密的账号带着
     `must_reset_password=1`，走默认鉴权的话**所有**接口都 403 —— 包括本接口，
     而那正是最需要看规则提示的页面（用户正卡在改密窗口里）。
 

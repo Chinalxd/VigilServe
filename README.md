@@ -128,8 +128,6 @@ VigilServe 由三部分组成：
 - **所有设备的 WEB 登录都只填不提交。** 系统把账号与口令填进登录页，登录按钮与两步验证验证码始终由人工处理。
 - SNMP 认证连续失败时，华为等品牌会临时锁定来源 IP，系统已内置失败熔断，批量扫描前请确认凭据正确。
 
-完整列表见 [docs/compatibility.html](docs/compatibility.html)。
-
 ### 构建环境（仅在从源码打包时需要）
 
 | 工具 | 版本 |
@@ -204,7 +202,6 @@ C:\Program Files\VigilServe\backend\data\initial_admin_password.txt
 | `agent/` | 被监控主机上的采集 Agent（PyInstaller 打包） |
 | `installer/` | Inno Setup 打包脚本（`build_installer.py` + `setup.iss`） |
 | `verify_version.py` | 版本号一致性自检 |
-| `BUILD.md` | 打包与本副本的说明 |
 | `DEPLOY.md` | 更详细的部署方式与环境变量 |
 
 ---
@@ -256,7 +253,4 @@ cd frontend && npm run dev
 
 ## 九、相关文档
 
-- [docs/compatibility.html](docs/compatibility.html) —— 兼容性列表（Windows 版本、网络设备品牌与型号覆盖）
 - [DEPLOY.md](DEPLOY.md) —— 详细部署方式与环境变量清单
-- [BUILD.md](BUILD.md) —— 打包说明、已知保留项
-- [CHANGELOG.md](CHANGELOG.md) —— 版本变更记录

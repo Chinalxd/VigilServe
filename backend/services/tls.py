@@ -124,7 +124,7 @@ def _write_private(path: Path, data: bytes) -> None:
     path.write_bytes(data)
     try:
         os.chmod(path, 0o600)
-    except Exception:  # noqa: BLE001  （Windows 上多半无效，忽略）
+    except Exception:  # noqa: BLE001 （Windows 上多半无效，忽略）
         pass
 
 
@@ -265,8 +265,8 @@ def tls_enabled() -> bool:
     return os.environ.get("VIGILSERVE_TLS", "1") != "0"
 
 
-# ── 客户端证书（设备身份，安全演进 S1）────────────────────────────────
-# 上面那段管的是服务器证书（浏览器 / Agent 校验服务端身份）；这里是**另一套**：
+# 客户端证书（设备身份，安全演进 S1）
+# 上面那段管的是服务器证书（浏览器 / Agent 校验服务端身份）；这里是**另一套**
 # 给每台受管设备签一张客户端证书，身份锚是 node_id + 公钥，**与 IP / 主机名彻底解耦**。
 NODE_URN_PREFIX = "urn:vigilserve:node:"
 CLIENT_DAYS = 90            # 证书有效期（评估 §2 拍板：不要 lease，90 天 + 自动续期）
@@ -295,7 +295,7 @@ def _csr_signature_ok(csr) -> bool:
 def cert_issued_by_current_ca(cert_pem: str) -> bool:
     """这张证书是不是**当前本地 CA** 签的。
 
-    🚨 为什么要单独判这一条（2026-09-28 现场事故）：
+ 为什么要单独判这一条（2026-09-28 现场事故）：
     `cert_needs_renew()` **只看日期**。服务端重装 / 重建 CA 之后，库里存着的那份
     Agent 9998 证书虽然"还没到期"，却已经不是当前 CA 签的了 —— 原样发回去，Agent 的
     9998 就永久挂在 CA 链校验失败上。服务端侧把这种失败归成 `ConnectionError`，
@@ -321,7 +321,7 @@ def cert_issued_by_current_ca(cert_pem: str) -> bool:
         else:
             return False
         return True
-    except Exception:  # noqa: BLE001  判不出来一律当作"不归本 CA"，宁可重签
+    except Exception:  # noqa: BLE001 判不出来一律当作"不归本 CA"，宁可重签
         return False
 
 
@@ -395,9 +395,9 @@ def cert_needs_renew(not_after) -> bool:
     return left.total_seconds() <= CLIENT_RENEW_AHEAD_DAYS * 86400
 
 
-# ── Agent 9998 服务器证书（P1-1：反向通道全链路 TLS）─────────────────
-# 上面 sign_client_cert 签的是**客户端证书**（Agent → 服务端证明身份）；
-# 这里签的是 Agent 本地 9998 API 的**服务器证书**（服务端 → Agent 校验对端），
+# Agent 9998 服务器证书（P1-1：反向通道全链路 TLS）
+# 上面 sign_client_cert 签的是**客户端证书**（Agent 服务端证明身份）；
+# 这里签的是 Agent 本地 9998 API 的**服务器证书**（服务端 Agent 校验对端），
 AGENT_API_DAYS = 365
 
 

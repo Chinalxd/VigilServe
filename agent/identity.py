@@ -15,7 +15,7 @@
     本模块刻意不 import winreg / ctypes，指纹采集走跨平台路径
     （/etc/machine-id → 注册表 MachineGuid → MAC 兜底），拿到以后也只存哈希。
 
-⚠ `canonical_string()` 必须与 `backend/services/agent_identity.py` 里的同名函数
+ `canonical_string()` 必须与 `backend/services/agent_identity.py` 里的同名函数
    **逐字节一致**，否则签名永远验不过。`.workbuddy/tools/t_s1_identity.py` 钉住这点。
 """
 from __future__ import annotations
@@ -31,7 +31,7 @@ import time
 
 try:
     from paths import CONFIG_DIR
-except Exception:  # noqa: BLE001  （单文件调试 / 单元测试环境）
+except Exception:  # noqa: BLE001 （单文件调试 / 单元测试环境）
     CONFIG_DIR = os.path.dirname(os.path.abspath(__file__))
 
 IDENTITY_DIR = os.path.join(CONFIG_DIR, "identity")
@@ -66,7 +66,7 @@ def _write_private(path: str, data: bytes) -> None:
         f.write(data)
     try:
         os.chmod(path, 0o600)
-    except Exception:  # noqa: BLE001  （Windows 上多半无效，忽略）
+    except Exception:  # noqa: BLE001 （Windows 上多半无效，忽略）
         pass
 
 
@@ -146,7 +146,7 @@ def build_csr(node_id: str, hostname: str = ""):
     return pem
 
 
-# ── 授权状态（方案 A：不再有"证书"，只有"服务端登记过我的公钥没有"）────
+# 授权状态（方案 A：不再有"证书"，只有"服务端登记过我的公钥没有"）
 
 def authorized() -> bool:
     """服务端是否已经登记了本机公钥。"""
@@ -172,7 +172,7 @@ def needs_enroll() -> tuple[bool, str]:
     「这张证是不是当前服务端 CA 签的」这些概念 —— 换服务端、重装服务端都不会
     留下"看着有效其实不被认"的僵尸身份。
 
-    ⚠ 这条**只针对客户端身份**（node.key 那把锁）。9998 的**服务器证书**是另一回事：
+ 这条**只针对客户端身份**（node.key 那把锁）。9998 的**服务器证书**是另一回事：
     它由服务端 CA 签发、由服务端校验，所以仍要同时判有效期和 CA 归属 ——
     见下面 `api_cert_signed_by_current_ca()`。别照着上面这段把那条判据删掉。
     """
@@ -180,11 +180,11 @@ def needs_enroll() -> tuple[bool, str]:
         return True, "本机尚未被服务端登记公钥"
     return False, ""
 
-# ── Agent 9998 API 的服务器证书（P1-1：反向通道全链路 TLS）────────────
-# 与上面的客户端证书（node.key / client.crt，Agent 向服务端证明身份）是**两把锁**：
+# Agent 9998 API 的服务器证书（P1-1：反向通道全链路 TLS）
+# 与上面的客户端证书（node.key / client.crt，Agent 向服务端证明身份）是**两把锁**
 # 这里是服务端调用本机 9998 时校验对端用的服务器证书，由服务端 CA 签发。
-# 🚨 这 6 个常量曾经被一次改动**连带删掉**（它们原本就贴在 `needs_enroll()` 下面），
-# 而所有调用点都包在 `except Exception: pass`（"申请失败不影响主流程"）里 ——
+# 这 6 个常量曾经被一次改动**连带删掉**（它们原本就贴在 `needs_enroll()` 下面），
+# 而所有调用点都包在 `except Exception: pass`（"申请失败不影响主流程"）里，
 # 于是整条 9998 证书申领/续签链路**静默失效**，只在服务端表现为
 API_TLS_DIR = os.path.join(CONFIG_DIR, "api_tls")
 API_KEY_PATH = os.path.join(API_TLS_DIR, "server.key")
@@ -263,7 +263,7 @@ def api_cert_signed_by_current_ca():
 
     返回 `True` / `False`；**判不出来时返回 `None`**（调用方按"不折腾"处理）。
 
-    🚨 为什么必须有这条判据（2026-09-28 现场事故）：
+ 为什么必须有这条判据（2026-09-28 现场事故）：
     服务端**重装 / 重建 CA** 之后，本机手里那张证书并没有到期
     （`AGENT_API_DAYS = 365`，签一次能撑一年），只看有效期的 `needs_api_cert()`
     会长期返回 False → `api_csr` 永不上送 → 服务端拿**当前 CA** 校验 9998 必然失败。
@@ -279,12 +279,12 @@ def api_cert_signed_by_current_ca():
         return False          # 没证书的情况由 needs_api_cert 的"文件不存在"分支管
     try:
         import tls_util as _tls
-    except Exception:         # noqa: BLE001  单文件调试 / 单测环境
+    except Exception:         # noqa: BLE001 单文件调试 / 单测环境
         return None
     try:
         ca_path = _tls.ca_path()
         if not ca_path or not os.path.isfile(ca_path):
-            return None       # 连 CA 都拿不到，判不了 —— 别据此瞎申请
+            return None       # 连 CA 都拿不到，判不了，别据此瞎申请
         with open(ca_path, "rb") as f:
             ca_pem = f.read()
         from cryptography import x509
@@ -313,9 +313,9 @@ def needs_api_cert() -> bool:
     pem = load_api_cert_pem()
     if not pem:
         return True
-    # 🚨 判据不能只有"到期没有"。服务端重装/重建 CA 后，本地这张证依然"没到期"，
-    #    但服务端已经验不过了（9998 全断，界面只写「无法连接到 Agent」）。
-    #    所以"是不是当前信任的 CA 签的"必须一起判 —— 见上面函数的注释。
+    # 判据不能只有"到期没有"。服务端重装/重建 CA 后，本地这张证依然"没到期"，
+    # 但服务端已经验不过了（9998 全断，界面只写「无法连接到 Agent」）。
+    # 所以"是不是当前信任的 CA 签的"必须一起判，见上面函数的注释。
     if api_cert_signed_by_current_ca() is False:
         return True
     na = api_cert_not_after()
@@ -447,7 +447,7 @@ def _hostname() -> str:
 def _machine_id() -> str:
     """Linux/NAS：`/etc/machine-id`；Windows：注册表 MachineGuid。
 
-    ⚠ 评估里提醒过：克隆 / sysprep 出来的镜像 machine-id 会重复，
+ 评估里提醒过：克隆 / sysprep 出来的镜像 machine-id 会重复，
     所以它单独一条不足以判断身份漂移，必须与公钥指纹一起看。
     """
     for p in ("/etc/machine-id", "/var/lib/dbus/machine-id"):
@@ -458,7 +458,7 @@ def _machine_id() -> str:
                     return v
         except Exception:  # noqa: BLE001
             pass
-    try:  # pragma: no cover  （Windows 分支）
+    try:  # pragma: no cover （Windows 分支）
         import winreg
         with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
                             r"SOFTWARE\Microsoft\Cryptography") as k:
@@ -482,7 +482,7 @@ def _primary_mac() -> str:
 def _board_serial() -> str:
     """主板序列号。
 
-    ⚠ 很多虚拟机 / 云主机 / 容器这一项读出来是 "None" / "To be filled by O.E.M."
+ 很多虚拟机 / 云主机 / 容器这一项读出来是 "None" / "To be filled by O.E.M."
     这类占位值，必须当成「没采到」丢掉，否则所有虚拟机会共享同一个"序列号"，
     L2 判据反而失效（评估文档 §3.3 提醒的正是这类重复值问题）。
 
@@ -527,7 +527,6 @@ def fingerprint_hash(info: dict) -> str:
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
-# ── 请求签名 ────────────────────────────────────────────────────────
 
 def canonical_string(method: str, path: str, node_id: str, ts: str, nonce: str) -> str:
     """被签名的规范串 —— 与服务端 `agent_identity.canonical_string` 必须一致。"""

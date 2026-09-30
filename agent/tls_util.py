@@ -9,7 +9,7 @@ CA 路径优先级：
   配置里的 `ca_file`  >  %LOCALAPPDATA%\\VigilServe\\Config\\Agent\\vigilserve-ca.crt
                      >  安装目录\\ca\\vigilserve-ca.crt  >  安装目录\\vigilserve-ca.crt
 
-⚠ 从 1.1.56 起，随包内置的 CA 只是一种"开箱即用"的便利，**不再被当作唯一来源**：
+ 从 1.1.56 起，随包内置的 CA 只是一种"开箱即用"的便利，**不再被当作唯一来源**：
 每台服务端都自签自己的本地 CA，预置 CA 只对打包那台机器有效。换台机器部署就必然
 报「证书未被信任（缺少本地 CA）」，这时由 `fetch_server_ca()` + `trust_ca_pem()`
 从服务端把 CA 取回来并落盘（上面第 2 个路径，优先级高于内置 CA），操作员核对
@@ -85,7 +85,7 @@ def ssl_context(cfg: dict | None = None) -> ssl.SSLContext:
         return ctx
     if not verify:
         # 交付审查 P1-6 复核：这个分支本身是**显式 opt-out**（默认走上面的 CA 校验），
-        # 属于合理设计。以前它静默生效 —— 配置里躺着一个 verify_tls=false，出问题
+        # 属于合理设计。以前它静默生效，配置里躺着一个 verify_tls=false，出问题
         # 排查半天也想不到链路是裸的。现在每次构造都留一条告警。
         _warn_no_verify()
         ctx = ssl.create_default_context()
@@ -94,7 +94,7 @@ def ssl_context(cfg: dict | None = None) -> ssl.SSLContext:
     elif ca:
         ctx = ssl.create_default_context(cafile=ca)
     else:
-        # 没有内置 CA（极少见）→ 退回系统信任库，仍然会校验证书链
+        # 没有内置 CA（极少见） 退回系统信任库，仍然会校验证书链
         ctx = ssl.create_default_context()
     _CTX_CACHE[key] = ctx
     return ctx
@@ -129,7 +129,7 @@ def _friendly_error(e: Exception, url: str) -> str:
 
 # 背景：每台 VigilServe 服务端都在**首次启动时自签一把本地 CA**（backend/services/tls.py），
 # 所以任何"预置在 Agent 安装包里"的 CA 只对打包那台机器有效。换个服务端部署，
-# 内置 CA 必然校验不过，界面上就是「证书未被信任（缺少本地 CA）」—— 而且此时 Agent
+# 内置 CA 必然校验不过，界面上就是「证书未被信任（缺少本地 CA）」，而且此时 Agent
 # 还没有任何凭据，所有需要登录的接口都调不动，靠自己是走不出来的。
 # 出路只有一个：让 Agent 能从服务端把 CA 取回来。取回来必须**人工核对指纹**再落盘，
 # 否则等于"第一次连接谁先说谁就是服务端"，中间人插一脚就永久被骗（TOFU 的老问题）。
@@ -232,7 +232,7 @@ def trust_ca_pem(pem: str) -> str:
     —— 这个路径在 `bundled_ca_path()` 的查找顺序里**排在随包内置 CA 之前**，
     所以写进去立刻生效，不需要改任何其它代码。
 
-    🚨 必须清 `_CTX_CACHE`：`ssl_context()` 按 (ca, verify) 做了缓存，
+ 必须清 `_CTX_CACHE`：`ssl_context()` 按 (ca, verify) 做了缓存，
     不清的话新 CA 要等进程重启才生效，界面上就是"点了信任、再测还是失败"。
     """
     pem = str(pem or "").strip()

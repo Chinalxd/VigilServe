@@ -17,12 +17,12 @@ class Server(Base):
     protocol = Column(String(20), default="SSH")
     connection_port = Column(Integer, default=22)
     # network = 装不上 Agent 的网络设备（交换机 / 路由器 / 防火墙 / 存储），
-    #           由服务端持 SNMP 凭据主动采集，不需要被管设备配合装东西。
+    # 由服务端持 SNMP 凭据主动采集，不需要被管设备配合装东西。
     # 两者共用 servers 表，靠这个字段区分；仪表盘 / 告警 / 分组 / 审计全部复用。
     device_kind = Column(String(20), default="host")
     # 设备资产信息：新增设备时由 SNMP 自动识别（services/device_profile.py），可人工改
     device_vendor = Column(String(50), default="")
-    device_model = Column(String(100), default="")      # S5720-28X-SI ...
+    device_model = Column(String(100), default="")      
     device_category = Column(String(30), default="")
     collect_interval_sec = Column(Integer, default=0)
     username = Column(String(100), default="")
@@ -47,8 +47,8 @@ class Server(Base):
     offline_time = Column(DateTime, nullable=True)
     last_seen = Column(DateTime, nullable=True)
 
-    # ── S5：SNMPv3 采集（网络设备：交换机 / 路由器 / 防火墙）──────────────
-    # Agent 装不上去的设备（交换机、交换机堆叠、纯网络设备）走这条路：
+    # S5：SNMPv3 采集（网络设备：交换机 / 路由器 / 防火墙）
+    # Agent 装不上去的设备（交换机、交换机堆叠、纯网络设备）走这条路
     # 服务端持凭据主动 SNMP 去问，不需要在被管设备上装任何东西。
     snmp_enabled = Column(Integer, default=0)
     snmp_version = Column(String(8), default="3")
@@ -64,9 +64,9 @@ class Server(Base):
     snmp_auth_password = Column(String(500), default="")
     snmp_priv_password = Column(String(500), default="")
 
-    # ── 方案 B：网络设备的命令行（CLI）凭据 ─────────────────────────────
+    # 方案 B：网络设备的命令行（CLI）凭据
     # SNMP 只能读指标，改不了配置。「WEB终端」要登录设备敲命令，得有 SSH/Telnet
-    # 凭据。刻意**不复用** `protocol` / `connection_port` / `username` / `password`：
+    # 凭据。刻意**不复用** `protocol` / `connection_port` / `username` / `password`
     # 那四个字段已经被主机侧（SSH/WinRM/Telnet 检测、collector 的 protocol 判断）
     # 占住了，而网络设备的 protocol 固定是 'snmp'（collector 靠它跳过主机采集循环）。
     cli_protocol = Column(String(10), default="ssh")
@@ -76,16 +76,16 @@ class Server(Base):
     cli_enable_password = Column(String(500), default="")
 
     # 交换机 / 路由器 / 防火墙 / 存储基本都自带 Web 管理界面。详情页的「WEB管理」
-    # 页签由**服务端反向代理**过去 —— 直接嵌 https://设备IP 会被浏览器拦
+    # 页签由**服务端反向代理**过去，直接嵌 https://设备IP 会被浏览器拦
     # （自签名证书 + X-Frame-Options + HTTPS 页面不允许嵌 HTTP）。
     # 地址固定用 snmp 采集时填的那个管理 IP，这里只存协议和端口。
     web_protocol = Column(String(5), default="https")
     web_port = Column(Integer, default=443)
 
-    # ── 方案 B：WEB 管理的账号口令自动填充（2026-09-21 加，09-22 改为只填不提交）──
+    # 方案 B：WEB 管理的账号口令自动填充（2026-09-21 加，09-22 改为只填不提交）
     # 「WEB管理」页签代理过去的是设备自带的登录页。管理员在编辑弹窗里存下账号口令并
     # 打开开关后，代理只在**设备返回登录页**时（= 这台设备当前没有我们的会话）把
-    # 账号与口令**填进设备自己的登录页**，**但不代替点登录** —— 登录仍由人按，
+    # 账号与口令**填进设备自己的登录页**，**但不代替点登录**，登录仍由人按，
     # 这样就不存在消耗设备失败次数、把账号锁死的可能（详见
     # services/web_auto_login.py）。有会话时设备根本不会返回登录页，天然不会重复填。
     web_auto_login = Column(Integer, default=0)
@@ -98,7 +98,7 @@ class Server(Base):
     def password_plain(self) -> str:
         """解密后的主机登录口令（唯一允许拿到明文的入口）。
 
-        👉 API 一律**不要**用这个属性往外吐——`routes/servers.py` 现在对所有人
+ API 一律**不要**用这个属性往外吐——`routes/servers.py` 现在对所有人
         （含管理员）只返回掩码。只有真正要连主机的地方（WinRM/SSH）才读它。
         """
         from services.secret_store import decrypt_secret
@@ -263,7 +263,7 @@ class AgentKey(Base):
     它**只剩一个用途** —— 服务端回调 Agent 9998 时算的那个 `X-Auth-Token`
     （`services/agent_auth.py`）。Agent → 服务端方向不再用它，详见下面注释。
 
-    ⚠ 本表所有新增列一律不写 `index=True` —— 与 `__table_args__` 里的显式
+ 本表所有新增列一律不写 `index=True` —— 与 `__table_args__` 里的显式
     Index 同名会让全新库 `create_all` 抛 "index already exists"（踩过一次）。
     """
     __tablename__ = "agent_keys"
@@ -272,14 +272,14 @@ class AgentKey(Base):
     secret_key = Column(String(64), nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-    # ── 客户端证书身份（安全演进 S1）──────────────────────────────────
+    # 客户端证书身份（安全演进 S1）
     # 身份锚是 node_id + 证书公钥，**不再是 IP / 主机名**。IP 变了照样认，
     # 换了 CDN / NAT / 重装系统 IP 不同也能自己接回来。
     node_id = Column(String(64), default="")
     pub_key = Column(Text, default="")
     # 2026-09-28：**未准入**设备送来的公钥先暂存在这里。
     # 为什么需要它：`_authenticate()` 拿「pub_key 有没有登记」当"是否已准入"的判据，
-    # 于是未准入的设备签不了名、心跳一律 401，`last_seen` 永远是空 —— 管理员在
+    # 于是未准入的设备签不了名、心跳一律 401，`last_seen` 永远是空，管理员在
     # 主机列表里看到的是"离线"，而它其实一直连着服务端。
     # 暂存之后，未准入设备可以**完成心跳这一条**签名校验（在线状态与准入解耦），
     # 但 pub_key 不登记，指标上报 / 配置下发仍然照旧拒绝。
@@ -294,7 +294,7 @@ class AgentKey(Base):
     identity_state = Column(String(20), default="none")
     pairing_code = Column(String(16), default="")
     machine_fingerprint = Column(String(96), default="")
-    # 存分项而不是只存一个总哈希，才能判断「到底变了几项」→ L1/L2/L3 分级。
+    # 存分项而不是只存一个总哈希，才能判断「到底变了几项」 L1/L2/L3 分级。
     fingerprint_parts = Column(Text, default="")
     revoked = Column(Integer, default=0)
     revoked_at = Column(DateTime, nullable=True)
@@ -302,20 +302,20 @@ class AgentKey(Base):
     auth_mode = Column(String(16), default="hmac")
     last_signature_at = Column(DateTime, nullable=True)
     # P1-1（9998 通道 TLS）：Agent 本地 API 的服务器证书（服务端 CA 签发）。
-    # 与 client_cert（Agent 的身份证书）是两回事 —— 这张是给服务端调用 9998 时校验对端用的。
+    # 与 client_cert（Agent 的身份证书）是两回事，这张是给服务端调用 9998 时校验对端用的。
     api_cert = Column(Text, default="")                 # Agent 9998 服务器证书 PEM
     api_cert_not_after = Column(DateTime, nullable=True)
 
-    # ── 2026-09-23 开源加固 ⑤：静态 token 可轮换 ──────────────────────────
-    # 轮换时旧密钥挪到这里，只被接受 `secret_key_prev_until` 之前这一段——
+    # 2026-09-23 开源加固 ⑤：静态 token 可轮换
+    # 轮换时旧密钥挪到这里，只被接受 `secret_key_prev_until` 之前这一段，
     # 给已经跑在外的 Agent 一次"来拿新 token"的机会，窗口一过即失效。
-    # ⚠ 不加 index=True（与 __table_args__ 的显式 Index 同名会让全新库 create_all 抛错）
+    # 不加 index=True（与 __table_args__ 的显式 Index 同名会让全新库 create_all 抛错）
     secret_key_prev = Column(String(64), default="")
     secret_key_prev_until = Column(DateTime, nullable=True)
 
-    # ── 2026-09-23 开源加固 ⑥：Agent 完整性自检（对标 agentTampering）──────
+    # 2026-09-23 开源加固 ⑥：Agent 完整性自检（对标 agentTampering）
     # Agent 每次心跳回报自己代码的 SHA256；服务端首次登记为基线，之后比对。
-    # 版本号变了（合法升级）就顺手更新基线 —— 否则每次升级都会误报"被篡改"。
+    # 版本号变了（合法升级）就顺手更新基线，否则每次升级都会误报"被篡改"。
     self_digest = Column(String(64), default="")
     self_digest_version = Column(String(20), default="")
     self_digest_at = Column(DateTime, nullable=True)
@@ -330,7 +330,7 @@ class NetworkInterface(Base):
     不存历史 —— 历史在 `MetricSnapshot.network_in_mbps/out_mbps`（所有端口汇总），
     单端口的历史曲线目前没必要存（48 口交换机 × 每分钟 = 一天 7 万行）。
 
-    ⚠ 同其它新表：新增列一律不写 `index=True`。
+ 同其它新表：新增列一律不写 `index=True`。
     """
     __tablename__ = "network_interfaces"
     id = Column(Integer, primary_key=True, index=True)
@@ -348,7 +348,7 @@ class NetworkInterface(Base):
     in_errors = Column(Integer, default=0)
     out_errors = Column(Integer, default=0)
     # 单端口速率（Mbps）：SNMP 只给累计字节，速率得自己差分（2026-09-21 加）。
-    # 第一轮回采没有基线，存 NULL —— 前端显示"—"，别显示 0 冒充"这口没流量"。
+    # 第一轮回采没有基线，存 NULL，前端显示"—"，别显示 0 冒充"这口没流量"。
     in_rate_mbps = Column(Float, nullable=True)
     out_rate_mbps = Column(Float, nullable=True)
     updated_at = Column(DateTime, nullable=True)
@@ -361,7 +361,7 @@ class SSHHostKey(Base):
     两者必须区分开 —— 所以**变更时不覆盖旧指纹**（与 S3 漂移分级 L3 一致：留证据），
     新观察到的指纹放进 `pending_*`，管理员确认后才能转正。
 
-    ⚠ 同 AgentKey：新增列一律不写 `index=True`（与显式 Index 重名会让全新库 create_all 失败）。
+ 同 AgentKey：新增列一律不写 `index=True`（与显式 Index 重名会让全新库 create_all 失败）。
     """
     __tablename__ = "ssh_host_keys"
     id = Column(Integer, primary_key=True, index=True)
@@ -370,7 +370,7 @@ class SSHHostKey(Base):
     port = Column(Integer, default=22)
     key_type = Column(String(32), default="")
     fingerprint = Column(String(80), default="")
-    # 只存指纹是不够的 —— 指纹一样但密钥不同的概率虽低，比对本身应看下完整密钥。
+    # 只存指纹是不够的，指纹一样但密钥不同的概率虽低，比对本身应看下完整密钥。
     public_key_b64 = Column(Text, default="")
     status = Column(String(16), default="pinned")
     pending_key_type = Column(String(32), default="")
@@ -559,7 +559,7 @@ class AgentNonce(Base):
     落库之后，重放窗口跨越重启依然有效。表很小（每次请求一行，过期即删），
     由 `check_nonce()` 顺手清理。
 
-    ⚠ 与本文件其它新表一致：不写 `index=True`。
+ 与本文件其它新表一致：不写 `index=True`。
     """
     __tablename__ = "agent_nonces"
 

@@ -6,11 +6,9 @@ import { usePerm } from '../services/permissions'
 import { connectWS } from '../services/ws'
 import './Terminal.css'
 
-/**
- * @param {boolean} network  网络设备=true 时连 `/ws/network-terminal/{id}`：
- *   由**服务端直接 SSH / Telnet 到设备**（网络设备装不上 Agent，主机那条
- *   「服务端 → Agent → 本机 PTY」的路走不通）。命令窗口本身完全复用。
- */
+/* @param {boolean} network 网络设备=true 时连 `/ws/network-terminal/{id}`：
+ * 由**服务端直接 SSH / Telnet 到设备**（网络设备装不上 Agent，主机那条
+ * 「服务端 → Agent → 本机 PTY」的路走不通）。命令窗口本身完全复用。 */
 export default function WebTerminal({ serverId, network = false }) {
   const { can } = usePerm()
   const canConnect = can('host', 'terminal', 'edit', 'connect')

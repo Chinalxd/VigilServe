@@ -44,7 +44,7 @@ def download_ca(authorization: Optional[str] = Header(None),
                 db: Session = Depends(get_db)):
     # 第二轮复查 R-9：这是内网**信任根**的分发口，导入它等于信任本服务端签出的
     # 所有证书。以前登录即可下载。CA 公钥本身不敏感，但"随手把信任根发出去"
-    # 不合适 —— 收紧到管理员。前端没有任何地方调它（纯人工排障用），无兼容风险。
+    # 不合适，收紧到管理员。前端没有任何地方调它（纯人工排障用），无兼容风险。
     require_admin_full(authorization, db)
     if not tls_svc.CA_CERT.exists():
         raise HTTPException(status_code=404, detail="本地 CA 尚未生成（服务器未启用 HTTPS）")

@@ -17,7 +17,7 @@
 
 重放防护：
   时间戳 ±300s + nonce 去重（TTL 600s）。同一 nonce 在窗口内二次出现直接拒。
-  ⚠ 2026-09-23 开源加固 ⑦：nonce 已**落库**（`models.AgentNonce`），跨后端重启
+ 2026-09-23 开源加固 ⑦：nonce 已**落库**（`models.AgentNonce`），跨后端重启
     依然有效 —— 以前只在内存里，重启一次就能把截获的合法请求重放进来。
 """
 from __future__ import annotations
@@ -85,8 +85,7 @@ def pubkey_fingerprint(spki_der: bytes) -> str:
     return hashlib.sha256(spki_der).hexdigest()
 
 
-# ── 请求签名 ────────────────────────────────────────────────────────
-# ⚠ 这个函数的定义必须和 `agent/identity.py::canonical_string()` **逐字节一致**，
+# 这个函数的定义必须和 `agent/identity.py::canonical_string()` **逐字节一致**，
 # 否则线上会出现"签名永远不过"的诡异故障。`.workbuddy/tools/t_s1_identity.py`
 
 def canonical_string(method: str, path: str, node_id: str, ts: str, nonce: str) -> str:
@@ -123,7 +122,7 @@ def signature_headers(method: str, path: str, node_id: str, private_key) -> dict
     ts = str(now_ts())
     nonce = new_nonce()
     msg = canonical_string(method, path, node_id, ts, nonce).encode("utf-8")
-    # ⚠ 是 `padding.PSS.DIGEST_LENGTH`，不是 `padding.DigestLength`（后者不存在）。
+    # 是 `padding.PSS.DIGEST_LENGTH`，不是 `padding.DigestLength`（后者不存在）。
     # 两端必须用同一个 salt 长度，否则验签会随机失败。
     sig = private_key.sign(msg, padding.PSS(mgf=padding.MGF1(hashes.SHA256()),
                                             salt_length=padding.PSS.DIGEST_LENGTH),
@@ -158,14 +157,14 @@ def _prune_nonces_db(db, now: float, own_session: bool = True) -> None:
             synchronize_session=False)
         # 与 `check_nonce()` 同一口径：会话是借来的就只 flush，不替调用方提交。
         db.commit() if own_session else db.flush()
-    except Exception:  # noqa: BLE001  清理失败不影响本次请求
+    except Exception:  # noqa: BLE001 清理失败不影响本次请求
         db.rollback()
 
 
 def check_nonce(node_id: str, nonce: str, db=None) -> Optional[str]:
     """返回错误原因，None 表示通过。
 
-    🚨 2026-09-23 开源加固 ⑦：nonce **落库**（以前只在进程内存里）。
+ 2026-09-23 开源加固 ⑦：nonce **落库**（以前只在进程内存里）。
 
     不改的后果很具体：签名的防重放完全依赖"这个 nonce 我用过了"这件事，而
     内存字典一重启就清空。攻击者截获一个合法签名请求后，只要等到后端重启
@@ -193,7 +192,7 @@ def check_nonce(node_id: str, nonce: str, db=None) -> Optional[str]:
         try:
             from database import SessionLocal
             db = SessionLocal()
-        except Exception:  # noqa: BLE001  拿不到 session 就只靠内存，不要拖垮认证
+        except Exception:  # noqa: BLE001 拿不到 session 就只靠内存，不要拖垮认证
             return None
     try:
         from models import AgentNonce
@@ -205,7 +204,7 @@ def check_nonce(node_id: str, nonce: str, db=None) -> Optional[str]:
         else:
             db.add(AgentNonce(nonce_key=key, seen_at=now))
         # 2026-09-29 S-4：这里原本无条件 `db.commit()`。但 `db` 常常是路由
-        # `Depends(get_db)` 传进来的**业务会话** —— 在认证路径里提前提交，等于把
+        # `Depends(get_db)` 传进来的**业务会话**，在认证路径里提前提交，等于把
         # 路由还没写完的改动一起落盘，之后 `db.rollback()` 再也撤不回来
         #（最坏的场景：请求最终被判 401 拒掉，副作用却已经提交了）。
         # 现在：会话是借来的就只 flush，由路由自己的 commit 一并落盘；
@@ -216,8 +215,8 @@ def check_nonce(node_id: str, nonce: str, db=None) -> Optional[str]:
             db.flush()
         _prune_nonces_db(db, now, own_session=_own)
     except Exception as exc:  # noqa: BLE001
-        # ⚠ 这里是**失败即放行**：nonce 表出问题不该让整批 Agent 掉线。
-        #   但它必须留下痕迹 —— 否则"防重放悄悄失效了"永远没人知道。
+        # 这里是**失败即放行**：nonce 表出问题不该让整批 Agent 掉线。
+        # 但它必须留下痕迹，否则"防重放悄悄失效了"永远没人知道。
         try:
             db.rollback()
         except Exception:
@@ -233,7 +232,7 @@ def check_nonce(node_id: str, nonce: str, db=None) -> Optional[str]:
 
 
 # 证书链校验结果缓存：{证书内容哈希|node_id: True/False}
-# 只在"第一次见到这张证书"时真做一次 X.509 全链校验，之后走字典 —— 否则每个
+# 只在"第一次见到这张证书"时真做一次 X.509 全链校验，之后走字典，否则每个
 # 心跳都要解析一遍证书，白白烧 CPU。
 _CERT_TRUST_CACHE: dict[str, bool] = {}
 _CERT_TRUST_CACHE_DETAIL: dict[str, str] = {}
@@ -242,7 +241,7 @@ _CERT_TRUST_CACHE_DETAIL: dict[str, str] = {}
 def cert_is_trusted(cert_pem: str, node_id: str = "") -> tuple[bool, str]:
     """这张证书是不是**本服务 CA 签的、还有效、用途是 clientAuth、node_id 也对**。
 
-    ⚠ 2026-09-29 S-7：**不参与认证路径**，仅供存量数据排查与回归脚本使用
+ 2026-09-29 S-7：**不参与认证路径**，仅供存量数据排查与回归脚本使用
     （`t_round4_cert_nonce.py` 在测它）。1.1.51 方案 A 之后，认证改为
     「库里登记的公钥」验签（`load_public_key`），不再经 X.509 证书链，
     所以本函数零业务调用点是**预期行为**，不是漏接。
@@ -309,7 +308,7 @@ def load_public_key(pem: str):
 def cert_public_key(cert_pem: str):
     """从证书 PEM 取公钥（按证书内容缓存，避免每个请求重新解析一遍 X.509）。
 
-    ⚠ 1.1.51 起**认证不再走这里**（改走 `load_public_key`）。保留是因为
+ 1.1.51 起**认证不再走这里**（改走 `load_public_key`）。保留是因为
     `services/cert_reclaim.py` 等存量数据的清理/迁移路径还会读旧字段。
     """
     if not cert_pem:

@@ -146,7 +146,7 @@ class TrayAgent:
             build_server_url(self.cfg),
             self.cfg.get("server_id", 0),
             self.cfg.get("token", ""),
-            update_key=self.cfg.get("update_key", ""),   # 开源加固 ④
+            update_key=self.cfg.get("update_key", ""),   
         )
         self.running = False
         self.thread = None
@@ -249,7 +249,7 @@ class TrayAgent:
                 info["install_path"] = APP_DIR
                 info["mesh_node_id"] = meshagent.detect_node_id()
 
-                # ── 设备身份：必要时向服务端申请 / 续签客户端证书 ──────────
+                # 设备身份：必要时向服务端申请 / 续签客户端证书
                 # 第一次报到会拿到「待审核 + 配对码」，管理员批准后下一个周期自动拿到证书。
                 _ok_id, _id_msg = self.connector.ensure_certificate(info)
                 if _id_msg:
@@ -293,7 +293,7 @@ class TrayAgent:
                         install_path=info.get("install_path", ""),
                         mesh_node_id=meshagent.detect_node_id(),
                     )
-                    # 开源加固 ④：存量 Agent 缺 update_key 时，心跳会补发一次 ——
+                    # 开源加固 ④：存量 Agent 缺 update_key 时，心跳会补发一次，
                     # 拿到就落盘，否则这台机器将永远收不到新安装包。
                     # 加固 ⑤：服务端轮换过密钥时，心跳也会把新 token 带回来。
                     _changed = False
@@ -307,11 +307,11 @@ class TrayAgent:
                     if _changed:
                         save(self.cfg)
                     if not hb or "error" in hb:
-                        # 🚨 把服务端给的拒绝原因原样露出来。以前这里只写一句
+                        # 把服务端给的拒绝原因原样露出来。以前这里只写一句
                         # "心跳失败，清除本地注册信息"，而服务端其实**已经**把原因
                         # 放在 401 的 detail 里了（未知 node_id / IP mismatch /
                         # 时间戳超差 / 证书不是本 CA 签的 …… 十几种）。看不到它，
-                        # 排障就只能靠猜 ——  phenomenon 一样、根因完全不同。
+                        # 排障就只能靠猜，phenomenon 一样、根因完全不同。
                         _why = ""
                         if isinstance(hb, dict):
                             _why = str(hb.get("message") or hb.get("detail") or "")[:150]
@@ -333,8 +333,8 @@ class TrayAgent:
 
                     # 服务端还没把本机公钥登记进库（= 未加入管理）：心跳通说明
                     # 网络是通的、服务端也已显示在线，但指标上报会被拒。
-                    # 这里直接跳过上报 —— 否则每 60 秒刷一条"推送失败"、托盘图标
-                    # 一直红着，看着像 Agent 坏了，其实只是还没被批准。
+                    # 这里直接跳过上报，否则每 60 秒刷一条"推送失败"、托盘图标
+                    # 一直红着，表现类似 Agent 坏了，实际是还没被批准。
                     _authz = hb.get("authorized")
                     _authz = True if _authz is None else bool(_authz)
                     if _authz != self._authorized:
@@ -371,19 +371,18 @@ class TrayAgent:
                             break
                     except Exception:
                         pass
-                    # ⚠ 未加入管理时跳过：`/config` 也要过签名准入，未准入会被 401，
-                    #   每 5 秒一次纯属白刷请求。心跳已经覆盖"报活"这件事。
+                    # 未加入管理时跳过：`/config` 也要过签名准入，未准入会被 401，
+                    # 每 5 秒一次纯属白刷请求。心跳已经覆盖"报活"这件事。
                     if slept % 5 == 0 and self._authorized and \
                             self.connector.server_id and self.cfg.get("token"):
                         try:
                             poll_cfg = self.connector.fetch_config()
                             if poll_cfg and not poll_cfg.get("error"):
-                                # 远程桌面的开流开关必须在这里复查，不能只靠外层循环：
+                                # 远程桌面的开流开关必须在这里复查，不能只靠外层循环
                                 # 外层间隔默认 60 秒，实测用户点开远程桌面要等约 45 秒
                                 # 才有画面（看着就像"连接后卡死/黑屏"）。这里 5 秒一次，
                                 # 与后端注释承诺的"约 5 秒内开流"一致。
                                 # 注意只在配置有效时下发，避免一次网络抖动就把正在
-                                # 推的流给关了。
                                 self.rdp.configure(server_url, self.connector.server_id,
                                                    self.cfg.get("token", ""))
                                 self.rdp.set_active(
@@ -540,7 +539,7 @@ def show_config_window():
     web_port_var = tk.StringVar(value=str(_wp_port))
     auto_var = tk.BooleanVar(value=cfg.get("auto_start", True))
 
-    # ── 服务端地址：协议固定 https（http 已随 HTTPS 一刀切废弃）──
+    # 服务端地址：协议固定 https（http 已随 HTTPS 一刀切废弃）
     frm_host = tk.Frame(root, bg="#f8f9fa")
     frm_host.pack(fill="x", padx=25, pady=(16, 4))
     tk.Label(frm_host, text="服务端地址", **_LBL).pack(fill="x")
@@ -564,7 +563,7 @@ def show_config_window():
     tk.Label(frm_port, text="API 端口（文件/终端）", **_LBL).pack(anchor="w")
     tk.Entry(frm_port, textvariable=api_port_var, width=10, **_ENT).pack(anchor="w", ipady=4)
 
-    # ── WEB 代理端口（2026-09-22 加）──
+    # WEB 代理端口（2026-09-22 加）
     # 与本机 WEB 管理相关的本地监听端口，分发后由用户按现场情况指定；
     # 留空 = 未启用（不改变任何现有行为）。
     frm_wport = tk.Frame(frm_ports, bg="#f8f9fa")
@@ -572,7 +571,7 @@ def show_config_window():
     tk.Label(frm_wport, text="WEB 代理端口", **_LBL).pack(anchor="w")
     tk.Entry(frm_wport, textvariable=web_port_var, width=10, **_ENT).pack(anchor="w", ipady=4)
 
-    # ── 本机配对码（人工准入：管理员要在服务端「主机管理」核对同一串码）──
+    # 本机配对码（人工准入：管理员要在服务端「主机管理」核对同一串码）
     frm_pair = tk.Frame(root, bg="#f8f9fa")
     frm_pair.pack(fill="x", padx=25, pady=4)
     # 标题会跟着状态变：未加入管理时写「本机配对码」，已授权时改成「设备身份状态」
@@ -637,11 +636,11 @@ def show_config_window():
             w_port = DEFAULTS["web_proxy_port"]
         return s_port, a_port, w_port
 
-    # 后台线程要结果、主线程轮询刷新标签 —— 避免跨线程直接碰 tkinter 控件。
+    # 后台线程要结果、主线程轮询刷新标签，避免跨线程直接碰 tkinter 控件。
     _pair_state = {"title": "本机配对码", "text": "读取中...", "bg": "#e9ecef", "fg": "#495057",
                    "hint": ""}
     # 设备已与服务端握手、但尚未被管理员纳管时的指路（问题 5）。
-    # 只在这一态显示，别的状态一律留空 —— 常驻的提示会被当成背景噪音忽略掉。
+    # 只在这一态显示，别的状态一律留空，常驻的提示会被当成背景噪音忽略掉。
     _PENDING_HINT = "待加入管理：请在服务端「主机管理」中加入管理，并核对配对码。"
 
     def _poll_pair():
@@ -652,7 +651,7 @@ def show_config_window():
             pair_label.config(text=_pair_state["text"], bg=_pair_state["bg"],
                               fg=_pair_state["fg"])
             pair_hint.config(text=_pair_state.get("hint") or "")
-        except Exception:  # noqa: BLE001  窗口已销毁
+        except Exception:  # noqa: BLE001 窗口已销毁
             return
         root.after(300, _poll_pair)
 
@@ -684,10 +683,10 @@ def show_config_window():
                                   latest.get("server_id", 0), latest.get("token", ""),
                                   update_key=latest.get("update_key", ""))
             resp = conn.enroll(info)
-            # 🚨 判断顺序有讲究：**先看本机公钥有没有被登记**，再看服务端给没给
-            #    配对码。只看"这次有没有回东西"的话，早就准入的设备每次都会显示
-            #    配对码 —— 管理员会以为点错了地方。
-            #    （1.1.51 方案 A：不再有证书，判据就是 `identity_state` / `enrolled`。）
+            # 判断顺序有讲究：**先看本机公钥有没有被登记**，再看服务端给没给
+            # 配对码。只看"这次有没有回东西"的话，早就准入的设备每次都会显示
+            # 配对码，管理员会以为点错了地方。
+            # （1.1.51 方案 A：不再有证书，判据就是 `identity_state` / `enrolled`。）
             if resp.get("identity_state") == "authorized" or resp.get("enrolled"):
                 _pair_state.update(
                     title="设备身份状态",
@@ -732,14 +731,14 @@ def show_config_window():
         s_port, a_port, w_port = _read_ports()
         host_clean = host.replace('http://', '').replace('https://', '').rstrip('/')
         # 协议固定 https：http 已随服务端 HTTPS 一刀切废弃，不再从配置里取 server_scheme
-        # （留着那个 http 默认值，就等于拿明文 HTTP 去打 HTTPS 端口 → RemoteDisconnected）。
+        # （留着那个 http 默认值，就等于拿明文 HTTP 去打 HTTPS 端口 RemoteDisconnected）。
         url = f"https://{host_clean}:{s_port}"
         update_status(f"正在测试 {url}...", "#fff3cd", "#856404")
 
         def _persist_https():
             """把 https 写回配置，让心跳/上报立刻用对协议。
 
-            🚨 save() 是全量写盘，必须以 load() 为底，否则会抹掉 server_id 等字段。
+ save() 是全量写盘，必须以 load() 为底，否则会抹掉 server_id 等字段。
             """
             try:
                 latest = load()
@@ -753,13 +752,13 @@ def show_config_window():
 
         try:
             # Step 1: ping（HTTPS 下必须带随包内置的 CA，否则自签证书必然校验失败）
-            # 🚨 必须用 resolve_base_url 拿回**真正连通的那个 url**，别拿自己拼的
-            # url 直接往下走 —— 拼错协议等于拿明文 HTTP 去打 HTTPS 端口，服务端直接
+            # 必须用 resolve_base_url 拿回**真正连通的那个 url**，别拿自己拼的
+            # url 直接往下走，拼错协议等于拿明文 HTTP 去打 HTTPS 端口，服务端直接
             # 断开连接，界面上就显示 "Remote end closed connection without response"。
             import tls_util
             _ok, _msg, _base = tls_util.resolve_base_url(url)
             if not _ok:
-                # 证书不认识是本机的事，不是网络的事 —— 明确告诉用户下一步点哪里，
+                # 证书不认识是本机的事，不是网络的事，明确告诉用户下一步点哪里，
                 # 否则现场只会反复重填地址（这是新部署最容易卡住的一步）。
                 if tls_util.is_ca_untrusted(_msg):
                     _msg += "　→ 点「信任服务端证书」"
@@ -916,12 +915,12 @@ def show_config_window():
         "cursor": "hand2",
     }
     # 「信任服务端证书」：换台机器部署服务端后第一次连接的唯一出路（见 on_trust_ca）。
-    # 平时不用它也无害 —— 只在证书不认识时才真正需要点。
+    # 平时不用它也无害，只在证书不认识时才真正需要点。
     tk.Button(inner, text="信任服务端证书", command=on_trust_ca, **btn_style).pack(side="left", padx=10)
     tk.Button(inner, text="测试连接", command=on_test, **btn_style).pack(side="left", padx=10)
     tk.Button(inner, text="保存配置", command=on_save, **btn_style).pack(side="left", padx=10)
 
-    # 打开配置面板就把配对码取回来 —— 这是管理员核对主机身份的第一步
+    # 打开配置面板就把配对码取回来，这是管理员核对主机身份的第一步
     # 窗口高度按内容自适应：按钮下方只保留一行空白（原先固定 560 会留一大块空白）
     root.update_idletasks()
     # 宽度也要跟随内容：按钮加到三个之后，死写 480 会把最右边那个挤掉
@@ -964,7 +963,7 @@ def _spawn_background_agent() -> bool:
 def main():
     # 必须放在**互斥量与托盘初始化之前**：卸载时 Agent 进程可能正在被结束，
     # 抢不到单实例锁也不该影响上报；更不能用托盘模式跑（那是常驻的）。
-    # 安装脚本在删配置之前调用它 —— 配置一删，私钥和服务端地址就没了。
+    # 安装脚本在删配置之前调用它，配置一删，私钥和服务端地址就没了。
     if "--report-uninstall" in sys.argv:
         try:
             from uninstall_report import report_uninstall
@@ -1003,8 +1002,8 @@ def main():
         agent.stop()
         icon.stop()
 
-    # 🚨 一个菜单里只能有一个 default。多写不会报错（Menu.__call__ 用 next() 取第一个，
-    #    后面的静默失效），所以写错了没有任何提示，只会双击停在第一个上。
+    # 一个菜单里只能有一个 default。多写不会报错（Menu.__call__ 用 next() 取第一个，
+    # 后面的静默失效），所以写错了没有任何提示，只会双击停在第一个上。
     menu = pystray.Menu(
         pystray.MenuItem("配置连接", on_config, default=True),
         pystray.MenuItem("退出", on_quit),

@@ -77,7 +77,7 @@ VENDOR_KEYWORDS = [
     ("qnap", "QNAP"),
 ]
 
-# ── 类别判定：关键字 → 类别 ──────────────────────────────────────────
+# 类别判定：关键字 类别
 # 顺序即优先级：防火墙要在交换机之前判（华为 USG 的 sysDescr 里也带 "Switch" 字样
 # 的情况不多，但 FortiGate 一类确实会同时命中，防火墙语义更强，放前面）。
 CATEGORY_KEYWORDS = [
@@ -105,7 +105,7 @@ CATEGORY_KEYWORDS = [
     ]),
 ]
 
-# 类别 → 中文名（页面展示用）
+# 类别 中文名（页面展示用）
 CATEGORY_LABELS = {
     "switch": "交换机",
     "router": "路由器",
@@ -121,7 +121,7 @@ CATEGORY_LABELS = {
 MODEL_PATTERNS = [
     r"\b(RG-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*)(?![A-Za-z0-9])",      # 锐捷 RG-S5750-28GT4XS
     r"\b(FortiGate[-\s]?[A-Za-z0-9]+)(?![A-Za-z0-9])",
-    r"\b(WS-C[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*)(?![A-Za-z0-9])",     # Cisco WS-C2960-24TC-L
+    r"\b(WS-C[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*)(?![A-Za-z0-9])",     
     r"\b(USG[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*)(?![A-Za-z0-9])",      # 华为防火墙 USG6525E
     r"\b(CE[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*)(?![A-Za-z0-9])",       # 华为数据中心交换机 CE6881-48S6CQ
     r"\b(MSR[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*)(?![A-Za-z0-9])",
@@ -136,7 +136,6 @@ MODEL_PATTERNS = [
     r"\b(TS-[A-Za-z0-9]+)(?![A-Za-z0-9])",
 ]
 
-# ── 型号前缀 → 类别 ──────────────────────────────────────────────────
 # 这一层比 sysDescr 关键字可靠得多：华为交换机的自述串里根本没有 "Switch"
 # 这个词（"Huawei Versatile Routing Platform Software ... S5720-28X-SI"），
 # 光靠关键字会全落进 other。各家的型号首字母是有规律的，所以先看型号。
@@ -235,7 +234,7 @@ def identify(sys_object_id: str = "", sys_descr: str = "", interface_count: int 
     ent = enterprise_number(oid)
     vendor = ENTERPRISE_VENDOR.get(ent, "") if ent else ""
     if vendor == "net-snmp":
-        # 不说明厂商 —— 交给关键字（可能识别出群晖 / QNAP）
+        # 不说明厂商，交给关键字（可能识别出群晖 / QNAP）
         vendor = ""
     if not vendor:
         vendor = _match_keywords(descr_lower, VENDOR_KEYWORDS)
@@ -243,7 +242,7 @@ def identify(sys_object_id: str = "", sys_descr: str = "", interface_count: int 
     model = _extract_model(descr)
 
     # 3) 类别：型号前缀 > sysDescr 关键字 > 端口数反推
-    #    型号优先是因为华为/华三的自述串里压根不写 "Switch" 这个词。
+    # 型号优先是因为华为/华三的自述串里压根不写 "Switch" 这个词。
     category = _category_from_model(model) or _match_category(descr_lower)
     if not category:
         if interface_count >= 16:

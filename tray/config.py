@@ -43,7 +43,6 @@ APP_ROOT = _resolve_app_root()
 WORKSPACE_ROOT = os.path.dirname(APP_ROOT)
 
 
-# never opens.
 # Therefore every candidate must (a) not be a Store alias and (b) actually run.
 
 def _is_store_alias(path: str) -> bool:
@@ -203,8 +202,8 @@ def set_ports(ports: dict) -> None:
 
 # 为什么需要它：Agent 的「服务端地址」要填的是**这台服务器在网络上真实的地址**。
 # 服务端本机自己用 127.0.0.1 没问题，但其它机器上的 Agent 拿 127.0.0.1 永远连不上
-# —— 这是新部署现场最常见的一次踩坑。所以面板上直接列出本机网卡 IP，选定后：
-#   * 「打开 Web 控制台」用它拼地址（本机永远可达，比 127.0.0.1 更贴近实际用法）；
+#，这是新部署现场最常见的一次踩坑。所以面板上直接列出本机网卡 IP，选定后
+# * 「打开 Web 控制台」用它拼地址（本机永远可达，比 127.0.0.1 更贴近实际用法）；
 # 多网卡（有线 + 无线 + 虚拟网卡）时由用户下拉选择，选择结果持久化到 APPDATA。
 
 def list_local_ips(include_loopback: bool = False) -> list[str]:
@@ -236,7 +235,7 @@ def list_local_ips(include_loopback: bool = False) -> list[str]:
                     continue
                 if ip not in ips:
                     ips.append(ip)
-    except Exception:  # noqa: BLE001  枚举网卡失败不能拖垮面板
+    except Exception:  # noqa: BLE001 枚举网卡失败不能拖垮面板
         pass
     if include_loopback and "127.0.0.1" not in ips:
         ips.append("127.0.0.1")
@@ -274,7 +273,7 @@ def build_services() -> list:
             "env": {
                 "PYTHONIOENCODING": "utf-8",
                 "PRODUCTION": "1",
-                # ⚠ 必须告诉主站「独立源代理在哪个端口」：web-config 只会在这个变量
+                # 必须告诉主站「独立源代理在哪个端口」：web-config 只会在这个变量
                 # 存在时才下发 proxy_base_url，前端才会把 WEB 管理的 iframe / 新窗口
                 # 指到那个源上。缺了它前端会退回同源形态，独立源等于白配。
                 "VIGILSERVE_WEBPROXY_PORT": str(ports["webproxy"]),
@@ -283,7 +282,6 @@ def build_services() -> list:
             # start_tray.bat and the tray launches the backend itself, so on a
             # fresh machine nothing ever ran it — the service then died with
             # ModuleNotFoundError while the tray reported a successful start.
-            #
             # The installer now bundles a complete portable runtime, so this
             # normally only verifies and exits. `marker` is still written as a
             # record of a successful check (and removed on uninstall), but the

@@ -1,17 +1,16 @@
 /* 方案 B：网络设备「系统信息」页签 —— 设备系统及硬件信息
  *
  * 这里原来是「网络」页签（SNMP 凭据 + SSH 指纹）。按用户要求删掉那个页签之后：
- *   · SNMPv3 凭据 → 挪到「设备管理 - 网络设备」页的编辑弹窗里维护
- *   · 剩下的设备信息 / 端口表 / SSH 主机密钥 → 复用成网络设备的「系统信息」
+ * · SNMPv3 凭据 → 挪到「设备管理 - 网络设备」页的编辑弹窗里维护
+ * · 剩下的设备信息 / 端口表 / SSH 主机密钥 → 复用成网络设备的「系统信息」
  *
  * 所以现在这一屏三块，全是"设备长什么样"：
- *   1. 资产信息（厂商 / 型号 / 类型 / 采集周期 —— 新增时 SNMP 自动识别，可人工改）
- *   2. 设备信息（sysDescr / sysName / 位置 / 运行时长 / 上次采集）
- *   3. 端口列表（IF-MIB：状态 / 速率 / 流量 / 错包）
+ * 1. 资产信息（厂商 / 型号 / 类型 / 采集周期 —— 新增时 SNMP 自动识别，可人工改）
+ * 2. 设备信息（sysDescr / sysName / 位置 / 运行时长 / 上次采集）
+ * 3. 端口列表（IF-MIB：状态 / 速率 / 流量 / 错包）
  *
  * 「SSH 主机密钥」卡片已按用户要求删除（2026-09-20）：它属于敏感凭据信息，
- * 不该出现在设备信息页。ssh_pinning 的后端能力与接口保留未动。
- */
+ * 不该出现在设备信息页。ssh_pinning 的后端能力与接口保留未动。 */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { parseServerTime } from '../utils/format'
 import { fetchNetworkInterfaces } from '../services/api'
@@ -251,7 +250,7 @@ export default function NetworkPanel({ serverId, server, mode = 'info' }) {
                         <th style={{ width: 70 }}>管理</th>
                         <th style={{ width: 70 }}>运行</th>
                         {/* 原来这列叫「速率」，加了"入向速率/出向速率"之后两个"速率"挨在一起
-                            分不清：这里是接口带宽（ifHighSpeed），那边是实测流量速率。 */}
+ 分不清：这里是接口带宽（ifHighSpeed），那边是实测流量速率。 */}
                         <th style={{ width: 90 }} title="接口协商带宽（ifHighSpeed）">端口带宽</th>
                         <th style={{ width: 100 }}>入向速率</th>
                         <th style={{ width: 100 }}>出向速率</th>
@@ -271,7 +270,7 @@ export default function NetworkPanel({ serverId, server, mode = 'info' }) {
                           <td><StatusPill text={i.oper_status} /></td>
                           <td className="np-num">{i.if_speed_mbps ? `${i.if_speed_mbps} Mbps` : '—'}</td>
                           {/* 速率列：库里没有基线时后端给 null，显示"—"而不是 0 Mbps
-                              （0 会被读成"这口真的没流量"） */}
+ （0 会被读成"这口真的没流量"） */}
                           <td className="np-num">{fmtRate(i.in_rate_mbps)}</td>
                           <td className="np-num">{fmtRate(i.out_rate_mbps)}</td>
                           <td className="np-num">{fmtBytes(i.in_octets)}</td>

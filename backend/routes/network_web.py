@@ -36,7 +36,7 @@
 （绝对地址、根相对 `/x`、相对 `x`、CSS `url()` 与 `@import`、meta refresh 跳转）统一
 折算到代理前缀并带上票据，再注入 `<base>` 与一小段 shim。
 
-### 🚨 票据为什么必须落在**路径**里（2026-09-20 血泪）
+### 票据为什么必须落在**路径**里（2026-09-20 血泪）
 
 早先票据只写在 query（`?t=…`），并由 shim 给 `fetch` / `XHR` / `sendBeacon` 补上。
 **这漏掉了浏览器自己发起的那一大类子资源请求**，典型是 webpack 运行时按 publicPath
@@ -62,7 +62,7 @@
 安全性不变：票据本来就是写在 URL 里的窄凭据（见 `services/web_proxy_ticket.py`），
 路径和 query 的可见性完全一样。
 
-### 🚨 另外两个"登录不了"的坑（2026-09-20 真机坐实）
+### 另外两个"登录不了"的坑（2026-09-20 真机坐实）
 
 **① 根相对地址不能用本页目录拼。** 做法见 `_map_url`：`/login.cgi` 这类**根相对**
 地址必须拼到"票据根"（`{prefix}{ticket}/`），只有 `../util/a.js` 这种**相对**地址才
@@ -77,7 +77,7 @@
 解法是 `WebProxyCorsMiddleware`（本模块内）挂到最外层，只给这个前缀放行预检；
 `main.py` 里在注册完 CORSMiddleware 之后调 `network_web.install_preflight(app)`。
 
-🚨 代理目标**不是**调用方能任意指定的：地址固定是这台设备的管理 IP，协议与端口由
+ 代理目标**不是**调用方能任意指定的：地址固定是这台设备的管理 IP，协议与端口由
 管理员在「主机管理 - 网络设备」里维护，所以不存在"借它扫内网"的问题。
 """
 import asyncio
@@ -108,14 +108,14 @@ router = APIRouter(prefix="/api/servers", tags=["network-web"])
 
 # 连设备走独立会话，且**不认环境里的 HTTP(S)_PROXY**：那些代理是给上外网用的，
 # 让它掺一脚会把请求发到互联网出口，换回一句看不懂的 502。requests 默认读
-# http_proxy 环境变量 —— 这里必须显式关掉（实测见过 "upstream connect failed"）。
+# http_proxy 环境变量，这里必须显式关掉（实测见过 "upstream connect failed"）。
 _SESSION = _requests.Session()
 _SESSION.trust_env = False
 
-# 🚨 连接池必须放大（2026-09-20 实测 NAS 首屏慢）：
+# 连接池必须放大（2026-09-20 实测 NAS 首屏慢）
 # webpack 分片，浏览器对它自己的域并发约 6 条，每条都落到我们这条到设备的连接上；
 # 池子只有 10 且**用完即阻塞**（pool_block=False 时超出的连接会新建、但旧的不复用），
-# 结果是每个分片都在重新做 TLS 握手 —— 叠起来就是"点一下要等好几秒"。
+# 结果是每个分片都在重新做 TLS 握手，叠起来就是"点一下要等好几秒"。
 _ADAPTER = _requests.adapters.HTTPAdapter(
     pool_connections=64, pool_maxsize=64, pool_block=False, max_retries=0,
 )
@@ -136,16 +136,16 @@ async def _run_in_thread(fn):
 # 票据被设备页读走也只能再访问它自己，不构成新增风险）。
 PROXY_ID_FROM_TICKET = False
 
-# 读可以慢一点（登录页拉一堆 JS）；连接也不能太快判死 —— 华为交换机的 HTTPS
+# 读可以慢一点（登录页拉一堆 JS）；连接也不能太快判死，华为交换机的 HTTPS
 # 用的是 connect 那个超时），握手一超时我们回 502，设备 JS 就弹「连接服务器失败」。
-# 🚨 别再调回 5：真机（某台华为交换机）2026-09-21 已复现。
+# 别再调回 5：真机（某台华为交换机）2026-09-21 已复现。
 CONNECT_TIMEOUT = 15
 READ_TIMEOUT = 25
 # 证书指纹探测用与正常连接相同的握手超时，别让设备慢的时候先超时 fasle 判定
 device_tls_pin.set_probe_timeout(CONNECT_TIMEOUT)
 
 # 逐跳首部不能往下游传（RFC 7230 §6.1）；Content-Length / Content-Encoding 也一并
-# 去掉 —— 我们对正文做过改写，长度和压缩方式都变了，留着会让浏览器解析失败
+# 去掉，我们对正文做过改写，长度和压缩方式都变了，留着会让浏览器解析失败
 _DROP_HEADERS = {
     "connection", "keep-alive", "proxy-authenticate", "proxy-authorization",
     "te", "trailers", "transfer-encoding", "upgrade",
@@ -170,22 +170,21 @@ _URL_ATTR_RE = re.compile(
 )
 _CSS_URL_RE = re.compile(r"url\(\s*([\"']?)([^)\"']*)\1\s*\)", re.I)
 _CSS_IMPORT_RE = re.compile(r"(@import\s+(?:url\(\s*)?)([\"'])([^\"']+)\2", re.I)
-# 🚨 meta refresh 的 `url=` **只能在 <meta> 标签里找**（2026-09-21 修华为交换机
-#    以前这条正则是裸的 `(url\s*=\s*)(...)` 带 re.I 扫**全文**，于是把内联 JS 里的
-#    —— `/web/` 被解析成正则字面量，后面的票据整串成了"标志位"，
+# meta refresh 的 `url=` **只能在 <meta> 标签里找**（2026-09-21 修华为交换机
+# 以前这条正则是裸的 `(url\s*=\s*)(...)` 带 re.I 扫**全文**，于是把内联 JS 里的
+#，`/web/` 被解析成正则字面量，后面的票据整串成了"标志位"，
 _META_TAG_RE = re.compile(r"<meta\b[^>]*>", re.I | re.S)
 _REFRESH_IN_META_RE = re.compile(r"(\burl\s*=\s*)([^;\"'>]+)", re.I)
 
 
-# 眼里一律算跨源 —— 没有 CORS 头的话，设备界面里的 AJAX 全部 "Failed to fetch"。
+# 眼里一律算跨源，没有 CORS 头的话，设备界面里的 AJAX 全部 "Failed to fetch"。
 # 这一层只放开代理路径，而且凭据走 URL 票据、不靠 Cookie，所以 `*` 就够、也不涉及
-# Cookie 泄露（任何一个网站拿着这个 `*` 也拿不到数据 —— 它没有票据）。
+# Cookie 泄露（任何一个网站拿着这个 `*` 也拿不到数据，它没有票据）。
 _CORS_HEADERS = {
-    # 🚨 为什么只能是 `*`，不能换成回显 Origin（交付审查复核结论，2026-09-23）：
+    # 为什么只能是 `*`，不能换成回显 Origin（交付审查复核结论，2026-09-23）
     # 沙箱 iframe 的文档源是**不透明源**，它发出的请求带的 Origin 头是字面量 `null`。
-    # 白名单写法（回显 Origin）在这里会恒不匹配 → 预检失败 → 设备页的 XHR 全挂。
+    # 白名单写法（回显 Origin）在这里会恒不匹配 预检失败 设备页的 XHR 全挂。
     # 所以 `*`（或字面量 `null`）是让沙箱 iframe 能工作的**必要条件**，不是偷懒。
-    #
     # 它可控在两点上：① 本中间件只在代理路径前缀上生效（见 WebProxyCorsMiddleware
     # 的 `_PROXY_PATH_RE` 判定），其它接口一律照旧；② 不设
     # Access-Control-Allow-Credentials，所以不存在 Cookie 凭据被跨站带出的可能；
@@ -199,9 +198,9 @@ _CORS_HEADERS = {
     "Vary": "Origin",
 }
 
-# 🚨 早先这里写的是 `unsafe-url`，实测下来它是**纯负收益**（2026-09-23 复核）：
-#   * 而它真正生效的场景是「新窗口打开」的顶层窗口 —— 在那里它会把**含票据的完整
-#   * 顶层窗口内跳我们自己的代理路径 = 同源 → 仍发完整 Referer，`recover_redirect()`
+# 早先这里写的是 `unsafe-url`，实测下来它是**纯负收益**（2026-09-23 复核）
+# * 而它真正生效的场景是「新窗口打开」的顶层窗口，在那里它会把**含票据的完整
+# * 顶层窗口内跳我们自己的代理路径 = 同源 仍发完整 Referer，`recover_redirect()`
 _REFERRER_POLICY = "strict-origin-when-cross-origin"
 
 _PROXY_PATH_RE = re.compile(r"^/api/servers/\d+/web/|^/web/")
@@ -212,7 +211,7 @@ _CORS_LOWER = [(k.lower().encode("latin-1"), v.encode("latin-1"))
 class WebProxyCorsMiddleware:
     """只给「WEB管理」代理路径放行跨源预检，并保证错误响应也带 CORS 头。
 
-    🚨 为什么必须盖在应用级 CORSMiddleware **外面**（2026-09-20 血泪）：
+ 为什么必须盖在应用级 CORSMiddleware **外面**（2026-09-20 血泪）：
     沙箱 iframe 里的文档源是 `null`（不透明源），它发出的 fetch/XHR 在浏览器眼里一律
     跨源，会先发一发 `OPTIONS` 预检。而 `main.py` 那套 CORSMiddleware 白名单是空的
     （只允许同源），预检被它直接截成 `400 Disallowed CORS origin` —— **路由根本轮不到**。
@@ -250,7 +249,7 @@ class WebProxyCorsMiddleware:
 def install_preflight(app) -> None:
     """挂上 `WebProxyCorsMiddleware`。
 
-    ⚠ 必须在 `app.add_middleware(CORSMiddleware, …)` **之后**调用：Starlette 把每次都
+ 必须在 `app.add_middleware(CORSMiddleware, …)` **之后**调用：Starlette 把每次都
     插到最前面，最后插的才是最外层，只有最外层才拦得住 CORS 中间件。
     """
     app.add_middleware(WebProxyCorsMiddleware)
@@ -260,11 +259,11 @@ def install_preflight(app) -> None:
 def _prefix(server_id) -> str:
     """**本进程实际提供服务**的路径前缀（不含票据），只用于拼 `<base>`。
 
-    🚨 这里必须回答的问题是"这份 HTML 是从哪个路径下发出去的"，因为相对地址会按
+ 这里必须回答的问题是"这份 HTML 是从哪个路径下发出去的"，因为相对地址会按
     它去解析。所以只认 `PROXY_ID_FROM_TICKET`（本进程就是独立源代理）→ `/web/`；
     主站进程一律 `/api/servers/{id}/web/`。
 
-    ⚠ 2026-09-20 踩过：一度让主站进程在看见 `VIGILSERVE_WEBPROXY_PORT` 时也返回
+ 2026-09-20 踩过：一度让主站进程在看见 `VIGILSERVE_WEBPROXY_PORT` 时也返回
     `/web/`，结果主站真被请求到时（旧前端 / 「新窗口打开」），`<base>` 指向主站
     根本不存在的 `/web/` → 回落 SPA 首页 → 登录框全空白。
     「前端该往哪个源发」是另一回事，见 `_frontend_prefix()`。
@@ -309,7 +308,7 @@ def _proxy_base_path() -> str:
 def _raw_prefix(base_href: str) -> str:
     """从带票据的 base 里剥出**不含票据**的前缀，给 shim 判"这已经是我们代理的地址"。
 
-    🚨 两种形态都要剥对（2026-09-20 血泪）：
+ 两种形态都要剥对（2026-09-20 血泪）：
       * 主站同源：`/api/servers/3/web/<ticket>/…` → `/api/servers/3/web/`
       * 独立源  ：`/web/<ticket>/…`             → `/web/`
 
@@ -386,7 +385,7 @@ def _rewrite_html(body: bytes, base_href: str, root_href: str, host: str,
                   fragment: bool = False) -> bytes:
     """把设备页面里的地址全部折算到代理前缀（路径自带票据），并补上 <base> 与 shim。
 
-    🚨 `fragment=True`（2026-09-21 修华为交换机"只剩菜单 / 连接服务器失败"）：
+ `fragment=True`（2026-09-21 修华为交换机"只剩菜单 / 连接服务器失败"）：
        设备会 **XHR 拉一个 HTML 片段**再塞进主页面 —— 例如
        `/simple/view/dashboard/dashboard/getScriptXXX.html` 里写着
        `<script src="../../lib/dashboard/dashboard/dashboardLib.js">`。
@@ -475,8 +474,8 @@ def _rewrite_html(body: bytes, base_href: str, root_href: str, host: str,
 
 
 _RAW_PREFIX_RE = re.compile(r"^(/api/servers/\d+/web/)")
-# 🚨 这里原本还有**第二份 `_raw_prefix()`**（只认上面这条主站正则），
-# 同名把上面那份覆盖掉了（Python 取最后定义）—— 独立源形态下它就原样返回 base_href，
+# 这里原本还有**第二份 `_raw_prefix()`**（只认上面这条主站正则），
+# 同名把上面那份覆盖掉了（Python 取最后定义），独立源形态下它就原样返回 base_href，
 # 于是 shim 的 `R` 变成"整页目录"，判重失效、票据被反复叠加。
 # 已于 2026-09-20 删除，只保留上面那一份（两种形态都剥）。改这块代码时**别再写第二份**。
 
@@ -490,7 +489,7 @@ def ticket_from_referer(request: Request) -> Optional[str]:
     设备 JS 常拿 `location.hostname` 硬拼绝对地址 —— 华为登录成功后跳首页就是
     `"https://" + location.hostname + port + "/simple/view/main/main.html"`，
     host 是代理源自己，路径却是设备路径，`/web/<ticket>/` 就这么被丢了。
-    🚨 前端拦不住：Chrome 的 `location.href` 是**不可伪造属性**，原型补丁无效
+ 前端拦不住：Chrome 的 `location.href` 是**不可伪造属性**，原型补丁无效
     （见 `install_preflight` 上面那段注释）。但导航请求一定会带 Referer，
     里面有上一页的完整路径 —— 票据就在那儿。
 
@@ -527,7 +526,7 @@ def recover_redirect(request: Request, path: str) -> Optional[Response]:
     return RedirectResponse(target, status_code=307)
 
 
-# 🚨🚨 2026-09-20 真机实测：沙箱 iframe（不给 allow-same-origin）是**不透明源**，
+# 2026-09-20 真机实测：沙箱 iframe（不给 allow-same-origin）是**不透明源**，
 # 剩下这条路只能靠 `window.name`：它跟着**浏览上下文**走，同一框架里跨任意次导航
 # 都还在，且不透明源里照样能读写（不像 cookie / localStorage）。shim 每页开头都会
 # 把票据根写进去，丢了票据的那次跳转落地后再读回来拼成完整路径。
@@ -622,23 +621,23 @@ def _rewrite_css(body: bytes, base_href: str, root_href: str, host: str) -> byte
 
 # 设备界面里用 JS 拼地址的地方（`fetch('/api/x')`、webpack 插分片），shim 负责补前缀。
 # 页面内的 <a>/<form>/<link>/<script> 已经在服务端改写过了，这里兜住脚本发起的那部分。
-# 🚨 data: / blob: / 已经是代理地址的一律不能碰：早先只判了 `//` 开头，结果把
+# data: / blob: / 已经是代理地址的一律不能碰：早先只判了 `//` 开头，结果把
 _SHIM_TMPL = (
     '<script data-vigils-web-proxy="1">(function(){'
-    # P = 本页目录（带票据）→ 给**相对**地址；B = 票据根 → 给**根相对**地址；
-    # R = 无票据前缀 → 只用来判"这条已经是我们代理的地址了"。
-    # 🚨 根相对绝不能拿 P 拼：设备的 HTTP.loginUrl 是 "/login.cgi"，按页面目录拼会变成
-    #    "/…/simple/view/login.cgi"，登录直接打空（2026-09-20 真机坐实）。
+    # P = 本页目录（带票据） 给**相对**地址；B = 票据根 给**根相对**地址；
+    # R = 无票据前缀 只用来判"这条已经是我们代理的地址了"。
+    # 根相对绝不能拿 P 拼：设备的 HTTP.loginUrl 是 "/login.cgi"，按页面目录拼会变成
+    # "/…/simple/view/login.cgi"，登录直接打空（2026-09-20 真机坐实）。
     'var P=__BASE__,R=__PREFIX__,B=__ROOT__;'
-    # 🚨 票据根写进 window.name：设备 JS 用 location.hostname 硬拼绝对地址时，
+    # 票据根写进 window.name：设备 JS 用 location.hostname 硬拼绝对地址时，
     # `/web/<ticket>/` 会被整段丢掉，而 Chrome 的 location.href 不可伪造、沙箱
-    # iframe 又不发 Referer —— 唯一还能跟着浏览上下文活下来的载体就是 window.name，
+    # iframe 又不发 Referer，唯一还能跟着浏览上下文活下来的载体就是 window.name，
     # 丢票据的那次跳转落地后由 `lost_ticket_page()` 读回来补成完整路径。
-    # 🚨 `window.name` 在这里**身兼两职**：
-    #   ① 票据根 —— 设备 JS 用 location.hostname 硬拼绝对地址时会把 /web/<ticket>/ 丢掉，
-    #      Chrome 的 location.href 不可伪造、沙箱 iframe 又不发 Referer，落地后只能靠
-    #      `lost_ticket_page()` 从这儿读回来补路径；
-    #   ② **跨导航存活的存储后援** —— 见下面 VS / vsLoad / vsSave。
+    # `window.name` 在这里**身兼两职**
+    # ① 票据根，设备 JS 用 location.hostname 硬拼绝对地址时会把 /web/<ticket>/ 丢掉，
+    # Chrome 的 location.href 不可伪造、沙箱 iframe 又不发 Referer，落地后只能靠
+    # `lost_ticket_page()` 从这儿读回来补路径；
+    # ② **跨导航存活的存储后援**，见下面 VS / vsLoad / vsSave。
     'var VS={b:B,c:"",ls:{},ss:{}};'
     'function vsLoad(){try{var n=window.name||"";if(!n)return;'
     'if(n.charAt(0)==="/"){VS.b=n;return;}'
@@ -660,14 +659,14 @@ _SHIM_TMPL = (
     'if(m){var t=Date.parse(m[1]);if(!isNaN(t)&&t<Date.now())dead=true}'
     'if(!dead)out.push(nm+"="+val);'
     'return out.join("; ")}catch(e){return cur}}'
-    # ── 存储垫片（🚨 必须跨导航存活，不能只是"不崩"）──
+    # 存储垫片（ 必须跨导航存活，不能只是"不崩"）
     # 沙箱不给 allow-same-origin 时是不透明源，读 document.cookie / localStorage /
-    # sessionStorage 一律抛 SecurityError。华为登录成功后是这么干的（真机抓到的代码）：
-    #     WEB.setCookie('Token', msg_arr[1].split("=")[1]);
-    #     location.href = protocol + location.hostname + port + mainLocation;
-    # 会话 Token 写在 **document.cookie** 里，不是 HTTP Set-Cookie —— 服务端保管箱代持不到。
-    # 早先的内存版一导航就归零 → 新页面 `WEB.getCookie('Token')` 读不到 →
-    # 设备判定未登录 → **"登录成功 → 跳首页 → 秒退登录页"**。
+    # sessionStorage 一律抛 SecurityError。华为登录成功后是这么干的（真机抓到的代码）
+    # WEB.setCookie('Token', msg_arr[1].split("=")[1]);
+    # location.href = protocol + location.hostname + port + mainLocation;
+    # 会话 Token 写在 **document.cookie** 里，不是 HTTP Set-Cookie，服务端保管箱代持不到。
+    # 早先的内存版一导航就归零 新页面 `WEB.getCookie('Token')` 读不到
+    # 设备判定未登录 **"登录成功 跳首页 秒退登录页"**。
     # 不透明源里唯一跨导航还在的就是 window.name，所以 cookie 与两个 storage 全落进去。
     # 顶层窗口（"新窗口打开"）原生 API 正常，一个字节都不会被改写。
     'function store(key){var m=VS[key]||(VS[key]={});return{'
@@ -692,7 +691,7 @@ _SHIM_TMPL = (
     'var H=(location.hostname||"").toLowerCase();'
     # 设备 JS 常拿 location.hostname 硬拼出**绝对**地址：华为登录成功后就是
     # `"https://"+location.hostname+port+"/simple/view/main/main.html"`。
-    # 它拼出来的 host 是**我们代理源自己**，路径却是设备路径 —— 票据前缀 /web/<ticket>/
+    # 它拼出来的 host 是**我们代理源自己**，路径却是设备路径，票据前缀 /web/<ticket>/
     # 就这么被丢掉了。后果：主站形态下跳到站点根、落回 SPA（就是"登录后页面空白"）；
     # 独立源形态下根上没有这条路由，直接 404 `{"detail":"Not Found"}`。
     # 所以凡是 host 等于本代理源的绝对地址，一律剥成路径再走票据根。
@@ -712,7 +711,7 @@ _SHIM_TMPL = (
     "if(/^[a-z][a-z0-9+.\\-]*:/i.test(s))return u;"
     # 已经是代理地址就别再加一次（R 是 P/B 的公共前缀，判它就够）
     "if(s.indexOf(R)===0)return s;"
-    # 根相对 → 票据根；相对 → 本页目录。两者不能混。
+    # 根相对 票据根；相对 本页目录。两者不能混。
     "return s.charAt(0)==='/'?B+s.slice(1):P+s;"
     '}catch(e){return u}}'
     'var f=window.fetch;'
@@ -740,7 +739,7 @@ _SHIM_TMPL = (
     '[window.HTMLMediaElement,"src"],[window.HTMLLinkElement,"href"],'
     '[window.HTMLFormElement,"action"]].forEach(function(pair){'
     'if(pair[0])patch(pair[0].prototype,pair[1])});'
-    # 🚨 导航（location.href = …）**别指望在 JS 层拦**：Chrome 把 href 做成 location
+    # 导航（location.href = …）**别指望在 JS 层拦**：Chrome 把 href 做成 location
     # 实例上的 [LegacyUnforgeable] 属性，`Object.getOwnPropertyDescriptor(
     # Location.prototype,'href')` 直接是 undefined，原型补丁静默失效（2026-09-20 实测）。
     # 这类跳转只能事后补：有 Referer 走 `recover_redirect()`，没有（沙箱 iframe 不发
@@ -749,7 +748,7 @@ _SHIM_TMPL = (
 )
 
 
-# ── 鉴权 ────────────────────────────────────────────────────────
+# 鉴权
 
 def _user_from_ticket(db: Session, ticket: str, server_id: int) -> dict:
     """票据 → 用户（重新查库取角色，权限每次现算，不信任票据里的任何内容）。
@@ -808,7 +807,7 @@ def _auth_user(request: Request, token: Optional[str], ticket: Optional[str],
 def _friendly_error(e: Exception, target: str) -> str:
     """把 requests 的异常翻成人能看懂的原因。
 
-    🚨 不能直接把 `str(e)` 拼回去 —— 那是一坨 HTTPConnectionPool / NewConnectionError
+ 不能直接把 `str(e)` 拼回去 —— 那是一坨 HTTPConnectionPool / NewConnectionError
     的英文堆栈，管理员看不懂，而且会把内网结构一起带出去。日志里保留原文，给人看的
     只说"该怎么查"。
     """
@@ -831,8 +830,8 @@ def _gate(db: Session, user: dict, server: Server, server_id: int) -> None:
     if PROXY_ID_FROM_TICKET and not server_id:
         server_id = int(server.id or 0)
     # 2026-09-29 S-8：判定顺序原来是「先设备类型、后权限/归属」。业务上等价，
-    # 但响应码泄露了信息 —— 无权用户拿 400/403 就能区分"这个 id 是不是网络设备"
-    # （实测 id=1/4 是服务器 → 400，id=3 是交换机 → 403），等于白送一份资产清单。
+    # 但响应码泄露了信息，无权用户拿 400/403 就能区分"这个 id 是不是网络设备"
+    # （实测 id=1/4 是服务器 400，id=3 是交换机 403），等于白送一份资产清单。
     # 改成先鉴权、后业务：无权一律 403，设备类型只在已授权后才判。
     if not has_perm(db, user, "host", "webadmin", "edit", "connect"):
         raise HTTPException(status_code=403, detail="当前角色没有打开设备 WEB 管理页面的权限")
@@ -926,7 +925,7 @@ def web_config(
         "host": host,
         "port": port,
         "url": f"{scheme}://{host}:{port}/" if enabled else "",
-        # ⚠ 给前端拼地址用（可能接在独立源上），不是本进程的服务前缀
+        # 给前端拼地址用（可能接在独立源上），不是本进程的服务前缀
         "proxy_prefix": _frontend_prefix(server_id),
         # 独立源部署时给前端的绝对地址（含协议+端口），前端优先用它；
         # 为空则退回同源相对前缀（主站形态）
@@ -977,17 +976,17 @@ def _maybe_auto_login(request: Request, db: Session, s: Server, user: dict,
                       is_fragment: bool) -> bytes:
     """设备返回登录页 + 这台设备存了凭据 → 附一段「把账号口令填好」的脚本。
 
-    🚨 触发条件里最关键的一条是「**设备返回了登录页**」：有会话时设备直接给主页，
+ 触发条件里最关键的一条是「**设备返回了登录页**」：有会话时设备直接给主页，
     根本走不到这里，所以它既是"该不该填"也是"有没有会话"的判定 —— 我们因此
     不需要（也拿不到，见 `web_auto_login` 模块说明）额外的会话状态。
 
-    🚨 **只填不提交**（2026-09-22 起）：绝不点登录按钮。填错口令会锁死设备账号
+ **只填不提交**（2026-09-22 起）：绝不点登录按钮。填错口令会锁死设备账号
     （华为"输入错误密码次数达到上限"、群晖同样会锁），而"填好之后由人按一下登录"
     本来就只值一下鼠标 —— 这个风险不值得担。详见 `web_auto_login` 模块 docstring。
 
     `ticket` 必须由调用方（`web_proxy`）传进来：下面的凭据地址要拼成
     `{前缀}{ticket}/__vs_cred`，而票据是 `web_proxy` 按当前用户/设备现签的局部变量。
-    ⚠ 2026-09-23 修复：P1-1 改成"口令不进页面、脚本按需取回"时，这里直接引用了
+ 2026-09-23 修复：P1-1 改成"口令不进页面、脚本按需取回"时，这里直接引用了
     `web_proxy` 里的 `ticket` 却没加参数 → 每次打开设备登录页都
     `NameError: name 'ticket' is not defined` → WEB 管理页签整个 500。
     因为只在"设备返回登录页"时才走到，平时（有会话、直接给主页）不触发，很难发现。
@@ -998,7 +997,7 @@ def _maybe_auto_login(request: Request, db: Session, s: Server, user: dict,
         return content
     adapter = auto_login.adapter_for(s)
     if adapter is None:
-        # 厂商认不出来就不动手 —— 乱提交表单有可能把设备账号锁死
+        # 厂商认不出来就不动手，乱提交表单有可能把设备账号锁死
         return content
     username = (getattr(s, "web_username", "") or "").strip()
     password = (s.web_password_plain or "") if hasattr(s, "web_password_plain") else ""
@@ -1018,7 +1017,7 @@ def _maybe_auto_login(request: Request, db: Session, s: Server, user: dict,
     if not adapter.is_login_page("", text):
         return content
 
-    # P1-1：口令**不进页面源码** —— 只发一个随机 cred_id 给它，真正的口令由脚本
+    # P1-1：口令**不进页面源码**，只发一个随机 cred_id 给它，真正的口令由脚本
     # 运行时向下面的 `__vs_cred` 端点按需取回（要求有效票据 + 该设备的权限）。
     # 于是 HTML 源码 / 浏览器缓存 / 页面截图里都不再有明文口令。
     cred_id = auto_login.issue_cred(server_id, user["user_id"], username, password)
@@ -1077,9 +1076,9 @@ async def web_proxy(
     if not host:
         raise HTTPException(status_code=400, detail="这台设备没有管理地址（ip_address 为空）")
 
-    # 🔒 TLS 指纹钉扎（TOFU）：转发给设备之前先比对证书指纹。
-    #    以前这里只有 verify=False 一个开关，内网里谁做一次中间人就能读到我们替设备
-    #    带上的会话 Cookie 和自动填的登录口令。详见 services/device_tls_pin.py。
+    # TLS 指纹钉扎（TOFU）：转发给设备之前先比对证书指纹。
+    # 以前这里只有 verify=False 一个开关，内网里谁做一次中间人就能读到我们替设备
+    # 带上的会话 Cookie 和自动填的登录口令。详见 services/device_tls_pin.py。
     _pin_ok, _pin_err = device_tls_pin.before_request(server_id, scheme, host, port)
     if not _pin_ok:
         logger.warning(f"[WebAdmin {server_id}] 证书指纹校验未通过：{_pin_err}")
@@ -1094,8 +1093,8 @@ async def web_proxy(
     prefix = _prefix(server_id)
     # 票据：来到手上的那张继续用（还能用就不重发），接口调用进来的现开一张
     incoming = t or path_ticket
-    # ⚠ 独立源形态下 server_id 来自票据，所以这里必须按 user_id 判断续用/重发，
-    #    不能再依赖"票据里的 server_id == 路径参数"（路径里根本没有它）
+    # 独立源形态下 server_id 来自票据，所以这里必须按 user_id 判断续用/重发，
+    # 不能再依赖"票据里的 server_id == 路径参数"（路径里根本没有它）
     ticket = incoming if (incoming and ticket_lib.verify(incoming, server_id) == user["user_id"]) \
         else ticket_lib.mint(user["user_id"], server_id)
 
@@ -1142,9 +1141,9 @@ async def web_proxy(
     if request.method not in ("GET", "HEAD"):
         body = await request.body()
 
-    # 🚨 必须丢到线程池里跑（2026-09-20 NAS 慢的根因）：
+    # 必须丢到线程池里跑（2026-09-20 NAS 慢的根因）
     # 本函数是 `async def`，而 requests 是**同步阻塞**的。直接在协程里调用它，等设备
-    # 响应期间整个事件循环被卡死 —— 浏览器那 6 条并发分片请求会**排成一队**，
+    # 响应期间整个事件循环被卡死，浏览器那 6 条并发分片请求会**排成一队**，
     # 每条各等一次完整往返，叠起来就是"点一下要等好几秒"。
     # 丢进线程池后，多个设备请求真正并行，首屏从 ~5s 降到 1s 量级。
     def _do_request():
@@ -1196,9 +1195,9 @@ async def web_proxy(
             out_headers["Location"] = mapped
 
     if "html" in ctype:
-        # 🚨 XHR/fetch 拉回来的是**片段**（会被插进主页面），不能按本页目录改写相对地址
-        #    —— 详见 _rewrite_html 的 fragment 说明。Sec-Fetch-Dest=empty 就是 XHR/fetch；
-        #    老浏览器没有这个头，退回认 jQuery 的 X-Requested-With。
+        # XHR/fetch 拉回来的是**片段**（会被插进主页面），不能按本页目录改写相对地址
+        #，详见 _rewrite_html 的 fragment 说明。Sec-Fetch-Dest=empty 就是 XHR/fetch；
+        # 老浏览器没有这个头，退回认 jQuery 的 X-Requested-With。
         _dest = (request.headers.get("sec-fetch-dest") or "").strip().lower()
         _xhr = (request.headers.get("x-requested-with") or "").strip().lower() == "xmlhttprequest"
         is_fragment = _dest == "empty" or (_xhr and not _dest)

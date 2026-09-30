@@ -11,7 +11,7 @@
 调用方：安装脚本 `installer/VigilServeAgent.iss` 的 `InitializeUninstall()`
 执行 `{app}\\VigilServeAgent.exe --report-uninstall [--purge]`。
 
-🚨 时序铁律：**必须在删除本机配置之前发出**。签名要用
+ 时序铁律：**必须在删除本机配置之前发出**。签名要用
 `identity/node.key` 里的私钥，服务端地址要从 `agent_config.json` 里读，
 两者都在配置目录里 —— 先删配置就什么都发不出去了（服务端只能干等超时）。
 """
@@ -64,7 +64,7 @@ def report_uninstall(purge: bool = False, timeout: float = _REPORT_TIMEOUT) -> b
             return False
         _log(f"卸载上报成功（purge={purge}）")
         return True
-    except Exception as e:  # noqa: BLE001  卸载上报绝不能影响卸载本身
+    except Exception as e:  # noqa: BLE001 卸载上报绝不能影响卸载本身
         _log(f"卸载上报异常：{e}")
         return False
 

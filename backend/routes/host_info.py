@@ -52,7 +52,7 @@ def _current_user(authorization: Optional[str], db: Session) -> dict:
 
 
 def _client_ip(request: Request) -> str:
-    """⚠ 2026-09-23 动态审计 D-1：取值规则已统一到 `services/client_ip.py`
+    """ 2026-09-23 动态审计 D-1：取值规则已统一到 `services/client_ip.py`
     （默认不信任 X-Forwarded-For，只认直连 IP；确实走了反向代理时用
     `VIGILSERVE_TRUSTED_PROXIES` 显式声明代理地址）。"""
     return get_client_ip(request)
@@ -71,11 +71,11 @@ def _agent_url(server: Server, endpoint: str) -> str:
     return f"https://{server.ip_address}:{server.agent_port or 9998}{endpoint}"
 
 
-# 后端访问被监控主机的 Agent 是**内网直连**，必须绕开系统 HTTP 代理：
+# 后端访问被监控主机的 Agent 是**内网直连**，必须绕开系统 HTTP 代理
 # 若服务器环境配置了 HTTP_PROXY，请求会被发到代理服务器上，Agent 侧永远收不到，
 _SESSION = _requests.Session()
 _SESSION.trust_env = False
-# P1-1：Agent 9998 全链路 TLS —— 用服务端本地 CA 校验 Agent 的服务器证书
+# P1-1：Agent 9998 全链路 TLS，用服务端本地 CA 校验 Agent 的服务器证书
 try:
     from services.agent_auth import agent_ca_verify as _agent_ca_verify
     _SESSION.verify = _agent_ca_verify()
@@ -136,17 +136,17 @@ def _audit(db: Session, *, message: str, category: str, action: str, level: str,
             target_id=str(server_id),
             details=details or {},
         )
-    except Exception:  # noqa: BLE001  — 审计写失败不能影响主流程
+    except Exception:  # noqa: BLE001 — 审计写失败不能影响主流程
         pass
 
 
 def _require_view(db: Session, user: dict, server_id: int, page: str) -> None:
-    # 🚨 第三轮审计 N-5（2026-09-23）：**先判登录，再判权限**。
-    #    以前直接把 `get_current_user_full()` 的结果（未登录时是 None）丢给
-    #    `has_perm()`，于是匿名请求拿到的是 **403 无权限查看该页签**，而不是 401。
-    #    权限判定本身没放水（数据一样没给），但语义错了：前端无法区分
-    #    "没权限"与"要重新登录"，会话过期后表现为空白列表而不是跳登录页。
-    #    放在这里而不是逐个端点改，本文件所有走 `_require_view` 的接口一并生效。
+    # 第三轮审计 N-5（2026-09-23）：**先判登录，再判权限**。
+    # 以前直接把 `get_current_user_full()` 的结果（未登录时是 None）丢给
+    # `has_perm()`，于是匿名请求拿到的是 **403 无权限查看该页签**，而不是 401。
+    # 权限判定本身没放水（数据一样没给），但语义错了：前端无法区分
+    # "没权限"与"要重新登录"，会话过期后表现为空白列表而不是跳登录页。
+    # 放在这里而不是逐个端点改，本文件所有走 `_require_view` 的接口一并生效。
     if not user:
         raise HTTPException(
             status_code=401,
@@ -178,11 +178,11 @@ def _sync_cpu_model(db: Session, server: Server, data: dict) -> None:
         server.extra_config = cfg
         flag_modified(server, "extra_config")
         db.commit()
-    except Exception:  # noqa: BLE001  回写失败不影响主机信息展示
+    except Exception:  # noqa: BLE001 回写失败不影响主机信息展示
         db.rollback()
 
 
-# kind → 权限页签（刷新接口要按采集项校验对应页签的权限，不能只看一个）
+# kind 权限页签（刷新接口要按采集项校验对应页签的权限，不能只看一个）
 _KIND_PAGE = {
     "system-info": "info",
     "applications": "apps",
@@ -362,12 +362,12 @@ def uninstall_applications(
     )
     if not ok:
         raise HTTPException(status_code=502, detail=payload.get("detail") or f"Agent 返回错误：{resp.status_code}")
-    # 卸完之后应用列表已经变了，缓存必须失效 —— 否则用户刷新页面看到的还是
+    # 卸完之后应用列表已经变了，缓存必须失效，否则用户刷新页面看到的还是
     # "明明卸掉了却还在列表里"的旧数据（缓存 TTL 有 5 分钟）。
     try:
         from services import host_info_async as hia
         hia.cache_invalidate(server.id)
-    except Exception:  # noqa: BLE001  缓存失效失败不能让卸载结果丢失
+    except Exception:  # noqa: BLE001 缓存失效失败不能让卸载结果丢失
         pass
     return payload
 
